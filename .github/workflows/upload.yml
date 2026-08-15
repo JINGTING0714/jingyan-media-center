@@ -28,18 +28,18 @@ jobs:
 
       - name: Install dependencies
         run: |
+          cd api
           npm install
 
 
       - name: Check media files
         id: check
         run: |
-
           echo "Checking upload folder..."
 
           files=$(find upload -type f ! -name ".gitkeep" | wc -l)
 
-          echo "files=$files"
+          echo "Files count: $files"
 
           if [ "$files" -eq 0 ]; then
             echo "No media files found."
@@ -53,9 +53,8 @@ jobs:
       - name: Run upload system
         if: steps.check.outputs.skip == 'false'
         env:
-
           GH_TOKEN: ${{ secrets.MEDIA_TOKEN }}
 
         run: |
-
-          node api/upload.js
+          cd api
+          node upload.js
