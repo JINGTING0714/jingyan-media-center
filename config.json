@@ -4,9 +4,6 @@
 
   "owner": "JINGTING0714",
 
-  "description": "Multi repository media management system",
-
-
   "repositories": {
 
     "music": [
@@ -17,15 +14,14 @@
 
         "capacity": {
           "limit": "700MB",
-          "strategy": "auto-switch"
+          "strategy": "manual-switch"
         },
 
         "cdn": "https://cdn.jsdelivr.net/gh/JINGTING0714/jingyan-media-01/",
 
-        "folder": {
-          "media": "music/",
-          "data": "data/music.json"
-        },
+        "folder": "music/",
+
+        "data": "data/music.json",
 
         "status": "active"
       }
@@ -40,15 +36,14 @@
 
         "capacity": {
           "limit": "700MB",
-          "strategy": "auto-switch"
+          "strategy": "manual-switch"
         },
 
         "cdn": "https://cdn.jsdelivr.net/gh/JINGTING0714/jingyan-image-01/",
 
-        "folder": {
-          "media": "image/",
-          "data": "data/image.json"
-        },
+        "folder": "image/",
+
+        "data": "data/image.json",
 
         "status": "active"
       }
@@ -63,15 +58,14 @@
 
         "capacity": {
           "limit": "700MB",
-          "strategy": "auto-switch"
+          "strategy": "manual-switch"
         },
 
         "cdn": "https://cdn.jsdelivr.net/gh/JINGTING0714/jingyan-video-01/",
 
-        "folder": {
-          "media": "video/",
-          "data": "data/video.json"
-        },
+        "folder": "video/",
+
+        "data": "data/video.json",
 
         "status": "active"
       }
@@ -82,173 +76,46 @@
 
   "fileRules": {
 
-
     "music": {
-
       "extensions": [
         "mp3",
         "wav",
         "flac",
-        "m4a",
-        "aac"
-      ],
-
-      "target": "music"
+        "m4a"
+      ]
     },
 
 
     "image": {
-
       "extensions": [
         "jpg",
         "jpeg",
         "png",
         "webp",
-        "gif",
-        "svg"
-      ],
-
-      "target": "image"
+        "gif"
+      ]
     },
 
 
     "video": {
-
       "extensions": [
         "mp4",
         "webm",
-        "mov",
-        "mkv"
-      ],
-
-      "target": "video"
+        "mov"
+      ]
     }
-
-  },
-
-
-  "naming": {
-
-
-    "format": "id-title.extension",
-
-    "id": {
-
-      "length": 4,
-
-      "start": 1
-
-    },
-
-
-    "rules": {
-
-      "lowercase": true,
-
-      "replaceSpace": "-",
-
-      "removeSpecialCharacters": true
-
-    },
-
-
-    "languages": [
-      "zh",
-      "en",
-      "ja",
-      "ko",
-      "fr",
-      "de",
-      "es"
-    ]
-
-  },
-
-
-  "metadata": {
-
-
-    "music": [
-
-      "id",
-      "title",
-      "artist",
-      "album",
-      "filename",
-      "format",
-      "duration",
-      "size",
-      "url",
-      "created"
-
-    ],
-
-
-    "image": [
-
-      "id",
-      "filename",
-      "format",
-      "width",
-      "height",
-      "size",
-      "url",
-      "created"
-
-    ],
-
-
-    "video": [
-
-      "id",
-      "title",
-      "filename",
-      "format",
-      "duration",
-      "resolution",
-      "size",
-      "url",
-      "created"
-
-    ]
 
   },
 
 
   "upload": {
 
-
-    "mode": "manual-upload",
-
-    "support": [
-
-      "drag-drop",
-
-      "file-select"
-
-    ],
-
+    "source": "upload",
 
     "autoGenerateUrl": true,
 
-    "autoUpdateJson": true,
-
-
-    "duplicateCheck": true
-
-  },
-
-
-  "cdn": {
-
-
-    "provider": "jsdelivr",
-
-    "cache": true,
-
-    "urlFormat": "{repository}/{folder}/{filename}"
+    "autoUpdateJson": true
 
   }
-
 
 }
