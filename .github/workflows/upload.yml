@@ -1,9 +1,17 @@
-name: Upload System
+name: Media Upload
 
 
 on:
-
   workflow_dispatch:
+    inputs:
+
+      type:
+        description: media type
+        required: true
+
+      filename:
+        description: filename
+        required: true
 
 
 jobs:
@@ -16,14 +24,17 @@ jobs:
     steps:
 
     - name: Checkout
-
       uses: actions/checkout@v4
 
 
-    - name: System Check
-
+    - name: Show upload info
       run: |
 
-        echo "Jingyan Media Center"
+        echo "type=${{ github.event.inputs.type }}"
+        echo "file=${{ github.event.inputs.filename }}"
 
-        echo "Upload automation ready"
+
+    - name: Finish
+      run: |
+
+        echo "upload workflow ready"
