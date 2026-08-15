@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>
+Jingyan Media Center
+</title>
+
+
+<link rel="stylesheet" href="style.css">
+
+</head>
+
+
+
+<body>
+
+
+<div class="container">
+
+
+<header class="header">
+
+<h1>
+Jingyan Media Center
+</h1>
+
+<p>
+智能媒体上传与 CDN 管理中心
+</p>
+
+</header>
+
+
+
+
+<section class="card upload-card">
+
+
+<h2>
+上传媒体
+</h2>
+
+
+<div class="upload-box">
+
+
+<div class="upload-symbol">
+＋
+</div>
+
+
+<h3>
+拖拽文件到这里
+</h3>
+
+
+<p>
+支持 MP3 / MP4 / JPG / PNG
+</p>
+
+
+<button id="selectBtn">
+选择文件
+</button>
+
+
+<input 
+id="fileInput"
+type="file"
+multiple
+hidden
+>
+
+
+</div>
+
+
+</section>
+
+
+
+
+
+<section class="card">
+
+
+<h2>
+文件分析
+</h2>
+
+
+<div class="info-grid">
+
+
+<div>
+类型
+<span id="type">
+-
+</span>
+</div>
+
+
+<div>
+文件名
+<span id="filename">
+-
+</span>
+</div>
+
+
+<div>
+大小
+<span id="size">
+-
+</span>
+</div>
+
+
+<div>
+状态
+<span id="status">
+等待上传
+</span>
+</div>
+
+
+</div>
+
+
+</section>
+
+
+
+
+
+
+<section class="card">
+
+
+<h2>
+自动处理流程
+</h2>
+
+
+<div class="steps">
+
+
+<div>
+01
+<br>
+识别类型
+</div>
+
+
+<div>
+02
+<br>
+自动命名
+</div>
+
+
+<div>
+03
+<br>
+分类存储
+</div>
+
+
+<div>
+04
+<br>
+生成 CDN
+</div>
+
+
+</div>
+
+
+</section>
+
+
+
+
+
+
+<section class="card">
+
+
+<h2>
+上传记录
+</h2>
+
+
+<div class="empty">
+
+暂无记录
+
+</div>
+
+
+</section>
+
+
+
+</div>
+
+
+
+<script src="script.js"></script>
+
+
+</body>
+
+</html>
