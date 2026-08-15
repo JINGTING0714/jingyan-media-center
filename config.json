@@ -1,6 +1,5 @@
 {
   "system": "jingyan-media-center",
-
   "version": "2.0",
 
   "owner": "JINGTING0714",
@@ -15,6 +14,7 @@
     },
 
     "allowedFormats": {
+
       "image": [
         "jpg",
         "jpeg",
@@ -37,91 +37,63 @@
         "avi",
         "mkv"
       ]
+
     }
+  },
+
+
+  "storage": {
+
+    "limit": "700MB",
+
+    "autoSwitch": true,
+
+    "mode": "automatic"
+
   },
 
 
   "repositories": {
 
+
     "image": {
 
-      "id": "image-01",
+      "current": "jingyan-image-01",
 
-      "name": "jingyan-image-01",
-
-      "type": "image",
-
-      "capacity": {
-
-        "limit": "700MB",
-
-        "allowOver": true,
-
-        "strategy": "auto-switch"
-
-      },
-
-      "folder": "image/",
+      "prefix": "jingyan-image-",
 
       "data": "data/image.json",
 
-      "status": "active"
-
-    },
-
-
-    "video": {
-
-      "id": "video-01",
-
-      "name": "jingyan-video-01",
-
-      "type": "video",
-
-      "capacity": {
-
-        "limit": "700MB",
-
-        "allowOver": true,
-
-        "strategy": "auto-switch"
-
-      },
-
-      "folder": "video/",
-
-      "data": "data/video.json",
-
-      "status": "active"
+      "status": "data/status.json"
 
     },
 
 
     "music": {
 
-      "id": "music-01",
+      "current": "jingyan-media-01",
 
-      "name": "jingyan-media-01",
-
-      "type": "music",
-
-      "capacity": {
-
-        "limit": "700MB",
-
-        "allowOver": true,
-
-        "strategy": "auto-switch"
-
-      },
-
-      "folder": "music/",
+      "prefix": "jingyan-media-",
 
       "data": "data/music.json",
 
-      "status": "active"
+      "status": "data/status.json"
+
+    },
+
+
+    "video": {
+
+      "current": "jingyan-video-01",
+
+      "prefix": "jingyan-video-",
+
+      "data": "data/video.json",
+
+      "status": "data/status.json"
 
     }
+
 
   },
 
@@ -131,19 +103,6 @@
     "provider": "jsdelivr",
 
     "enabled": true
-
-  },
-
-
-  "automation": {
-
-    "generateID": true,
-
-    "generateJSON": true,
-
-    "autoSwitchRepository": true,
-
-    "updateStatus": true
 
   }
 
