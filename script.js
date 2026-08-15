@@ -1,52 +1,41 @@
 const uploadBox = document.querySelector(".upload-box");
 
-
 const fileInput = document.createElement("input");
 
-fileInput.type = "file";
-
-fileInput.multiple = true;
-
+fileInput.type="file";
+fileInput.multiple=true;
 
 fileInput.style.display="none";
-
 
 document.body.appendChild(fileInput);
 
 
 
-uploadBox.addEventListener(
-"click",
-()=>{
+uploadBox.onclick=()=>{
 
 fileInput.click();
 
-});
+};
 
 
 
-
-fileInput.addEventListener(
-"change",
-(e)=>{
+fileInput.onchange=e=>{
 
 handleFiles(e.target.files);
 
-});
-
+};
 
 
 
 uploadBox.addEventListener(
 "dragover",
-(e)=>{
+e=>{
 
 e.preventDefault();
 
 uploadBox.style.borderColor="#8B5CF6";
 
 });
-
 
 
 uploadBox.addEventListener(
@@ -61,7 +50,7 @@ uploadBox.style.borderColor="#D8C7FF";
 
 uploadBox.addEventListener(
 "drop",
-(e)=>{
+e=>{
 
 e.preventDefault();
 
@@ -73,33 +62,82 @@ handleFiles(e.dataTransfer.files);
 
 
 
-
 function handleFiles(files){
 
 
 [...files].forEach(file=>{
 
 
-const info={
+const type=getType(file.name);
 
-name:file.name,
+
+
+const limit=getLimit(type);
+
+
+
+if(type==="unknown"){
+
+alert(
+file.name+" 不支持"
+);
+
+return;
+
+}
+
+
+
+if(file.size>limit){
+
+alert(
+file.name+" 超过限制"
+);
+
+return;
+
+}
+
+
+
+
+const data={
+
+
+id:
+createID(type),
+
+
+title:
+removeExt(file.name),
+
+
+filename:
+file.name,
+
+
+type:type,
+
 
 size:
 formatSize(file.size),
 
-type:
-getType(file.name),
 
 created:
-new Date().toISOString()
+new Date()
+.toISOString()
+
+
 
 };
 
 
-console.log(info);
+
+console.log(data);
 
 
-showResult(info);
+
+showResult(data);
 
 
 
@@ -113,12 +151,11 @@ showResult(info);
 
 
 
-function getType(filename){
+function getType(name){
 
 
-const ext=
-filename
-.split(".")
+let ext=
+name.split(".")
 .pop()
 .toLowerCase();
 
@@ -135,7 +172,7 @@ if(
 .includes(ext)
 )
 
-return "audio";
+return "music";
 
 
 
@@ -153,7 +190,6 @@ return "video";
 
 
 
-
 if(
 [
 "jpg",
@@ -168,9 +204,72 @@ if(
 return "image";
 
 
-
 return "unknown";
 
+
+}
+
+
+
+
+
+function getLimit(type){
+
+
+if(type==="image")
+
+return 15*1024*1024;
+
+
+if(
+type==="music"||
+type==="video"
+)
+
+return 30*1024*1024;
+
+
+return 0;
+
+
+}
+
+
+
+
+
+
+
+function createID(type){
+
+
+let prefix={
+music:"music",
+video:"video",
+image:"image"
+}[type];
+
+
+
+return prefix+
+"-"+
+Date.now();
+
+
+}
+
+
+
+
+
+
+function removeExt(name){
+
+return name
+.substring(
+0,
+name.lastIndexOf(".")
+);
 
 }
 
@@ -184,23 +283,20 @@ function formatSize(bytes){
 
 if(bytes<1024)
 
-return bytes+" B";
-
+return bytes+"B";
 
 
 if(bytes<1024*1024)
 
-return
-(bytes/1024)
-.toFixed(2)
-+" KB";
+return(
+bytes/1024
+).toFixed(2)+"KB";
 
 
-
-return
-(bytes/1024/1024)
-.toFixed(2)
-+" MB";
+return(
+bytes/1024/1024
+)
+.toFixed(2)+"MB";
 
 
 }
@@ -214,32 +310,36 @@ return
 function showResult(data){
 
 
-
-const box=
-document.createElement("div");
-
+const box=document.createElement("div");
 
 box.className="file-result";
 
 
-
 box.innerHTML=`
 
-<h3>${data.name}</h3>
+<h3>${data.title}</h3>
 
 <p>
 类型：
 ${data.type}
 </p>
 
+
+<p>
+文件：
+${data.filename}
+</p>
+
+
 <p>
 大小：
 ${data.size}
 </p>
 
+
 <p>
-时间：
-${data.created}
+ID：
+${data.id}
 </p>
 
 `;
@@ -249,7 +349,6 @@ ${data.created}
 document
 .querySelector(".card")
 .appendChild(box);
-
 
 
 }
