@@ -4,118 +4,264 @@
 
   "owner": "JINGTING0714",
 
+  "description": "Automatic multi repository media management system",
+
+
   "repositories": {
 
+
     "music": [
+
       {
         "id": "music-01",
+
         "name": "jingyan-media-01",
+
         "type": "music",
 
+        "priority": 1,
+
+
         "capacity": {
+
           "limit": "700MB",
-          "strategy": "manual-switch"
+
+          "strategy": "auto-switch"
+
         },
+
 
         "cdn": "https://cdn.jsdelivr.net/gh/JINGTING0714/jingyan-media-01/",
 
-        "folder": "music/",
 
-        "data": "data/music.json",
+        "folder": {
+
+          "media": "music/",
+
+          "data": "data/music.json",
+
+          "status": "data/status.json"
+
+        },
+
 
         "status": "active"
+
       }
+
     ],
+
+
 
 
     "image": [
+
       {
+
         "id": "image-01",
+
         "name": "jingyan-image-01",
+
         "type": "image",
 
+        "priority": 1,
+
+
         "capacity": {
+
           "limit": "700MB",
-          "strategy": "manual-switch"
+
+          "strategy": "auto-switch"
+
         },
+
 
         "cdn": "https://cdn.jsdelivr.net/gh/JINGTING0714/jingyan-image-01/",
 
-        "folder": "image/",
 
-        "data": "data/image.json",
+        "folder": {
+
+          "media": "image/",
+
+          "data": "data/image.json",
+
+          "status": "data/status.json"
+
+        },
+
 
         "status": "active"
+
       }
+
     ],
 
 
+
+
     "video": [
+
       {
+
         "id": "video-01",
+
         "name": "jingyan-video-01",
+
         "type": "video",
 
+        "priority": 1,
+
+
         "capacity": {
+
           "limit": "700MB",
-          "strategy": "manual-switch"
+
+          "strategy": "auto-switch"
+
         },
+
 
         "cdn": "https://cdn.jsdelivr.net/gh/JINGTING0714/jingyan-video-01/",
 
-        "folder": "video/",
 
-        "data": "data/video.json",
+        "folder": {
+
+          "media": "video/",
+
+          "data": "data/video.json",
+
+          "status": "data/status.json"
+
+        },
+
 
         "status": "active"
+
       }
+
     ]
 
+
   },
+
+
 
 
   "fileRules": {
 
+
     "music": {
+
       "extensions": [
+
         "mp3",
+
         "wav",
+
         "flac",
+
         "m4a"
+
       ]
+
     },
+
 
 
     "image": {
+
       "extensions": [
+
         "jpg",
+
         "jpeg",
+
         "png",
+
         "webp",
+
         "gif"
+
       ]
+
     },
 
 
+
     "video": {
+
       "extensions": [
+
         "mp4",
+
         "webm",
+
         "mov"
+
       ]
+
     }
+
 
   },
 
 
+
+
+
+  "naming": {
+
+
+    "music": {
+
+      "format": "music-000001"
+
+    },
+
+
+    "image": {
+
+      "format": "image-000001"
+
+    },
+
+
+    "video": {
+
+      "format": "video-000001"
+
+    }
+
+
+  },
+
+
+
+
+
   "upload": {
 
-    "source": "upload",
+
+    "source": "website",
+
+
+    "autoDetectType": true,
+
 
     "autoGenerateUrl": true,
 
-    "autoUpdateJson": true
+
+    "autoGenerateId": true,
+
+
+    "autoUpdateJson": true,
+
+
+    "autoSwitchRepository": true
+
 
   }
+
+
 
 }
