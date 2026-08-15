@@ -14,6 +14,7 @@ jobs:
     permissions:
       contents: write
 
+
     steps:
 
       - name: Checkout
@@ -26,35 +27,40 @@ jobs:
           node-version: 20
 
 
-      - name: Install dependencies
-        run: |
-          cd api
-          npm install
-
-
       - name: Check media files
         id: check
         run: |
+
           echo "Checking upload folder..."
 
           files=$(find upload -type f ! -name ".gitkeep" | wc -l)
 
-          echo "Files count: $files"
+          echo "files=$files"
+
 
           if [ "$files" -eq 0 ]; then
-            echo "No media files found."
+
+            echo "No media files found"
+
             echo "skip=true" >> $GITHUB_OUTPUT
+
           else
-            echo "Media files detected."
+
+            echo "Media files detected"
+
             echo "skip=false" >> $GITHUB_OUTPUT
+
           fi
+
 
 
       - name: Run upload system
         if: steps.check.outputs.skip == 'false'
+
         env:
+
           GH_TOKEN: ${{ secrets.MEDIA_TOKEN }}
 
         run: |
-          cd api
-          node upload.js
+
+          node api/upload.js
