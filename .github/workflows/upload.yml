@@ -2,39 +2,73 @@ name: Media Upload
 
 
 on:
+
   workflow_dispatch:
+
     inputs:
 
       type:
-        description: media type
+
+        description: "media type"
+
         required: true
 
+
       filename:
-        description: filename
+
+        description: "filename"
+
         required: true
+
+
+
+permissions:
+
+  contents: write
+
 
 
 jobs:
 
+
   upload:
+
 
     runs-on: ubuntu-latest
 
 
+
     steps:
 
+
     - name: Checkout
+
       uses: actions/checkout@v4
 
 
-    - name: Show upload info
+
+    - name: System Check
+
       run: |
 
-        echo "type=${{ github.event.inputs.type }}"
-        echo "file=${{ github.event.inputs.filename }}"
+        echo "Jingyan Media Center"
+
+        echo "Type: ${{ github.event.inputs.type }}"
+
+        echo "File: ${{ github.event.inputs.filename }}"
+
+
+
+    - name: Prepare
+
+      run: |
+
+        mkdir -p upload
+
 
 
     - name: Finish
+
       run: |
 
-        echo "upload workflow ready"
+        echo "Upload pipeline ready"
