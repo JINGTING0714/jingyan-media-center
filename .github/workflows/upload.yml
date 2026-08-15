@@ -1,70 +1,57 @@
 name: Media Upload
 
-
 on:
-
   push:
-
     paths:
-
       - "upload/**"
-
-
 
 jobs:
 
-
   upload:
-
 
     runs-on: ubuntu-latest
 
-
     permissions:
-
       contents: write
-
-
 
     steps:
 
-
       - name: Checkout
-
         uses: actions/checkout@v4
 
 
-
       - name: Setup Node
-
         uses: actions/setup-node@v4
-
         with:
-
           node-version: 20
 
 
-
       - name: Install dependencies
-
         run: |
-
           npm install
 
 
-
-      - name: Check upload files
-
+      - name: Check media files
+        id: check
         run: |
 
           echo "Checking upload folder..."
 
-          ls -la upload
+          files=$(find upload -type f ! -name ".gitkeep" | wc -l)
 
+          echo "files=$files"
+
+          if [ "$files" -eq 0 ]; then
+            echo "No media files found."
+            echo "skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "Media files detected."
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
 
 
       - name: Run upload system
-
+        if: steps.check.outputs.skip == 'false'
         env:
 
           GH_TOKEN: ${{ secrets.MEDIA_TOKEN }}
