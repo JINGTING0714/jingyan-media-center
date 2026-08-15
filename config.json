@@ -5,66 +5,32 @@
 
   "mode": "automatic",
 
-
   "cdn": {
-
     "provider": "jsdelivr",
-
     "enabled": true
-
   },
-
 
   "sources": {
-
-
-    "image":
-
-    {
-      "repo":
-      "JINGTING0714/jingyan-image-01",
-
-      "json":
-      "data/image.json"
+    "image": {
+      "repo": "JINGTING0714/jingyan-image-01",
+      "json": "data/image.json"
     },
 
-
-    "video":
-
-    {
-      "repo":
-      "JINGTING0714/jingyan-video-01",
-
-      "json":
-      "data/video.json"
+    "video": {
+      "repo": "JINGTING0714/jingyan-video-01",
+      "json": "data/video.json"
     },
 
-
-    "music":
-
-    {
-      "repo":
-      "JINGTING0714/jingyan-media-01",
-
-      "json":
-      "data/music.json"
+    "music": {
+      "repo": "JINGTING0714/jingyan-media-01",
+      "json": "data/music.json"
     }
-
-
   },
 
-
   "automation": {
-
-
     "upload": true,
-
     "updateDatabase": true,
-
     "generateCDN": true,
-
     "refreshCache": true
-
   }
-
 }
