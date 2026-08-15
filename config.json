@@ -1,0 +1,45 @@
+{
+  "system": "jingyan-media",
+  "version": "1.0",
+
+  "repositories": {
+    "music": [
+      {
+        "id": "music-01",
+        "name": "jingyan-media-01",
+        "owner": "JINGTING0714",
+        "type": "music",
+        "cdn": "https://cdn.jsdelivr.net/gh/JINGTING0714/jingyan-media-01/",
+        "folder": "music/",
+        "data": "data/music.json",
+        "status": "active"
+      }
+    ],
+
+    "image": [
+      {
+        "id": "image-01",
+        "name": "jingyan-image-01",
+        "owner": "JINGTING0714",
+        "type": "image",
+        "cdn": "https://cdn.jsdelivr.net/gh/JINGTING0714/jingyan-image-01/",
+        "folder": "image/",
+        "data": "data/image.json",
+        "status": "active"
+      }
+    ],
+
+    "video": [
+      {
+        "id": "video-01",
+        "name": "jingyan-video-01",
+        "owner": "JINGTING0714",
+        "type": "video",
+        "cdn": "https://cdn.jsdelivr.net/gh/JINGTING0714/jingyan-video-01/",
+        "folder": "video/",
+        "data": "data/video.json",
+        "status": "active"
+      }
+    ]
+  }
+}
