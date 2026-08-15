@@ -1,267 +1,150 @@
 {
   "system": "jingyan-media-center",
-  "version": "1.0",
+
+  "version": "2.0",
 
   "owner": "JINGTING0714",
 
-  "description": "Automatic multi repository media management system",
+  "upload": {
+    "enabled": true,
+
+    "limits": {
+      "image": "15MB",
+      "audio": "30MB",
+      "video": "30MB"
+    },
+
+    "allowedFormats": {
+      "image": [
+        "jpg",
+        "jpeg",
+        "png",
+        "webp",
+        "gif"
+      ],
+
+      "audio": [
+        "mp3",
+        "wav",
+        "flac",
+        "aac",
+        "m4a"
+      ],
+
+      "video": [
+        "mp4",
+        "mov",
+        "avi",
+        "mkv"
+      ]
+    }
+  },
 
 
   "repositories": {
 
-
-    "music": [
-
-      {
-        "id": "music-01",
-
-        "name": "jingyan-media-01",
-
-        "type": "music",
-
-        "priority": 1,
-
-
-        "capacity": {
-
-          "limit": "700MB",
-
-          "strategy": "auto-switch"
-
-        },
-
-
-        "cdn": "https://cdn.jsdelivr.net/gh/JINGTING0714/jingyan-media-01/",
-
-
-        "folder": {
-
-          "media": "music/",
-
-          "data": "data/music.json",
-
-          "status": "data/status.json"
-
-        },
-
-
-        "status": "active"
-
-      }
-
-    ],
-
-
-
-
-    "image": [
-
-      {
-
-        "id": "image-01",
-
-        "name": "jingyan-image-01",
-
-        "type": "image",
-
-        "priority": 1,
-
-
-        "capacity": {
-
-          "limit": "700MB",
-
-          "strategy": "auto-switch"
-
-        },
-
-
-        "cdn": "https://cdn.jsdelivr.net/gh/JINGTING0714/jingyan-image-01/",
-
-
-        "folder": {
-
-          "media": "image/",
-
-          "data": "data/image.json",
-
-          "status": "data/status.json"
-
-        },
-
-
-        "status": "active"
-
-      }
-
-    ],
-
-
-
-
-    "video": [
-
-      {
-
-        "id": "video-01",
-
-        "name": "jingyan-video-01",
-
-        "type": "video",
-
-        "priority": 1,
-
-
-        "capacity": {
-
-          "limit": "700MB",
-
-          "strategy": "auto-switch"
-
-        },
-
-
-        "cdn": "https://cdn.jsdelivr.net/gh/JINGTING0714/jingyan-video-01/",
-
-
-        "folder": {
-
-          "media": "video/",
-
-          "data": "data/video.json",
-
-          "status": "data/status.json"
-
-        },
-
-
-        "status": "active"
-
-      }
-
-    ]
-
-
-  },
-
-
-
-
-  "fileRules": {
-
-
-    "music": {
-
-      "extensions": [
-
-        "mp3",
-
-        "wav",
-
-        "flac",
-
-        "m4a"
-
-      ]
-
-    },
-
-
-
     "image": {
 
-      "extensions": [
+      "id": "image-01",
 
-        "jpg",
+      "name": "jingyan-image-01",
 
-        "jpeg",
+      "type": "image",
 
-        "png",
+      "capacity": {
 
-        "webp",
+        "limit": "700MB",
 
-        "gif"
+        "allowOver": true,
 
-      ]
+        "strategy": "auto-switch"
 
-    },
+      },
 
+      "folder": "image/",
 
+      "data": "data/image.json",
 
-    "video": {
-
-      "extensions": [
-
-        "mp4",
-
-        "webm",
-
-        "mov"
-
-      ]
-
-    }
-
-
-  },
-
-
-
-
-
-  "naming": {
-
-
-    "music": {
-
-      "format": "music-000001"
-
-    },
-
-
-    "image": {
-
-      "format": "image-000001"
+      "status": "active"
 
     },
 
 
     "video": {
 
-      "format": "video-000001"
+      "id": "video-01",
+
+      "name": "jingyan-video-01",
+
+      "type": "video",
+
+      "capacity": {
+
+        "limit": "700MB",
+
+        "allowOver": true,
+
+        "strategy": "auto-switch"
+
+      },
+
+      "folder": "video/",
+
+      "data": "data/video.json",
+
+      "status": "active"
+
+    },
+
+
+    "music": {
+
+      "id": "music-01",
+
+      "name": "jingyan-media-01",
+
+      "type": "music",
+
+      "capacity": {
+
+        "limit": "700MB",
+
+        "allowOver": true,
+
+        "strategy": "auto-switch"
+
+      },
+
+      "folder": "music/",
+
+      "data": "data/music.json",
+
+      "status": "active"
 
     }
-
 
   },
 
 
+  "cdn": {
+
+    "provider": "jsdelivr",
+
+    "enabled": true
+
+  },
 
 
+  "automation": {
 
-  "upload": {
+    "generateID": true,
 
+    "generateJSON": true,
 
-    "source": "website",
+    "autoSwitchRepository": true,
 
-
-    "autoDetectType": true,
-
-
-    "autoGenerateUrl": true,
-
-
-    "autoGenerateId": true,
-
-
-    "autoUpdateJson": true,
-
-
-    "autoSwitchRepository": true
-
+    "updateStatus": true
 
   }
-
-
 
 }
