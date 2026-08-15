@@ -3,29 +3,11 @@ name: Media Upload
 
 on:
 
-  workflow_dispatch:
+  push:
 
-    inputs:
+    paths:
 
-      type:
-
-        description: "media type"
-
-        required: true
-
-
-      filename:
-
-        description: "filename"
-
-        required: true
-
-
-
-permissions:
-
-  contents: write
-
+      - "upload/**"
 
 
 jobs:
@@ -37,38 +19,47 @@ jobs:
     runs-on: ubuntu-latest
 
 
+    permissions:
+
+      contents: write
+
+
 
     steps:
 
 
-    - name: Checkout
+      - name: Checkout
 
-      uses: actions/checkout@v4
-
-
-
-    - name: System Check
-
-      run: |
-
-        echo "Jingyan Media Center"
-
-        echo "Type: ${{ github.event.inputs.type }}"
-
-        echo "File: ${{ github.event.inputs.filename }}"
+        uses: actions/checkout@v4
 
 
 
-    - name: Prepare
+      - name: Install
 
-      run: |
+        run: |
 
-        mkdir -p upload
+          npm install
 
 
 
-    - name: Finish
+      - name: Process Upload
 
-      run: |
+        run: |
 
-        echo "Upload pipeline ready"
+          node api/upload.js
+
+
+
+      - name: Commit Update
+
+        run: |
+
+          git config --global user.name "github-actions"
+
+          git config --global user.email "actions@github.com"
+
+          git add .
+
+          git commit -m "auto update media"
+
+          git push
