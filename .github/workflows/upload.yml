@@ -10,6 +10,7 @@ on:
       - "upload/**"
 
 
+
 jobs:
 
 
@@ -34,7 +35,17 @@ jobs:
 
 
 
-      - name: Install
+      - name: Setup Node
+
+        uses: actions/setup-node@v4
+
+        with:
+
+          node-version: 20
+
+
+
+      - name: Install dependencies
 
         run: |
 
@@ -42,24 +53,22 @@ jobs:
 
 
 
-      - name: Process Upload
+      - name: Check upload files
+
+        run: |
+
+          echo "Checking upload folder..."
+
+          ls -la upload
+
+
+
+      - name: Run upload system
+
+        env:
+
+          GH_TOKEN: ${{ secrets.MEDIA_TOKEN }}
 
         run: |
 
           node api/upload.js
-
-
-
-      - name: Commit Update
-
-        run: |
-
-          git config --global user.name "github-actions"
-
-          git config --global user.email "actions@github.com"
-
-          git add .
-
-          git commit -m "auto update media"
-
-          git push
