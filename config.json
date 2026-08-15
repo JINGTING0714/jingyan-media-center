@@ -1,45 +1,254 @@
 {
-  "system": "jingyan-media",
+  "system": "jingyan-media-center",
   "version": "1.0",
 
+  "owner": "JINGTING0714",
+
+  "description": "Multi repository media management system",
+
+
   "repositories": {
+
     "music": [
       {
         "id": "music-01",
         "name": "jingyan-media-01",
-        "owner": "JINGTING0714",
         "type": "music",
+
+        "capacity": {
+          "limit": "700MB",
+          "strategy": "auto-switch"
+        },
+
         "cdn": "https://cdn.jsdelivr.net/gh/JINGTING0714/jingyan-media-01/",
-        "folder": "music/",
-        "data": "data/music.json",
+
+        "folder": {
+          "media": "music/",
+          "data": "data/music.json"
+        },
+
         "status": "active"
       }
     ],
+
 
     "image": [
       {
         "id": "image-01",
         "name": "jingyan-image-01",
-        "owner": "JINGTING0714",
         "type": "image",
+
+        "capacity": {
+          "limit": "700MB",
+          "strategy": "auto-switch"
+        },
+
         "cdn": "https://cdn.jsdelivr.net/gh/JINGTING0714/jingyan-image-01/",
-        "folder": "image/",
-        "data": "data/image.json",
+
+        "folder": {
+          "media": "image/",
+          "data": "data/image.json"
+        },
+
         "status": "active"
       }
     ],
+
 
     "video": [
       {
         "id": "video-01",
         "name": "jingyan-video-01",
-        "owner": "JINGTING0714",
         "type": "video",
+
+        "capacity": {
+          "limit": "700MB",
+          "strategy": "auto-switch"
+        },
+
         "cdn": "https://cdn.jsdelivr.net/gh/JINGTING0714/jingyan-video-01/",
-        "folder": "video/",
-        "data": "data/video.json",
+
+        "folder": {
+          "media": "video/",
+          "data": "data/video.json"
+        },
+
         "status": "active"
       }
     ]
+
+  },
+
+
+  "fileRules": {
+
+
+    "music": {
+
+      "extensions": [
+        "mp3",
+        "wav",
+        "flac",
+        "m4a",
+        "aac"
+      ],
+
+      "target": "music"
+    },
+
+
+    "image": {
+
+      "extensions": [
+        "jpg",
+        "jpeg",
+        "png",
+        "webp",
+        "gif",
+        "svg"
+      ],
+
+      "target": "image"
+    },
+
+
+    "video": {
+
+      "extensions": [
+        "mp4",
+        "webm",
+        "mov",
+        "mkv"
+      ],
+
+      "target": "video"
+    }
+
+  },
+
+
+  "naming": {
+
+
+    "format": "id-title.extension",
+
+    "id": {
+
+      "length": 4,
+
+      "start": 1
+
+    },
+
+
+    "rules": {
+
+      "lowercase": true,
+
+      "replaceSpace": "-",
+
+      "removeSpecialCharacters": true
+
+    },
+
+
+    "languages": [
+      "zh",
+      "en",
+      "ja",
+      "ko",
+      "fr",
+      "de",
+      "es"
+    ]
+
+  },
+
+
+  "metadata": {
+
+
+    "music": [
+
+      "id",
+      "title",
+      "artist",
+      "album",
+      "filename",
+      "format",
+      "duration",
+      "size",
+      "url",
+      "created"
+
+    ],
+
+
+    "image": [
+
+      "id",
+      "filename",
+      "format",
+      "width",
+      "height",
+      "size",
+      "url",
+      "created"
+
+    ],
+
+
+    "video": [
+
+      "id",
+      "title",
+      "filename",
+      "format",
+      "duration",
+      "resolution",
+      "size",
+      "url",
+      "created"
+
+    ]
+
+  },
+
+
+  "upload": {
+
+
+    "mode": "manual-upload",
+
+    "support": [
+
+      "drag-drop",
+
+      "file-select"
+
+    ],
+
+
+    "autoGenerateUrl": true,
+
+    "autoUpdateJson": true,
+
+
+    "duplicateCheck": true
+
+  },
+
+
+  "cdn": {
+
+
+    "provider": "jsdelivr",
+
+    "cache": true,
+
+    "urlFormat": "{repository}/{folder}/{filename}"
+
   }
+
+
 }
