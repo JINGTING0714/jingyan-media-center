@@ -2,28 +2,43 @@ const uploadBox = document.querySelector(".upload-box");
 
 const fileInput = document.createElement("input");
 
-fileInput.type="file";
-fileInput.multiple=true;
-
-fileInput.style.display="none";
+fileInput.type = "file";
+fileInput.multiple = true;
+fileInput.style.display = "none";
 
 document.body.appendChild(fileInput);
 
 
 
-uploadBox.onclick=()=>{
+let counters = {
 
-fileInput.click();
+    music: 1,
+    image: 1,
+    video: 1
+
+};
+
+
+
+
+
+uploadBox.onclick = ()=>{
+
+    fileInput.click();
 
 };
 
 
 
-fileInput.onchange=e=>{
 
-handleFiles(e.target.files);
+
+fileInput.onchange = e=>{
+
+    handleFiles(e.target.files);
 
 };
+
+
 
 
 
@@ -31,20 +46,23 @@ uploadBox.addEventListener(
 "dragover",
 e=>{
 
-e.preventDefault();
+    e.preventDefault();
 
-uploadBox.style.borderColor="#8B5CF6";
+    uploadBox.style.borderColor="#8B5CF6";
 
 });
+
+
 
 
 uploadBox.addEventListener(
 "dragleave",
 ()=>{
 
-uploadBox.style.borderColor="#D8C7FF";
+    uploadBox.style.borderColor="#D8C7FF";
 
 });
+
 
 
 
@@ -52,11 +70,12 @@ uploadBox.addEventListener(
 "drop",
 e=>{
 
-e.preventDefault();
+    e.preventDefault();
 
-handleFiles(e.dataTransfer.files);
+    handleFiles(e.dataTransfer.files);
 
 });
+
 
 
 
@@ -65,83 +84,47 @@ handleFiles(e.dataTransfer.files);
 function handleFiles(files){
 
 
-[...files].forEach(file=>{
+    [...files].forEach(file=>{
 
 
-const type=getType(file.name);
-
-
-
-const limit=getLimit(type);
+        const type=getType(file.name);
 
 
 
-if(type==="unknown"){
+        if(type==="unknown"){
 
-alert(
-file.name+" 不支持"
-);
+            alert(
+            "不支持的文件类型: "
+            +file.name
+            );
 
-return;
+            return;
 
-}
-
-
-
-if(file.size>limit){
-
-alert(
-file.name+" 超过限制"
-);
-
-return;
-
-}
+        }
 
 
 
+        if(!checkSize(file,type)){
 
-const data={
+            return;
 
-
-id:
-createID(type),
-
-
-title:
-removeExt(file.name),
-
-
-filename:
-file.name,
-
-
-type:type,
-
-
-size:
-formatSize(file.size),
-
-
-created:
-new Date()
-.toISOString()
+        }
 
 
 
-};
+        const data=createMediaData(file,type);
 
 
 
-console.log(data);
+        console.log(data);
 
 
 
-showResult(data);
+        showResult(data);
 
 
 
-});
+    });
 
 
 }
@@ -151,13 +134,16 @@ showResult(data);
 
 
 
-function getType(name){
+
+function getType(filename){
 
 
-let ext=
-name.split(".")
+const ext =
+filename
+.split(".")
 .pop()
 .toLowerCase();
+
 
 
 
@@ -176,17 +162,23 @@ return "music";
 
 
 
+
+
 if(
 [
 "mp4",
 "mov",
 "avi",
-"mkv"
+"mkv",
+"webm"
 ]
 .includes(ext)
 )
 
 return "video";
+
+
+
 
 
 
@@ -204,6 +196,9 @@ if(
 return "image";
 
 
+
+
+
 return "unknown";
 
 
@@ -213,26 +208,57 @@ return "unknown";
 
 
 
-function getLimit(type){
 
 
-if(type==="image")
-
-return 15*1024*1024;
+function checkSize(file,type){
 
 
-if(
-type==="music"||
-type==="video"
-)
-
-return 30*1024*1024;
+const size=file.size;
 
 
-return 0;
+let limit;
+
+
+
+if(type==="image"){
+
+    limit=15*1024*1024;
+
+}
+
+
+
+if(type==="music" || type==="video"){
+
+    limit=30*1024*1024;
+
+}
+
+
+
+
+if(size>limit){
+
+
+alert(
+file.name+
+"\n超过上传限制"
+);
+
+
+return false;
 
 
 }
+
+
+
+return true;
+
+
+}
+
+
 
 
 
@@ -243,17 +269,17 @@ return 0;
 function createID(type){
 
 
-let prefix={
-music:"music",
-video:"video",
-image:"image"
-}[type];
+let id=
+String(counters[type])
+.padStart(6,"0");
 
 
 
-return prefix+
-"-"+
-Date.now();
+counters[type]++;
+
+
+
+return type+"-"+id;
 
 
 }
@@ -263,15 +289,123 @@ Date.now();
 
 
 
-function removeExt(name){
 
-return name
-.substring(
-0,
-name.lastIndexOf(".")
-);
+
+
+function createMediaData(file,type){
+
+
+
+let ext =
+file.name
+.split(".")
+.pop()
+.toLowerCase();
+
+
+
+return {
+
+
+"id":
+createID(type),
+
+
+
+"title":
+file.name
+.replace(/\.[^/.]+$/,""),
+
+
+
+
+"file":{
+
+
+"name":
+file.name,
+
+
+"format":
+ext,
+
+
+"size":
+formatSize(file.size)
+
+
+},
+
+
+
+
+
+"media":{
+
+
+"type":
+type==="music"
+?
+"audio"
+:
+type,
+
+
+"category":
+type,
+
+
+"language":
+""
+
+
+
+},
+
+
+
+
+"url":
+"",
+
+
+
+"repository":{
+
+
+"name":
+"pending",
+
+
+"type":
+type
+
+
+},
+
+
+
+
+"created":
+new Date()
+.toISOString()
+.split("T")[0],
+
+
+
+
+"source":
+"upload"
+
+
+};
+
+
 
 }
+
+
+
 
 
 
@@ -281,25 +415,32 @@ name.lastIndexOf(".")
 function formatSize(bytes){
 
 
+
 if(bytes<1024)
 
-return bytes+"B";
+return bytes+" B";
+
 
 
 if(bytes<1024*1024)
 
 return(
 bytes/1024
-).toFixed(2)+"KB";
+)
+.toFixed(2)
++" KB";
+
 
 
 return(
 bytes/1024/1024
 )
-.toFixed(2)+"MB";
-
+.toFixed(2)
++" MB";
 
 }
+
+
 
 
 
@@ -310,9 +451,12 @@ bytes/1024/1024
 function showResult(data){
 
 
+
 const box=document.createElement("div");
 
+
 box.className="file-result";
+
 
 
 box.innerHTML=`
@@ -321,25 +465,31 @@ box.innerHTML=`
 
 <p>
 类型：
-${data.type}
+${data.media.category}
 </p>
 
 
 <p>
 文件：
-${data.filename}
+${data.file.name}
 </p>
 
 
 <p>
 大小：
-${data.size}
+${data.file.size}
 </p>
 
 
 <p>
 ID：
 ${data.id}
+</p>
+
+
+<p>
+状态：
+等待上传服务器
 </p>
 
 `;
@@ -349,6 +499,7 @@ ${data.id}
 document
 .querySelector(".card")
 .appendChild(box);
+
 
 
 }
