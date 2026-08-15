@@ -1,101 +1,9 @@
 {
   "system": "jingyan-media-center",
-  "version": "2.0",
 
-  "owner": "JINGTING0714",
+  "version": "3.0",
 
-  "upload": {
-    "enabled": true,
-
-    "limits": {
-      "image": "15MB",
-      "audio": "30MB",
-      "video": "30MB"
-    },
-
-    "allowedFormats": {
-
-      "image": [
-        "jpg",
-        "jpeg",
-        "png",
-        "webp",
-        "gif"
-      ],
-
-      "audio": [
-        "mp3",
-        "wav",
-        "flac",
-        "aac",
-        "m4a"
-      ],
-
-      "video": [
-        "mp4",
-        "mov",
-        "avi",
-        "mkv"
-      ]
-
-    }
-  },
-
-
-  "storage": {
-
-    "limit": "700MB",
-
-    "autoSwitch": true,
-
-    "mode": "automatic"
-
-  },
-
-
-  "repositories": {
-
-
-    "image": {
-
-      "current": "jingyan-image-01",
-
-      "prefix": "jingyan-image-",
-
-      "data": "data/image.json",
-
-      "status": "data/status.json"
-
-    },
-
-
-    "music": {
-
-      "current": "jingyan-media-01",
-
-      "prefix": "jingyan-media-",
-
-      "data": "data/music.json",
-
-      "status": "data/status.json"
-
-    },
-
-
-    "video": {
-
-      "current": "jingyan-video-01",
-
-      "prefix": "jingyan-video-",
-
-      "data": "data/video.json",
-
-      "status": "data/status.json"
-
-    }
-
-
-  },
+  "mode": "automatic",
 
 
   "cdn": {
@@ -103,6 +11,59 @@
     "provider": "jsdelivr",
 
     "enabled": true
+
+  },
+
+
+  "sources": {
+
+
+    "image":
+
+    {
+      "repo":
+      "JINGTING0714/jingyan-image-01",
+
+      "json":
+      "data/image.json"
+    },
+
+
+    "video":
+
+    {
+      "repo":
+      "JINGTING0714/jingyan-video-01",
+
+      "json":
+      "data/video.json"
+    },
+
+
+    "music":
+
+    {
+      "repo":
+      "JINGTING0714/jingyan-media-01",
+
+      "json":
+      "data/music.json"
+    }
+
+
+  },
+
+
+  "automation": {
+
+
+    "upload": true,
+
+    "updateDatabase": true,
+
+    "generateCDN": true,
+
+    "refreshCache": true
 
   }
 
