@@ -1,144 +1,185 @@
-const https = require("https");
-const fs = require("fs");
+const https=require("https");
+const fs=require("fs");
+
+
 
 
 
 function githubRequest(
-  method,
-  path,
-  token,
-  data=null
+
+    method,
+
+    path,
+
+    token,
+
+    data=null
+
 ){
 
-  return new Promise((resolve,reject)=>{
+
+    return new Promise(
+
+        (resolve,reject)=>{
 
 
-    const options={
-
-      hostname:"api.github.com",
-
-      path,
-
-      method,
+            const options={
 
 
-      headers:{
+                hostname:
 
-
-        "Authorization":
-        `Bearer ${token}`,
-
-
-        "User-Agent":
-        "jingyan-media-center",
-
-
-        "Accept":
-        "application/vnd.github+json",
-
-
-        "Content-Type":
-        "application/json"
-
-
-      }
-
-    };
+                "api.github.com",
 
 
 
-    const req=https.request(
-
-      options,
-
-      res=>{
+                path,
 
 
-        let body="";
+
+                method,
 
 
-        res.on(
-          "data",
-          chunk=>{
-            body+=chunk;
-          }
-        );
+
+                headers:{
 
 
-        res.on(
-          "end",
-          ()=>{
+                    "Authorization":
+
+                    `Bearer ${token}`,
 
 
-            let result;
+
+                    "User-Agent":
+
+                    "jingyan-media-center",
 
 
-            try{
 
-              result=
-              JSON.parse(body);
+                    "Accept":
 
-            }catch{
+                    "application/vnd.github+json",
 
-              result=body;
+
+
+                    "Content-Type":
+
+                    "application/json"
+
+
+                }
+
+
+            };
+
+
+
+
+            const req=
+
+            https.request(
+
+                options,
+
+                res=>{
+
+
+                    let body="";
+
+
+
+                    res.on(
+                        "data",
+                        chunk=>{
+                            body+=chunk;
+                        }
+                    );
+
+
+
+                    res.on(
+                        "end",
+                        ()=>{
+
+
+                            let result;
+
+
+
+                            try{
+
+                                result=
+                                JSON.parse(body);
+
+                            }catch{
+
+                                result=body;
+
+                            }
+
+
+
+                            if(
+                                res.statusCode>=400
+                            ){
+
+                                reject(
+                                    new Error(
+                                        JSON.stringify(result)
+                                    )
+                                );
+
+                                return;
+
+                            }
+
+
+
+                            resolve(result);
+
+
+
+                        }
+
+                    );
+
+
+
+                }
+
+            );
+
+
+
+
+
+            req.on(
+                "error",
+                reject
+            );
+
+
+
+
+            if(data){
+
+                req.write(
+                    JSON.stringify(data)
+                );
 
             }
 
 
 
-            if(
-              res.statusCode>=400
-            ){
-
-              reject(
-                new Error(
-                  JSON.stringify(result)
-                )
-              );
-
-              return;
-
-            }
+            req.end();
 
 
-
-            resolve(result);
-
-
-          }
-
-        );
-
-
-      }
+        }
 
     );
-
-
-
-    req.on(
-      "error",
-      reject
-    );
-
-
-
-    if(data){
-
-      req.write(
-        JSON.stringify(data)
-      );
-
-    }
-
-
-    req.end();
-
-
-  });
 
 
 }
+
 
 
 
@@ -149,21 +190,22 @@ function githubRequest(
 function getToken(){
 
 
-  const token=
-  process.env.GH_TOKEN;
+    const token=
+    process.env.GH_TOKEN;
 
 
 
-  if(!token){
+    if(!token){
 
-    throw new Error(
-      "GH_TOKEN missing"
-    );
+        throw new Error(
+            "GH_TOKEN missing"
+        );
 
-  }
+    }
 
 
-  return token;
+
+    return token;
 
 
 }
@@ -175,65 +217,64 @@ function getToken(){
 
 
 
+
 async function createRepository({
 
- username,
+    name,
 
- token,
-
- name,
-
- description=""
-
+    description=""
 
 }){
 
 
-  const result=
-  await githubRequest(
-
-    "POST",
-
-    "/user/repos",
-
-    token,
-
-    {
-
-
-      name,
-
-
-      description,
-
-
-      private:false,
-
-
-      auto_init:true
-
-
-    }
-
-  );
+    const token=
+    getToken();
 
 
 
-  return {
+    const result=
+
+    await githubRequest(
+
+        "POST",
+
+        "/user/repos",
+
+        token,
+
+        {
 
 
-    success:true,
+            name,
 
 
-    repo:
-    result.full_name,
+            description,
 
 
-    url:
-    result.html_url
+            private:false,
 
 
-  };
+            auto_init:true
+
+
+        }
+
+    );
+
+
+
+    return {
+
+
+        repo:
+        result.full_name,
+
+
+        url:
+        result.html_url
+
+
+    };
 
 
 }
@@ -248,126 +289,73 @@ async function createRepository({
 
 async function uploadFile(
 
- repo,
+    repo,
 
- filePath,
+    filePath,
 
- targetPath
-
-
-){
-
-
-  const token=
-  getToken();
-
-
-
-  const content=
-  fs.readFileSync(
-    filePath
-  )
-  .toString("base64");
-
-
-
-
-  const result=
-  await githubRequest(
-
-
-    "PUT",
-
-
-    `/repos/${repo}/contents/${targetPath}`,
-
-
-    token,
-
-
-    {
-
-
-      message:
-      `Upload ${targetPath}`,
-
-
-      content
-
-
-    }
-
-
-  );
-
-
-
-  return {
-
-
-    success:true,
-
-
-    sha:
-    result.content.sha,
-
-
-    path:
     targetPath
 
-
-  };
-
-
-}
-
-
-
-
-
-
-
-
-
-
-function generateRepositoryName(
-
- type,
-
- index
-
 ){
 
 
-  const map={
-
-
-    image:
-    "jingyan-image-",
-
-
-    audio:
-    "jingyan-media-",
-
-
-    video:
-    "jingyan-video-"
-
-
-  };
+    const token=
+    getToken();
 
 
 
-  return (
+    const content=
 
-    map[type]
+    fs.readFileSync(
+        filePath
+    )
+    .toString(
+        "base64"
+    );
 
-    +
 
-    String(index)
-    .padStart(2,"0")
 
-  );
+    const result=
+
+    await githubRequest(
+
+        "PUT",
+
+        `/repos/${repo}/contents/${targetPath}`,
+
+        token,
+
+        {
+
+
+            message:
+
+            `Upload ${targetPath}`,
+
+
+
+            content
+
+
+        }
+
+    );
+
+
+
+    return {
+
+
+        sha:
+
+        result.content.sha,
+
+
+        path:
+
+        targetPath
+
+
+    };
 
 
 }
@@ -381,16 +369,13 @@ function generateRepositoryName(
 module.exports={
 
 
- githubRequest,
+    githubRequest,
 
 
- createRepository,
+    createRepository,
 
 
- uploadFile,
-
-
- generateRepositoryName
+    uploadFile
 
 
 };
