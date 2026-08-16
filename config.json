@@ -1,240 +1,98 @@
 {
   "system": "jingyan-media-center",
-
   "version": "7.0",
-
   "mode": "automatic",
-
-
   "github": {
-
     "api": "https://api.github.com",
-
     "private": false,
-
     "autoCreateRepository": true
-
   },
-
-
   "cdn": {
-
     "provider": "jsdelivr",
-
     "enabled": true
-
   },
-
-
   "limits": {
-
-
     "image": {
-
       "maxSizeMB": 15
-
     },
-
-
     "audio": {
-
       "maxSizeMB": 30
-
     },
-
-
     "video": {
-
       "maxSizeMB": 30
-
     }
-
-
   },
-
-
   "storage": {
-
-
     "maxRepositorySizeMB": 700,
-
-
     "autoSwitchRepository": true,
-
-
     "repositories": {
-
-
       "image": [
-
         {
-
           "id": "image-01",
-
           "repo": "JINGTING0714/jingyan-image-01",
-
           "branch": "main",
-
           "folder": "image",
-
           "database": "data/image.json",
-
           "sizeMB": 0
-
         }
-
       ],
-
-
-
       "audio": [
-
         {
-
           "id": "audio-01",
-
           "repo": "JINGTING0714/jingyan-media-01",
-
           "branch": "main",
-
           "folder": "music",
-
           "database": "data/music.json",
-
-          "sizeMB": 0
-
+          "sizeMB": 1.1138153076171875
         }
-
       ],
-
-
-
       "video": [
-
         {
-
           "id": "video-01",
-
           "repo": "JINGTING0714/jingyan-video-01",
-
           "branch": "main",
-
           "folder": "video",
-
           "database": "data/video.json",
-
           "sizeMB": 0
-
         }
-
       ]
-
-
     }
-
-
   },
-
-
-
   "repositoryTemplate": {
-
-
     "image": {
-
       "prefix": "jingyan-image-",
-
       "startNumber": 1
-
     },
-
-
     "audio": {
-
       "prefix": "jingyan-media-",
-
       "startNumber": 1
-
     },
-
-
     "video": {
-
       "prefix": "jingyan-video-",
-
       "startNumber": 1
-
     }
-
-
   },
-
-
-
   "rename": {
-
-
     "enabled": true,
-
-
     "format": "number-name-extension",
-
-
     "allow": [
-
       "a-z",
-
       "0-9",
-
       "-",
-
       "."
-
     ]
-
-
   },
-
-
-
   "database": {
-
-
     "enabled": true,
-
-
     "autoUpdate": true
-
-
   },
-
-
-
   "automation": {
-
-
     "upload": true,
-
-
     "rename": true,
-
-
     "generateID": true,
-
-
     "generateCDN": true,
-
-
     "updateDatabase": true,
-
-
     "autoCreateRepository": true,
-
-
     "autoSwitchRepository": true
-
-
   }
-
-
 }
