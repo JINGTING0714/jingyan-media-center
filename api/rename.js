@@ -1,99 +1,57 @@
-const fs = require("fs");
 const path = require("path");
 
 
-const PINYIN = {
+const BASIC_PINYIN = {
 
-"方":"fang",
-"大":"da",
-"同":"tong",
+    "方": "fang",
+    "大": "da",
+    "同": "tong",
 
-"周":"zhou",
-"杰":"jie",
-"伦":"lun",
+    "周": "zhou",
+    "杰": "jie",
+    "伦": "lun",
 
-"晴":"qing",
-"天":"tian",
+    "晴": "qing",
+    "天": "tian",
 
-"你":"ni",
-"好":"hao",
+    "圣": "sheng",
+    "诞": "dan",
+    "快": "kuai",
+    "乐": "le",
 
-"的":"de",
+    "夜": "ye",
+    "曲": "qu",
 
-"音":"yin",
-"乐":"yue",
+    "你": "ni",
+    "好": "hao",
 
-"新":"xin",
-"歌":"ge"
+    "音": "yin",
+    "新": "xin",
+    "歌": "ge"
 
 };
 
 
+function convertBasicChinese(text) {
+
+    let result = "";
 
 
+    for (
+        const char
+        of text
+    ) {
 
-function loadConfig(){
-
-    return JSON.parse(
-
-        fs.readFileSync(
-            "config.json",
-            "utf8"
-        )
-
-    );
-
-}
-
-
-
-
-
-
-function getExtension(filename){
-
-    return path.extname(filename)
-    .toLowerCase();
-
-}
-
-
-
-
-
-
-function removeExtension(filename){
-
-    return path.basename(
-        filename,
-        path.extname(filename)
-    );
-
-}
-
-
-
-
-
-
-function convertChinese(text){
-
-
-    let result="";
-
-
-    for(
-        const char of text
-    ){
-
-        if(PINYIN[char]){
+        if (
+            BASIC_PINYIN[char]
+        ) {
 
             result +=
-            "-"
-            +
-            PINYIN[char];
+                " " +
+                BASIC_PINYIN[char] +
+                " ";
 
-        }else{
+        } else {
 
             result += char;
 
@@ -107,40 +65,53 @@ function convertChinese(text){
 }
 
 
-
-
-
-
-function normalizeName(name){
-
+function normalizeName(text) {
 
     let result =
-    convertChinese(name);
-
-
-
-    result =
-    result
-    .toLowerCase();
-
+        convertBasicChinese(
+            text
+        );
 
 
     result =
-    result
-    .replace(
-        /[^a-z0-9]+/g,
-        "-"
-    );
-
+        result
+            .normalize("NFKD")
+            .replace(
+                /[\u0300-\u036f]/g,
+                ""
+            )
+            .replace(
+                /&/g,
+                " and "
+            )
+            .replace(
+                /['’"`]/g,
+                ""
+            )
+            .toLowerCase();
 
 
     result =
-    result
-    .replace(
-        /^-+|-+$/g,
-        ""
-    );
+        result
+            .replace(
+                /[^a-z0-9]+/g,
+                "-"
+            )
+            .replace(
+                /-+/g,
+                "-"
+            )
+            .replace(
+                /^-+|-+$/g,
+                ""
+            );
 
+
+    if (!result) {
+
+        result = "file";
+
+    }
 
 
     return result;
@@ -148,155 +119,60 @@ function normalizeName(name){
 }
 
 
+function renameFile(
+    filename,
+    sequence
+) {
 
-
-
-
-
-function getNextNumber(type){
-
-
-    const config=
-    loadConfig();
-
-
-    const file =
-    config.database[type];
-
-
-
-    if(
-        !fs.existsSync(file)
-    ){
-
-        return "001";
-
-    }
-
-
-
-
-    const list =
-    JSON.parse(
-
-        fs.readFileSync(
-            file,
-            "utf8"
+    const extension =
+        path.extname(
+            filename
         )
-
-    );
-
+        .toLowerCase();
 
 
-    return String(
-        list.length+1
-    )
-    .padStart(
-        3,
-        "0"
-    );
+    let basename =
+        path.basename(
+            filename,
+            extension
+        );
 
 
-}
+    basename =
+        basename.replace(
+            /^\d{1,6}[-_\s]+/,
+            ""
+        );
 
 
+    const normalized =
+        normalizeName(
+            basename
+        );
 
 
-
-
-
-
-function renameFile(filename){
-
-
-    const ext =
-    getExtension(filename);
-
-
-
-    const name =
-    removeExtension(filename);
-
-
-
-    const clean =
-    normalizeName(name);
-
-
-
-    let prefix="001";
-
-
-
-    if(
-        ext===".mp3" ||
-        ext===".wav" ||
-        ext===".flac"
-    ){
-
-        prefix=
-        getNextNumber("audio");
-
-    }
-
-
-
-    if(
-        ext===".jpg" ||
-        ext===".png" ||
-        ext===".webp"
-    ){
-
-        prefix=
-        getNextNumber("image");
-
-    }
-
-
-
-    if(
-        ext===".mp4" ||
-        ext===".webm"
-    ){
-
-        prefix=
-        getNextNumber("video");
-
-    }
-
+    const number =
+        String(sequence)
+            .padStart(
+                3,
+                "0"
+            );
 
 
     return (
-
-        prefix
-        +
-        "-"
-        +
-        clean
-        +
-        ext
-
+        number +
+        "-" +
+        normalized +
+        extension
     );
-
 
 }
 
 
-
-
-
-
-
-module.exports={
-
+module.exports = {
 
     renameFile,
 
-
-    normalizeName,
-
-
-    convertChinese
-
+    normalizeName
 
 };
