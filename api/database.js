@@ -1,15 +1,18 @@
-const fs = require("fs");
-const path = require("path");
+const fs=require("fs");
+const path=require("path");
+
 
 
 
 function loadConfig(){
 
     return JSON.parse(
+
         fs.readFileSync(
             "config.json",
             "utf8"
         )
+
     );
 
 }
@@ -17,13 +20,17 @@ function loadConfig(){
 
 
 
+
 function ensureDatabase(file){
 
 
-    const dir = path.dirname(file);
+    const dir=
+    path.dirname(file);
+
 
 
     if(!fs.existsSync(dir)){
+
 
         fs.mkdirSync(
             dir,
@@ -31,6 +38,7 @@ function ensureDatabase(file){
                 recursive:true
             }
         );
+
 
     }
 
@@ -51,6 +59,7 @@ function ensureDatabase(file){
 
         );
 
+
     }
 
 
@@ -64,6 +73,7 @@ function readDatabase(file){
 
 
     ensureDatabase(file);
+
 
 
     return JSON.parse(
@@ -82,9 +92,13 @@ function readDatabase(file){
 
 
 
+
 function writeDatabase(
+
     file,
+
     data
+
 ){
 
 
@@ -112,10 +126,12 @@ function writeDatabase(
 
 
 
+
 function getDatabase(type){
 
 
-    const config = loadConfig();
+    const config=
+    loadConfig();
 
 
 
@@ -130,7 +146,8 @@ function getDatabase(type){
 
 
 
-function addMedia(
+
+function addRecord(
 
     type,
 
@@ -139,15 +156,55 @@ function addMedia(
 ){
 
 
-    const database = getDatabase(type);
+
+    const database=
+    getDatabase(type);
 
 
 
-    const list = readDatabase(database);
+    const list=
+    readDatabase(database);
 
 
 
-    list.push(item);
+    const record={
+
+
+        id:
+        Date.now()
+        .toString(),
+
+
+        type,
+
+
+        name:
+        item.name,
+
+
+        repository:
+        item.repository,
+
+
+        path:
+        item.path,
+
+
+        cdn:
+        item.cdn,
+
+
+        createdAt:
+        new Date()
+        .toISOString()
+
+
+    };
+
+
+
+
+    list.push(record);
 
 
 
@@ -161,58 +218,11 @@ function addMedia(
 
 
 
-    return item;
+    return record;
 
 
 }
 
-
-
-
-
-
-function generateMediaData(
-
-    type,
-
-    filename,
-
-    url
-
-){
-
-
-    return {
-
-
-        id:
-
-        Date.now().toString(),
-
-
-
-        type,
-
-
-
-        filename,
-
-
-
-        url,
-
-
-
-        createdAt:
-
-        new Date().toISOString()
-
-
-
-    };
-
-
-}
 
 
 
@@ -228,17 +238,21 @@ function removeMedia(
 ){
 
 
-    const database = getDatabase(type);
+    const database=
+    getDatabase(type);
 
 
 
-    let list = readDatabase(database);
+    let list=
+    readDatabase(database);
 
 
 
-    list = list.filter(
+    list=
+    list.filter(
 
-        item => item.id !== id
+        item=>
+        item.id!==id
 
     );
 
@@ -253,7 +267,6 @@ function removeMedia(
     );
 
 
-
     return true;
 
 
@@ -264,14 +277,13 @@ function removeMedia(
 
 
 
-function getMedia(
-
-    type
-
-){
 
 
-    const database = getDatabase(type);
+function getMedia(type){
+
+
+    const database=
+    getDatabase(type);
 
 
 
@@ -286,19 +298,18 @@ function getMedia(
 
 
 
+
+
 module.exports={
 
 
-    addMedia,
+    addRecord,
 
 
     removeMedia,
 
 
     getMedia,
-
-
-    generateMediaData,
 
 
     readDatabase,
