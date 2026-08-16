@@ -2,24 +2,20 @@
   "system": "jingyan-media-center",
   "version": "8.0",
   "mode": "automatic",
-
   "github": {
     "owner": "JINGTING0714",
     "private": false,
     "autoCreateRepository": true
   },
-
   "cdn": {
     "provider": "jsdelivr",
     "enabled": true,
     "includeBranch": true
   },
-
   "storage": {
     "targetRepositorySizeMB": 700,
     "overflowToleranceMB": 10,
     "autoSwitchRepository": true,
-
     "repositories": {
       "image": [
         {
@@ -32,7 +28,6 @@
           "sizeMB": 0
         }
       ],
-
       "audio": [
         {
           "id": "audio-01",
@@ -41,10 +36,9 @@
           "folder": "music",
           "database": "data/music.json",
           "status": "data/status.json",
-          "sizeMB": 0
+          "sizeMB": 8.397
         }
       ],
-
       "video": [
         {
           "id": "video-01",
@@ -58,7 +52,6 @@
       ]
     }
   },
-
   "mediaTypes": {
     "image": {
       "extensions": [
@@ -75,7 +68,6 @@
       "idPrefix": "image",
       "repositoryPrefix": "jingyan-image-"
     },
-
     "audio": {
       "extensions": [
         "mp3",
@@ -90,7 +82,6 @@
       "idPrefix": "music",
       "repositoryPrefix": "jingyan-media-"
     },
-
     "video": {
       "extensions": [
         "mp4",
@@ -104,19 +95,16 @@
       "repositoryPrefix": "jingyan-video-"
     }
   },
-
   "counters": {
     "image": 0,
-    "audio": 2,
+    "audio": 3,
     "video": 0
   },
-
   "rename": {
     "enabled": true,
     "format": "number-name-extension",
     "numberDigits": 3
   },
-
   "automation": {
     "upload": true,
     "rename": true,
