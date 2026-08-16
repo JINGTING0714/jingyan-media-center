@@ -1,9 +1,12 @@
-const fs=require("fs");
-const path=require("path");
+const fs = require("fs");
+const path = require("path");
+
+
 
 
 
 function loadConfig(){
+
 
     return JSON.parse(
 
@@ -23,37 +26,39 @@ function loadConfig(){
 function ensureFile(file){
 
 
-    const dir=
+    const dir =
     path.dirname(file);
 
 
 
-    if(!fs.existsSync(dir)){
-
+    if(
+        !fs.existsSync(dir)
+    ){
 
         fs.mkdirSync(
-
             dir,
-
             {
                 recursive:true
             }
-
         );
 
     }
 
 
 
-
-    if(!fs.existsSync(file)){
-
+    if(
+        !fs.existsSync(file)
+    ){
 
         fs.writeFileSync(
 
             file,
 
-            "[]"
+            JSON.stringify(
+                [],
+                null,
+                2
+            )
 
         );
 
@@ -74,14 +79,42 @@ function readDatabase(file){
     ensureFile(file);
 
 
+
     return JSON.parse(
 
         fs.readFileSync(
-
             file,
-
             "utf8"
+        )
 
+    );
+
+
+}
+
+
+
+
+
+
+function writeDatabase(
+    file,
+    data
+){
+
+
+    ensureFile(file);
+
+
+
+    fs.writeFileSync(
+
+        file,
+
+        JSON.stringify(
+            data,
+            null,
+            2
         )
 
     );
@@ -95,33 +128,50 @@ function readDatabase(file){
 
 
 
-function writeDatabase(
-
-    file,
-
-    data
-
-){
+function getDatabase(type){
 
 
-    ensureFile(file);
+    const config =
+    loadConfig();
 
 
 
-    fs.writeFileSync(
+    return config.database[type];
 
-        file,
 
-        JSON.stringify(
+}
 
-            data,
 
-            null,
 
-            2
 
-        )
 
+
+
+function generateID(type,list){
+
+
+    const prefix =
+    type
+    +
+    "-";
+
+
+
+    const number =
+    String(
+        list.length+1
+    )
+    .padStart(
+        6,
+        "0"
+    );
+
+
+
+    return (
+        prefix
+        +
+        number
     );
 
 
@@ -136,7 +186,7 @@ function writeDatabase(
 
 function addRecord(
 
-    repository,
+    type,
 
     item
 
@@ -144,7 +194,7 @@ function addRecord(
 
 
     const database =
-    repository.database;
+    getDatabase(type);
 
 
 
@@ -153,36 +203,39 @@ function addRecord(
 
 
 
-
     const record={
 
 
         id:
-
-        Date.now()
-        .toString(),
-
-
-        type:item.type,
+        generateID(
+            type,
+            list
+        ),
 
 
-        name:item.name,
+
+        type,
+
+
+
+        name:
+        item.name,
+
 
 
         repository:
-        repository.repo,
+        item.repository,
+
 
 
         path:
         item.path,
 
 
+
         cdn:
         item.cdn,
 
-
-        sizeMB:
-        item.sizeMB,
 
 
         createdAt:
@@ -191,7 +244,6 @@ function addRecord(
 
 
     };
-
 
 
 
@@ -219,17 +271,71 @@ function addRecord(
 
 
 
-function getMedia(repository){
 
 
-    return readDatabase(
+function removeMedia(
 
-        repository.database
+    type,
+
+    id
+
+){
+
+
+    const database =
+    getDatabase(type);
+
+
+
+    let list =
+    readDatabase(database);
+
+
+
+    list =
+    list.filter(
+
+        item =>
+        item.id !== id
 
     );
 
 
+
+    writeDatabase(
+
+        database,
+
+        list
+
+    );
+
+
+
+    return true;
+
+
 }
+
+
+
+
+
+
+
+function getMedia(type){
+
+
+    const database =
+    getDatabase(type);
+
+
+
+    return readDatabase(database);
+
+
+}
+
 
 
 
@@ -240,6 +346,9 @@ module.exports={
 
 
     addRecord,
+
+
+    removeMedia,
 
 
     getMedia,
