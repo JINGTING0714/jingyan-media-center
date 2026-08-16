@@ -3,101 +3,98 @@ const path = require("path");
 
 
 const {
-    verifyToken
+  verifyToken
 }=require("./auth");
 
 
 const {
-    renameFile
+  renameFile
 }=require("./rename");
 
 
 const {
-    selectRepository
+  selectRepository
 }=require("./repository");
 
 
 const {
-    uploadFile
+  uploadFile
 }=require("./github");
 
 
 const {
-    generateRepositoryCDN
+  generateRepositoryCDN
 }=require("./cdn");
 
 
 const {
-    addMedia,
-    generateMediaData
+  addRecord
 }=require("./database");
 
 
 
+function loadConfig(){
 
+  return JSON.parse(
+    fs.readFileSync(
+      "config.json",
+      "utf8"
+    )
+  );
 
-function detectType(filename){
-
-
-    const ext =
-
-    path.extname(filename)
-    .replace(".","")
-    .toLowerCase();
-
-
-
-    if(
-        [
-            "jpg",
-            "jpeg",
-            "png",
-            "webp",
-            "gif"
-        ]
-        .includes(ext)
-    ){
-
-        return "image";
-
-    }
+}
 
 
 
-    if(
-        [
-            "mp3",
-            "wav",
-            "flac",
-            "aac"
-        ]
-        .includes(ext)
-    ){
 
-        return "audio";
+function detectType(file){
 
-    }
+
+  const ext =
+  path.extname(file)
+  .replace(".","")
+  .toLowerCase();
 
 
 
-    if(
-        [
-            "mp4",
-            "webm"
-        ]
-        .includes(ext)
-    ){
-
-        return "video";
-
-    }
+  const images=[
+    "jpg",
+    "jpeg",
+    "png",
+    "webp",
+    "gif"
+  ];
 
 
+  const audio=[
+    "mp3",
+    "wav",
+    "flac",
+    "aac"
+  ];
 
-    throw new Error(
-        "Unsupported file type"
-    );
 
+  const video=[
+    "mp4",
+    "webm"
+  ];
+
+
+
+  if(images.includes(ext))
+    return "image";
+
+
+  if(audio.includes(ext))
+    return "audio";
+
+
+  if(video.includes(ext))
+    return "video";
+
+
+
+  return null;
 
 }
 
@@ -105,192 +102,223 @@ function detectType(filename){
 
 
 
-
-
-async function upload(
-
-    file,
-
-    token
-
-){
+async function processUpload(file){
 
 
 
-    const user = verifyToken(token);
+  const config=loadConfig();
 
 
 
-    if(!user){
+  const type=
+  detectType(file);
 
-        throw new Error(
-            "Unauthorized"
-        );
+
+
+  if(!type){
+
+    console.log(
+      "Unsupported:",
+      file
+    );
+
+    return;
+
+  }
+
+
+
+
+  const newName=
+  renameFile(
+    path.basename(file)
+  );
+
+
+
+  const repository=
+  selectRepository(
+    type,
+    config
+  );
+
+
+
+  const targetPath=
+  `${repository.folder}/${newName}`;
+
+
+
+
+
+  console.log(
+    "Uploading:",
+    targetPath
+  );
+
+
+
+
+
+  await uploadFile(
+
+    repository.repo,
+
+    targetPath,
+
+    file
+
+  );
+
+
+
+
+
+  const cdn=
+  generateRepositoryCDN(
+
+    repository.repo,
+
+    targetPath
+
+  );
+
+
+
+
+
+  addRecord(
+
+    type,
+
+    {
+
+      name:newName,
+
+      repository:
+      repository.repo,
+
+
+      path:
+      targetPath,
+
+
+      cdn,
+
+
+      time:
+      new Date()
+      .toISOString()
 
     }
 
+  );
 
 
 
 
 
-    const type =
-
-    detectType(
-        file.name
-    );
-
-
-
-
-
-
-    const newName =
-
-    renameFile(
-        file.name
-    );
-
-
-
-
-
-
-
-    const repository =
-
-    selectRepository(
-        type
-    );
-
-
-
-
-
-
-
-
-    const githubPath =
-
-    repository.folder
-
-    +
-
-    "/"
-
-    +
-
-    newName;
-
-
-
-
-
-
-
-
-
-    await uploadFile(
-
-
-        repository.repo,
-
-
-        githubPath,
-
-
-        file.buffer
-
-
-    );
-
-
-
-
-
-
-
-
-
-    const cdn =
-
-    generateRepositoryCDN(
-
-        repository,
-
-        newName
-
-    );
-
-
-
-
-
-
-
-
-
-    const data =
-
-    generateMediaData(
-
-        type,
-
-        newName,
-
-        cdn
-
-    );
-
-
-
-
-
-
-
-
-    addMedia(
-
-        type,
-
-        data
-
-    );
-
-
-
-
-
-
-
-    return {
-
-
-        success:true,
-
-
-        type,
-
-
-        filename:newName,
-
-
-        repository:repository.repo,
-
-
-        url:cdn,
-
-
-        data
-
-
-    };
-
-
+  console.log(
+    "Completed:",
+    newName
+  );
 
 }
 
 
+
+
+async function run(){
+
+
+
+  console.log(
+    "Jingyan Media Upload Start"
+  );
+
+
+
+  const uploadDir=
+  "upload";
+
+
+
+  if(!fs.existsSync(uploadDir)){
+
+
+    console.log(
+      "upload folder missing"
+    );
+
+
+    return;
+
+  }
+
+
+
+
+
+  const files=
+  fs.readdirSync(uploadDir);
+
+
+
+  for(const file of files){
+
+
+
+    const fullPath=
+    path.join(
+      uploadDir,
+      file
+    );
+
+
+
+    if(
+      fs.statSync(fullPath)
+      .isFile()
+    ){
+
+
+      await processUpload(
+        fullPath
+      );
+
+
+    }
+
+
+  }
+
+
+
+
+  console.log(
+    "All upload finished"
+  );
+
+}
+
+
+
+
+
+// GitHub Actions入口
+
+if(require.main===module){
+
+  run()
+  .catch(err=>{
+
+    console.error(err);
+
+    process.exit(1);
+
+  });
+
+}
 
 
 
@@ -298,8 +326,10 @@ async function upload(
 
 module.exports={
 
-    upload,
+  detectType,
 
-    detectType
+  processUpload,
+
+  run
 
 };
