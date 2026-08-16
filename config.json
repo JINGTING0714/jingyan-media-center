@@ -1,21 +1,31 @@
 {
   "system": "jingyan-media-center",
-  "version": "8.0",
+  "version": "9.0",
   "mode": "automatic",
+
   "github": {
     "owner": "JINGTING0714",
     "private": false,
     "autoCreateRepository": true
   },
+
   "cdn": {
     "provider": "jsdelivr",
     "enabled": true,
     "includeBranch": true
   },
+
   "storage": {
     "targetRepositorySizeMB": 700,
     "overflowToleranceMB": 10,
     "autoSwitchRepository": true,
+
+    "activeRepository": {
+      "image": "image-01",
+      "audio": "audio-01",
+      "video": "video-01"
+    },
+
     "repositories": {
       "image": [
         {
@@ -25,9 +35,12 @@
           "folder": "image",
           "database": "data/image.json",
           "status": "data/status.json",
-          "sizeMB": 0
+          "marker": "data/repository.json",
+          "sizeMB": 0,
+          "state": "active"
         }
       ],
+
       "audio": [
         {
           "id": "audio-01",
@@ -36,9 +49,12 @@
           "folder": "music",
           "database": "data/music.json",
           "status": "data/status.json",
-          "sizeMB": 8.397
+          "marker": "data/repository.json",
+          "sizeMB": 8.397,
+          "state": "active"
         }
       ],
+
       "video": [
         {
           "id": "video-01",
@@ -47,11 +63,14 @@
           "folder": "video",
           "database": "data/video.json",
           "status": "data/status.json",
-          "sizeMB": 0
+          "marker": "data/repository.json",
+          "sizeMB": 0,
+          "state": "active"
         }
       ]
     }
   },
+
   "mediaTypes": {
     "image": {
       "extensions": [
@@ -65,9 +84,11 @@
       "folder": "image",
       "database": "data/image.json",
       "status": "data/status.json",
+      "marker": "data/repository.json",
       "idPrefix": "image",
       "repositoryPrefix": "jingyan-image-"
     },
+
     "audio": {
       "extensions": [
         "mp3",
@@ -79,9 +100,11 @@
       "folder": "music",
       "database": "data/music.json",
       "status": "data/status.json",
+      "marker": "data/repository.json",
       "idPrefix": "music",
       "repositoryPrefix": "jingyan-media-"
     },
+
     "video": {
       "extensions": [
         "mp4",
@@ -91,29 +114,26 @@
       "folder": "video",
       "database": "data/video.json",
       "status": "data/status.json",
+      "marker": "data/repository.json",
       "idPrefix": "video",
       "repositoryPrefix": "jingyan-video-"
     }
   },
+
   "counters": {
     "image": 0,
     "audio": 3,
     "video": 0
   },
+
   "rename": {
-    "enabled": true,
     "format": "number-name-extension",
     "numberDigits": 3
   },
-  "automation": {
-    "upload": true,
-    "rename": true,
-    "generateID": true,
-    "generateCDN": true,
-    "updateDatabase": true,
-    "updateStatus": true,
-    "autoCreateRepository": true,
-    "autoSwitchRepository": true,
-    "deleteTemporaryFile": true
+
+  "upload": {
+    "deduplicateByHash": true,
+    "deleteTemporaryFile": true,
+    "failOnUnsupported": true
   }
 }
