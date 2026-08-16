@@ -6,21 +6,16 @@
 
   "owner": {
 
-
     "username": "JINGTING0714",
 
     "role": "owner"
 
-
   },
-
 
 
   "users": [
 
-
     {
-
       "id": "001",
 
       "username": "JINGTING0714",
@@ -31,12 +26,10 @@
 
       "status": "active"
 
-
     },
 
 
     {
-
       "id": "002",
 
       "username": "friend01",
@@ -47,12 +40,9 @@
 
       "status": "active"
 
-
     }
 
-
   ],
-
 
 
 
@@ -72,9 +62,7 @@
 
       "users": true,
 
-      "repository": true,
-
-      "github": true
+      "repository": true
 
 
     },
@@ -94,290 +82,26 @@
 
       "users": false,
 
-      "repository": false,
-
-      "github": false
+      "repository": false
 
 
     }
 
 
   },
-
-
-
-
-  "github": {
-
-
-    "username": "JINGTING0714",
-
-
-    "token": "OWNER_TOKEN_PLACEHOLDER",
-
-
-    "permission": {
-
-
-      "createRepository": true,
-
-
-      "updateConfig": true,
-
-
-      "updateAuth": true
-
-
-    }
-
-
-  },
-
-
-
-
-
-
-  "repositories": {
-
-
-    "image": [
-
-      {
-
-        "id": "image-01",
-
-        "repo": "JINGTING0714/jingyan-image-01",
-
-        "branch": "main",
-
-        "folder": "image",
-
-        "database": "data/image.json",
-
-        "maxSizeMB":700
-
-      }
-
-    ],
-
-
-
-
-    "audio": [
-
-      {
-
-        "id": "media-01",
-
-        "repo": "JINGTING0714/jingyan-media-01",
-
-        "branch": "main",
-
-        "folder": "music",
-
-        "database": "data/music.json",
-
-        "maxSizeMB":700
-
-      }
-
-    ],
-
-
-
-
-    "video": [
-
-      {
-
-        "id": "video-01",
-
-        "repo": "JINGTING0714/jingyan-video-01",
-
-        "branch": "main",
-
-        "folder": "video",
-
-        "database": "data/video.json",
-
-        "maxSizeMB":700
-
-      }
-
-    ]
-
-
-  },
-
-
-
-
-
-  "repositoryTemplate": {
-
-
-    "image": {
-
-
-      "prefix": "jingyan-image-",
-
-
-      "startNumber":1
-
-
-    },
-
-
-    "audio": {
-
-
-      "prefix":"jingyan-media-",
-
-
-      "startNumber":1
-
-
-    },
-
-
-    "video": {
-
-
-      "prefix":"jingyan-video-",
-
-
-      "startNumber":1
-
-
-    }
-
-
-  },
-
-
-
-
-
-
-  "upload": {
-
-
-    "autoDetect": true,
-
-
-    "allowed": [
-
-
-      "jpg",
-
-      "jpeg",
-
-      "png",
-
-      "webp",
-
-      "gif",
-
-      "mp3",
-
-      "wav",
-
-      "flac",
-
-      "aac",
-
-      "mp4",
-
-      "webm"
-
-
-    ],
-
-
-
-    "limits": {
-
-
-      "image": {
-
-
-        "maxSizeMB":15
-
-
-      },
-
-
-      "audio": {
-
-
-        "maxSizeMB":30
-
-
-      },
-
-
-      "video": {
-
-
-        "maxSizeMB":30
-
-
-      }
-
-
-    }
-
-
-  },
-
-
 
 
 
   "security": {
 
 
-    "requireToken":true,
+    "requireToken": true,
 
+    "allowPublicUpload": false,
 
-    "allowPublicUpload":false,
-
-
-    "maxUsers":20
-
-
-  },
-
-
-
-
-
-  "automation": {
-
-
-    "rename":true,
-
-
-    "generateID":true,
-
-
-    "autoCreateRepository":true,
-
-
-    "autoSwitchRepository":true,
-
-
-    "updateDatabase":true,
-
-
-    "generateCDN":true,
-
-
-    "refreshCache":true
+    "maxUsers": 20
 
 
   }
-
 
 }
