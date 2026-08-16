@@ -4,7 +4,6 @@ const fs=require("fs");
 
 
 
-
 function githubRequest(
 
     method,
@@ -31,9 +30,7 @@ function githubRequest(
                 "api.github.com",
 
 
-
                 path,
-
 
 
                 method,
@@ -74,9 +71,8 @@ function githubRequest(
 
 
 
-            const req=
 
-            https.request(
+            const req=https.request(
 
                 options,
 
@@ -88,29 +84,40 @@ function githubRequest(
 
 
                     res.on(
+
                         "data",
+
                         chunk=>{
+
                             body+=chunk;
+
                         }
+
                     );
 
 
 
+
                     res.on(
+
                         "end",
+
                         ()=>{
 
 
                             let result;
 
 
-
                             try{
 
+
                                 result=
+
                                 JSON.parse(body);
 
+
                             }catch{
+
 
                                 result=body;
 
@@ -118,19 +125,28 @@ function githubRequest(
 
 
 
-                            if(
-                                res.statusCode>=400
-                            ){
+
+
+                            if(res.statusCode>=400){
+
 
                                 reject(
+
                                     new Error(
+
                                         JSON.stringify(result)
+
                                     )
+
                                 );
+
 
                                 return;
 
+
                             }
+
+
 
 
 
@@ -152,25 +168,37 @@ function githubRequest(
 
 
 
+
             req.on(
+
                 "error",
+
                 reject
+
             );
+
 
 
 
 
             if(data){
 
+
                 req.write(
+
                     JSON.stringify(data)
+
                 );
+
 
             }
 
 
 
+
+
             req.end();
+
 
 
         }
@@ -178,7 +206,9 @@ function githubRequest(
     );
 
 
+
 }
+
 
 
 
@@ -191,15 +221,20 @@ function getToken(){
 
 
     const token=
+
     process.env.GH_TOKEN;
 
 
 
     if(!token){
 
+
         throw new Error(
+
             "GH_TOKEN missing"
+
         );
+
 
     }
 
@@ -220,7 +255,9 @@ function getToken(){
 
 async function createRepository({
 
+
     name,
+
 
     description=""
 
@@ -228,7 +265,10 @@ async function createRepository({
 
 
     const token=
+
     getToken();
+
+
 
 
 
@@ -263,18 +303,23 @@ async function createRepository({
 
 
 
+
+
     return {
 
 
         repo:
+
         result.full_name,
 
 
         url:
+
         result.html_url
 
 
     };
+
 
 
 }
@@ -298,19 +343,27 @@ async function uploadFile(
 ){
 
 
+
     const token=
+
     getToken();
+
 
 
 
     const content=
 
     fs.readFileSync(
+
         filePath
+
     )
-    .toString(
-        "base64"
-    );
+
+    .toString("base64");
+
+
+
+
 
 
 
@@ -342,6 +395,8 @@ async function uploadFile(
 
 
 
+
+
     return {
 
 
@@ -358,7 +413,10 @@ async function uploadFile(
     };
 
 
+
 }
+
+
 
 
 
