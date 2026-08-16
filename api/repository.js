@@ -1,52 +1,61 @@
 const fs=require("fs");
 
 const {
- createRepository,
- generateRepositoryName
-}
-=require("./github");
-
-
+    createRepository
+}=require("./github");
 
 
 
 function loadConfig(){
 
 
- return JSON.parse(
+    return JSON.parse(
 
- fs.readFileSync(
- "config.json",
- "utf8"
- )
+        fs.readFileSync(
+            "config.json",
+            "utf8"
+        )
 
- );
-
+    );
 
 }
-
-
 
 
 
 function saveConfig(data){
 
 
- fs.writeFileSync(
+    fs.writeFileSync(
 
- "config.json",
+        "config.json",
 
- JSON.stringify(
+        JSON.stringify(
+            data,
+            null,
+            2
+        )
 
- data,
+    );
 
- null,
 
- 2
+}
 
- )
 
- );
+
+
+
+function getRepositories(
+
+    type
+
+){
+
+
+    const config=
+    loadConfig();
+
+
+    return config.storage.repositories[type];
 
 
 }
@@ -58,99 +67,201 @@ function saveConfig(data){
 
 
 
-async function selectRepository(type){
+async function createNewRepository(
+
+    type,
+
+    config
+
+){
+
+
+    const list=
+    config.storage.repositories[type];
 
 
 
- const config=
- loadConfig();
+    const index=
+    list.length + 1;
+
+
+
+    const template=
+    config.repositoryTemplate[type];
+
+
+
+    const name=
+
+    template.prefix
+    +
+    String(index)
+    .padStart(
+        2,
+        "0"
+    );
 
 
 
 
- const list=
- config.storage.repositories[type];
+
+    const result=
+
+    await createRepository({
+
+        name
+
+    });
 
 
 
 
- if(!list){
 
-  throw new Error(
-   "Invalid media type"
-  );
-
- }
+    const repo={
 
 
+        id:
+
+        `${type}-${index}`,
 
 
- for(
-  const repo of list
- ){
 
-  if(
-   repo.sizeMB <
-   config.storage.maxRepositorySizeMB
-  ){
+        repo:
+
+        result.repo,
+
+
+
+        branch:
+
+        "main",
+
+
+
+        folder:
+
+        config.sources[type].folder,
+
+
+
+        database:
+
+        config.database[type],
+
+
+
+        sizeMB:
+
+        0
+
+
+    };
+
+
+
+
+
+    list.push(repo);
+
+
+
+    saveConfig(config);
+
+
 
     return repo;
 
-  }
 
- }
-
+}
 
 
 
 
 
 
- const index=
- list.length+1;
+
+
+
+async function selectRepository(
+
+    type
+
+){
+
+
+    const config=
+    loadConfig();
+
+
+
+    const list=
+    getRepositories(type);
+
+
+
+
+    for(
+        const repo of list
+    ){
+
+
+        if(
+
+            repo.sizeMB
+
+            <
+
+            config.storage.maxRepositorySizeMB
+
+        ){
+
+
+            return repo;
+
+
+        }
+
+
+    }
 
 
 
 
 
- const name=
- generateRepositoryName(
-
- type,
-
- index
-
- );
 
 
+    if(
+
+        config.storage.autoSwitchRepository
+
+    ){
+
+
+        return await createNewRepository(
+
+            type,
+
+            config
+
+        );
+
+
+    }
 
 
 
 
- const token=
- process.env.GH_TOKEN;
 
 
-
- if(!token){
 
     throw new Error(
-      "GH_TOKEN missing"
+
+        "No available repository"
+
     );
 
- }
 
-
-
-
- const result=
- await createRepository({
-
-    token,
-
-    name
-
- });
+}
 
 
 
@@ -158,63 +269,51 @@ async function selectRepository(type){
 
 
 
- const newRepo={
+
+function updateRepositorySize(
+
+    type,
+
+    repoId,
+
+    size
+
+){
 
 
- id:
- `${type}-${index}`,
-
-
- repo:
- result.repo,
-
-
- branch:
- "main",
-
-
-
- folder:
- type==="audio"
- ?
- "music"
- :
- type,
+    const config=
+    loadConfig();
 
 
 
- database:
- `data/${type}.json`,
+    const list=
+    config.storage.repositories[type];
 
 
 
- sizeMB:0
+    const repo=
 
+    list.find(
 
- };
+        r=>
 
+        r.id===repoId
 
-
-
-
- list.push(
- newRepo
- );
+    );
 
 
 
+    if(repo){
 
 
- saveConfig(
- config
- );
+        repo.sizeMB += size;
+
+
+    }
 
 
 
-
-
- return newRepo;
-
+    saveConfig(config);
 
 
 }
@@ -228,6 +327,14 @@ async function selectRepository(type){
 
 module.exports={
 
- selectRepository
+
+    selectRepository,
+
+
+    updateRepositorySize,
+
+
+    getRepositories
+
 
 };
