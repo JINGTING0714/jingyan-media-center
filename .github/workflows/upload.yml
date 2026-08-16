@@ -1,66 +1,203 @@
-name: Media Upload
+name: Media Upload Automation
+
 
 on:
+
   push:
+
     paths:
+
       - "upload/**"
+
+      - "api/**"
+
+      - "config.json"
+
+      - "auth.template.json"
+
+
 
 jobs:
 
+
   upload:
+
 
     runs-on: ubuntu-latest
 
+
     permissions:
+
       contents: write
+
 
 
     steps:
 
-      - name: Checkout
+
+
+      - name: Checkout Repository
+
         uses: actions/checkout@v4
 
 
-      - name: Setup Node
+
+
+
+      - name: Setup Node.js
+
         uses: actions/setup-node@v4
+
         with:
+
           node-version: 20
 
 
-      - name: Check media files
-        id: check
+
+
+
+      - name: Check Environment
+
+
         run: |
 
-          echo "Checking upload folder..."
 
-          files=$(find upload -type f ! -name ".gitkeep" | wc -l)
+          echo "Node Version:"
 
-          echo "files=$files"
+          node -v
 
 
-          if [ "$files" -eq 0 ]; then
+          echo "Starting Jingyan Media Center"
 
-            echo "No media files found"
 
-            echo "skip=true" >> $GITHUB_OUTPUT
 
-          else
 
-            echo "Media files detected"
 
-            echo "skip=false" >> $GITHUB_OUTPUT
+      - name: Install Dependencies
+
+
+        run: |
+
+
+          if [ -f package.json ];
+
+          then
+
+            npm install
 
           fi
 
 
 
-      - name: Run upload system
-        if: steps.check.outputs.skip == 'false'
 
-        env:
 
-          GH_TOKEN: ${{ secrets.MEDIA_TOKEN }}
+      - name: Scan Upload Folder
+
+
+        id: scan
+
 
         run: |
 
+
+          COUNT=$(find upload -type f ! -name ".gitkeep" | wc -l)
+
+
+          echo "Detected files: $COUNT"
+
+
+
+          if [ "$COUNT" -eq 0 ];
+
+          then
+
+
+            echo "skip=true" >> $GITHUB_OUTPUT
+
+
+          else
+
+
+            echo "skip=false" >> $GITHUB_OUTPUT
+
+
+          fi
+
+
+
+
+
+
+
+      - name: Execute Media Pipeline
+
+
+        if:
+
+          steps.scan.outputs.skip == 'false'
+
+
+        env:
+
+
+          GH_TOKEN:
+
+            ${{ secrets.MEDIA_TOKEN }}
+
+
+        run:
+
+
           node api/upload.js
+
+
+
+
+
+
+
+      - name: Commit Database Update
+
+
+        if:
+
+          steps.scan.outputs.skip == 'false'
+
+
+        run: |
+
+
+          git config user.name "github-actions"
+
+          git config user.email "github-actions@github.com"
+
+
+
+          git add .
+
+
+
+          git commit -m "Auto update media database" || echo "Nothing to commit"
+
+
+
+          git push
+
+
+
+
+
+
+
+      - name: Cleanup Upload Folder
+
+
+        if:
+
+          steps.scan.outputs.skip == 'false'
+
+
+        run: |
+
+
+          find upload -type f ! -name ".gitkeep" -delete
