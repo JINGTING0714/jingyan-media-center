@@ -1,34 +1,30 @@
-const fs = require("fs");
-const path = require("path");
+const fs=require("fs");
+const path=require("path");
 
 
 const {
-  verifyToken
-}=require("./auth");
-
-
-const {
-  renameFile
+    renameFile
 }=require("./rename");
 
 
 const {
-  selectRepository
+    selectRepository,
+    updateRepositorySize
 }=require("./repository");
 
 
 const {
-  uploadFile
+    uploadFile
 }=require("./github");
 
 
 const {
-  generateRepositoryCDN
+    generateCDN
 }=require("./cdn");
 
 
 const {
-  addRecord
+    addRecord
 }=require("./database");
 
 
@@ -37,16 +33,21 @@ const {
 
 function loadConfig(){
 
-  return JSON.parse(
+    return JSON.parse(
 
-    fs.readFileSync(
-      "config.json",
-      "utf8"
-    )
+        fs.readFileSync(
 
-  );
+            "config.json",
+
+            "utf8"
+
+        )
+
+    );
 
 }
+
+
 
 
 
@@ -55,216 +56,318 @@ function loadConfig(){
 function detectType(file){
 
 
-  const ext =
-  path.extname(file)
-  .replace(".","")
-  .toLowerCase();
+    const ext=
 
+    path.extname(file)
 
+    .replace(".","")
 
-  const images=[
-    "jpg",
-    "jpeg",
-    "png",
-    "webp",
-    "gif"
-  ];
+    .toLowerCase();
 
 
-  const audio=[
-    "mp3",
-    "wav",
-    "flac",
-    "aac"
-  ];
 
+    const map={
 
-  const video=[
-    "mp4",
-    "webm"
-  ];
 
+        image:[
 
+            "jpg",
 
-  if(images.includes(ext))
-    return "image";
+            "jpeg",
 
+            "png",
 
-  if(audio.includes(ext))
-    return "audio";
+            "webp",
 
+            "gif"
 
-  if(video.includes(ext))
-    return "video";
+        ],
 
 
 
-  return null;
+        audio:[
 
-}
+            "mp3",
 
+            "wav",
 
+            "flac",
 
+            "aac"
 
+        ],
 
 
 
-async function processUpload(file){
+        video:[
 
+            "mp4",
 
-  const config=
-  loadConfig();
+            "webm"
 
+        ]
 
 
-  const type=
-  detectType(file);
+    };
 
 
 
-  if(!type){
 
-    console.log(
-      "Unsupported:",
-      file
-    );
+    for(
 
-    return;
+        const type in map
 
-  }
+    ){
 
 
+        if(
 
+            map[type]
 
-  const newName=
-  renameFile(
-    path.basename(file)
-  );
+            .includes(ext)
 
+        ){
 
+            return type;
 
-
-
-  const repository=
-  selectRepository(
-    type,
-    config
-  );
-
-
-
-
-
-  if(!repository){
-
-    throw new Error(
-      "No repository available for "+type
-    );
-
-  }
-
-
-
-
-
-  const targetPath=
-  `${repository.folder}/${newName}`;
-
-
-
-
-
-
-  console.log(
-    "Uploading:",
-    targetPath
-  );
-
-
-
-
-
-
-
-  await uploadFile(
-
-    repository.repo,
-
-    file,
-
-    targetPath
-
-  );
-
-
-
-
-
-
-
-  const cdn=
-  generateRepositoryCDN(
-
-    repository.repo,
-
-    targetPath
-
-  );
-
-
-
-
-
-
-
-  const record=
-  addRecord(
-
-    type,
-
-    {
-
-      name:newName,
-
-
-      repository:
-      repository.repo,
-
-
-      path:
-      targetPath,
-
-
-      cdn
+        }
 
 
     }
 
-  );
 
 
 
-
-
-
-  console.log(
-    "Database saved:",
-    record.id
-  );
-
-
-
-
-
-
-  console.log(
-    "Completed:",
-    newName
-  );
+    return null;
 
 
 }
 
+
+
+
+
+
+
+function getSizeMB(file){
+
+
+    const size=
+
+    fs.statSync(file)
+
+    .size;
+
+
+
+    return size /
+
+    1024 /
+
+    1024;
+
+
+}
+
+
+
+
+
+
+
+
+
+async function processUpload(
+
+    file,
+
+    index
+
+){
+
+
+    const config=
+
+    loadConfig();
+
+
+
+
+    const type=
+
+    detectType(file);
+
+
+
+    if(!type){
+
+        return;
+
+    }
+
+
+
+
+
+    const sizeMB=
+
+    getSizeMB(file);
+
+
+
+
+    if(
+
+        sizeMB
+
+        >
+
+        config.limits[type].maxSizeMB
+
+    ){
+
+        throw new Error(
+
+            "File too large"
+
+        );
+
+    }
+
+
+
+
+
+    const repository=
+
+    await selectRepository(
+
+        type
+
+    );
+
+
+
+
+
+    const newName=
+
+    renameFile(
+
+        path.basename(file),
+
+        index
+
+    );
+
+
+
+
+
+    const target=
+
+    repository.folder
+
+    +
+
+    "/"
+
+    +
+
+    newName;
+
+
+
+
+
+
+
+    await uploadFile(
+
+        repository.repo,
+
+        file,
+
+        target
+
+    );
+
+
+
+
+
+
+
+    const cdn=
+
+    generateCDN(
+
+        repository.repo,
+
+        repository.branch,
+
+        target
+
+    );
+
+
+
+
+
+
+
+
+    addRecord(
+
+        repository,
+
+        {
+
+            type,
+
+            name:newName,
+
+            path:target,
+
+            cdn,
+
+            sizeMB
+
+        }
+
+    );
+
+
+
+
+
+
+
+    updateRepositorySize(
+
+        type,
+
+        repository.id,
+
+        sizeMB
+
+    );
+
+
+
+
+
+    console.log(
+
+        "Uploaded:",
+
+        cdn
+
+    );
+
+
+
+}
 
 
 
@@ -277,85 +380,87 @@ async function processUpload(file){
 async function run(){
 
 
-
-  console.log(
-    "Jingyan Media Upload Start"
-  );
-
-
-
-
-  const uploadDir=
-  "upload";
-
-
-
-
-  if(!fs.existsSync(uploadDir)){
-
-
-    console.log(
-      "upload folder missing"
-    );
-
-
-    return;
-
-
-  }
-
-
-
-
-
-
-  const files=
-  fs.readdirSync(uploadDir);
-
-
-
-
-
-  for(const file of files){
-
-
-
-    const fullPath=
-    path.join(
-      uploadDir,
-      file
-    );
-
+    const dir="upload";
 
 
 
     if(
 
-      fs.statSync(fullPath)
-      .isFile()
+        !fs.existsSync(dir)
+
+    ){
+
+        return;
+
+    }
+
+
+
+
+
+
+    const files=
+
+    fs.readdirSync(dir);
+
+
+
+
+    let index=1;
+
+
+
+    for(
+
+        const file of files
 
     ){
 
 
-      await processUpload(
-        fullPath
-      );
+        const full=
+
+        path.join(
+
+            dir,
+
+            file
+
+        );
+
+
+
+        if(
+
+            fs.statSync(full)
+
+            .isFile()
+
+        ){
+
+
+            await processUpload(
+
+                full,
+
+                index
+
+            );
+
+
+
+            index++;
+
+
+        }
 
 
     }
 
 
-  }
-
-
-
-
-
-  console.log(
-    "All upload finished"
-  );
 
 }
+
+
 
 
 
@@ -363,36 +468,38 @@ async function run(){
 if(require.main===module){
 
 
-  run()
+    run()
 
-  .catch(err=>{
+    .catch(
 
-
-    console.error(err);
-
-
-    process.exit(1);
+        err=>{
 
 
-  });
+            console.error(err);
+
+
+            process.exit(1);
+
+
+        }
+
+    );
 
 
 }
 
 
 
-
-
 module.exports={
 
 
- detectType,
+    run,
 
 
- processUpload,
+    processUpload,
 
 
- run
+    detectType
 
 
 };
