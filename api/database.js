@@ -3,24 +3,16 @@ const path=require("path");
 
 
 
-
-
-
 function loadConfig(){
-
 
     return JSON.parse(
 
         fs.readFileSync(
-
             "config.json",
-
             "utf8"
-
         )
 
     );
-
 
 }
 
@@ -29,10 +21,7 @@ function loadConfig(){
 
 
 
-
-
-
-function ensureDatabase(file){
+function ensureFile(file){
 
 
     const dir=
@@ -40,20 +29,14 @@ function ensureDatabase(file){
 
 
 
-
-    if(
-        !fs.existsSync(dir)
-    ){
+    if(!fs.existsSync(dir)){
 
 
         fs.mkdirSync(
-
             dir,
-
             {
                 recursive:true
             }
-
         );
 
 
@@ -61,12 +44,7 @@ function ensureDatabase(file){
 
 
 
-
-
-
-    if(
-        !fs.existsSync(file)
-    ){
+    if(!fs.existsSync(file)){
 
 
         fs.writeFileSync(
@@ -94,48 +72,24 @@ function ensureDatabase(file){
 
 
 
-
 function readDatabase(file){
 
 
-    ensureDatabase(file);
+    ensureFile(file);
 
 
 
-
-    const data=
-
-    JSON.parse(
+    return JSON.parse(
 
         fs.readFileSync(
-
             file,
-
             "utf8"
-
         )
 
     );
 
 
-
-
-    if(
-        !Array.isArray(data)
-    ){
-
-        return [];
-
-    }
-
-
-
-    return data;
-
-
-
 }
-
 
 
 
@@ -153,9 +107,7 @@ function writeDatabase(
 ){
 
 
-
-    ensureDatabase(file);
-
+    ensureFile(file);
 
 
 
@@ -164,21 +116,15 @@ function writeDatabase(
         file,
 
         JSON.stringify(
-
             data,
-
             null,
-
             2
-
         )
 
     );
 
 
-
 }
-
 
 
 
@@ -190,32 +136,43 @@ function writeDatabase(
 function getDatabase(type){
 
 
-
     const config=
     loadConfig();
 
 
 
-
-    if(
-        !config.sources[type]
-    ){
-
-        throw new Error(
-            "Unknown media type: "+type
-        );
-
-    }
-
-
-
-
-    return config.sources[type].json;
-
+    return config.database[type];
 
 
 }
 
+
+
+
+
+
+
+
+function getNextID(type){
+
+
+    const list=
+    getMedia(type);
+
+
+
+    return String(
+
+        list.length + 1
+
+    )
+    .padStart(
+        6,
+        "0"
+    );
+
+
+}
 
 
 
@@ -233,18 +190,13 @@ function addRecord(
 ){
 
 
-
-    const database=
+    const file=
     getDatabase(type);
 
 
 
-
     const list=
-    readDatabase(database);
-
-
-
+    readDatabase(file);
 
 
 
@@ -253,8 +205,7 @@ function addRecord(
 
         id:
 
-        Date.now()
-        .toString(),
+        `${type}-${getNextID(type)}`,
 
 
 
@@ -292,18 +243,13 @@ function addRecord(
 
 
 
-
-
-
     list.push(record);
-
-
 
 
 
     writeDatabase(
 
-        database,
+        file,
 
         list
 
@@ -311,10 +257,7 @@ function addRecord(
 
 
 
-
-
     return record;
-
 
 
 }
@@ -336,17 +279,13 @@ function removeMedia(
 ){
 
 
-
-    const database=
+    const file=
     getDatabase(type);
 
 
 
-
     let list=
-    readDatabase(database);
-
-
+    readDatabase(file);
 
 
 
@@ -354,18 +293,16 @@ function removeMedia(
     list.filter(
 
         item=>
+
         item.id!==id
 
     );
 
 
 
-
-
-
     writeDatabase(
 
-        database,
+        file,
 
         list
 
@@ -373,9 +310,7 @@ function removeMedia(
 
 
 
-
     return true;
-
 
 
 }
@@ -391,20 +326,15 @@ function removeMedia(
 function getMedia(type){
 
 
-
-    const database=
+    const file=
     getDatabase(type);
 
 
 
-
-    return readDatabase(database);
-
+    return readDatabase(file);
 
 
 }
-
-
 
 
 
@@ -422,6 +352,9 @@ module.exports={
 
 
     getMedia,
+
+
+    getNextID,
 
 
     readDatabase,
