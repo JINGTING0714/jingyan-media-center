@@ -31,7 +31,9 @@ jobs:
 
     permissions:
 
+
       contents: write
+
 
 
 
@@ -40,9 +42,11 @@ jobs:
     steps:
 
 
+
       - name: Checkout
 
         uses: actions/checkout@v4
+
 
 
 
@@ -60,7 +64,8 @@ jobs:
 
 
 
-      - name: Check upload files
+
+      - name: Check Upload Files
 
 
         id: check
@@ -69,11 +74,11 @@ jobs:
         run: |
 
 
-          echo "Checking upload folder"
+          echo "Checking upload folder..."
 
 
 
-          if [ ! -d "upload" ]; then
+          if [ ! -d upload ]; then
 
             echo "skip=true" >> $GITHUB_OUTPUT
 
@@ -83,21 +88,31 @@ jobs:
 
 
 
-          files=$(find upload -type f | wc -l)
+
+
+          count=$(find upload -type f ! -name ".gitkeep" | wc -l)
 
 
 
-          echo "files=$files"
+          echo "files=$count"
 
 
 
-          if [ "$files" -eq 0 ]; then
+          if [ "$count" -eq 0 ]; then
+
+
+            echo "No files"
+
 
 
             echo "skip=true" >> $GITHUB_OUTPUT
 
 
           else
+
+
+            echo "Files detected"
+
 
 
             echo "skip=false" >> $GITHUB_OUTPUT
@@ -111,7 +126,7 @@ jobs:
 
 
 
-      - name: Run media automation
+      - name: Run Media Upload
 
 
         if: steps.check.outputs.skip == 'false'
@@ -120,13 +135,11 @@ jobs:
         env:
 
 
-          GH_TOKEN:
-
-            ${{ secrets.MEDIA_TOKEN }}
+          GH_TOKEN: ${{ secrets.MEDIA_TOKEN }}
 
 
 
-        run:
+        run: |
 
 
           node api/upload.js
@@ -137,46 +150,28 @@ jobs:
 
 
 
-      - name: Commit database update
+      - name: Commit Database Update
+
 
 
         if: steps.check.outputs.skip == 'false'
+
 
 
         run: |
 
 
-
           git config user.name "github-actions"
 
 
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.email "github-actions@github.com"
 
 
 
-          git add data/
+          git add .
 
 
-
-          git add upload/
-
-
-
-          git diff --cached --quiet || git commit -m "Auto update media database"
-
-
-
-
-
-
-
-      - name: Push changes
-
-
-        if: steps.check.outputs.skip == 'false'
-
-
-        run:
+          git commit -m "Update media database" || echo "No changes"
 
 
 
