@@ -12,6 +12,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+
   upload:
 
     runs-on: ubuntu-latest
@@ -26,53 +27,123 @@ jobs:
         with:
           fetch-depth: 0
 
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
+
       - name: Check Upload Files
         id: check
         shell: bash
         run: |
+
           echo "Checking upload folder..."
 
           if [ ! -d "upload" ]; then
+
             echo "skip=true" >> "$GITHUB_OUTPUT"
+
             echo "Upload folder does not exist."
+
             exit 0
+
           fi
+
 
           count=$(find upload -maxdepth 1 -type f ! -name ".gitkeep" | wc -l)
 
+
           echo "Detected files: $count"
 
+
           if [ "$count" -eq 0 ]; then
+
             echo "skip=true" >> "$GITHUB_OUTPUT"
+
           else
+
             echo "skip=false" >> "$GITHUB_OUTPUT"
+
           fi
 
+
       - name: Run Media Upload
+        id: media_upload
         if: steps.check.outputs.skip == 'false'
+
         env:
           GH_TOKEN: ${{ secrets.MEDIA_TOKEN }}
+
         run: |
+
           node api/upload.js
 
+
       - name: Save Automation State
-        if: steps.check.outputs.skip == 'false'
+        if: always() && steps.check.outputs.skip == 'false'
+
         shell: bash
+
         run: |
+
+          set -e
+
+
           git config user.name "github-actions[bot]"
+
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
 
           git add config.json upload/
 
+
           if git diff --cached --quiet; then
+
             echo "No local state changes."
+
             exit 0
+
           fi
 
+
           git commit -m "chore: update media upload state"
-          git push
+
+
+          for attempt in 1 2 3; do
+
+            echo "Push attempt: $attempt"
+
+
+            git fetch origin main
+
+
+            if ! git rebase origin/main; then
+
+              echo "Rebase conflict. Aborting state push safely."
+
+              git rebase --abort || true
+
+              exit 1
+
+            fi
+
+
+            if git push origin HEAD:main; then
+
+              echo "Automation state pushed."
+
+              exit 0
+
+            fi
+
+
+            sleep $((attempt * 2))
+
+          done
+
+
+          echo "Failed to push automation state after 3 attempts."
+
+          exit 1
