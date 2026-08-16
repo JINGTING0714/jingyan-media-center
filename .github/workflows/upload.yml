@@ -17,6 +17,8 @@ on:
 
 
 
+
+
 jobs:
 
 
@@ -26,17 +28,19 @@ jobs:
     runs-on: ubuntu-latest
 
 
+
     permissions:
 
       contents: write
 
 
 
+
+
     steps:
 
 
-
-      - name: Checkout Repository
+      - name: Checkout
 
         uses: actions/checkout@v4
 
@@ -44,7 +48,7 @@ jobs:
 
 
 
-      - name: Setup Node.js
+      - name: Setup Node
 
         uses: actions/setup-node@v4
 
@@ -56,60 +60,38 @@ jobs:
 
 
 
-      - name: Check Environment
+      - name: Check upload files
+
+
+        id: check
 
 
         run: |
 
 
-          echo "Node Version:"
-
-          node -v
-
-
-          echo "Starting Jingyan Media Center"
+          echo "Checking upload folder"
 
 
 
+          if [ ! -d "upload" ]; then
 
+            echo "skip=true" >> $GITHUB_OUTPUT
 
-      - name: Install Dependencies
-
-
-        run: |
-
-
-          if [ -f package.json ];
-
-          then
-
-            npm install
+            exit 0
 
           fi
 
 
 
-
-
-      - name: Scan Upload Folder
-
-
-        id: scan
-
-
-        run: |
-
-
-          COUNT=$(find upload -type f ! -name ".gitkeep" | wc -l)
-
-
-          echo "Detected files: $COUNT"
+          files=$(find upload -type f | wc -l)
 
 
 
-          if [ "$COUNT" -eq 0 ];
+          echo "files=$files"
 
-          then
+
+
+          if [ "$files" -eq 0 ]; then
 
 
             echo "skip=true" >> $GITHUB_OUTPUT
@@ -129,12 +111,10 @@ jobs:
 
 
 
-      - name: Execute Media Pipeline
+      - name: Run media automation
 
 
-        if:
-
-          steps.scan.outputs.skip == 'false'
+        if: steps.check.outputs.skip == 'false'
 
 
         env:
@@ -143,6 +123,7 @@ jobs:
           GH_TOKEN:
 
             ${{ secrets.MEDIA_TOKEN }}
+
 
 
         run:
@@ -156,48 +137,47 @@ jobs:
 
 
 
-      - name: Commit Database Update
+      - name: Commit database update
 
 
-        if:
-
-          steps.scan.outputs.skip == 'false'
+        if: steps.check.outputs.skip == 'false'
 
 
         run: |
+
 
 
           git config user.name "github-actions"
 
-          git config user.email "github-actions@github.com"
+
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
 
 
-          git add .
+          git add data/
 
 
 
-          git commit -m "Auto update media database" || echo "Nothing to commit"
+          git add upload/
+
+
+
+          git diff --cached --quiet || git commit -m "Auto update media database"
+
+
+
+
+
+
+
+      - name: Push changes
+
+
+        if: steps.check.outputs.skip == 'false'
+
+
+        run:
 
 
 
           git push
-
-
-
-
-
-
-
-      - name: Cleanup Upload Folder
-
-
-        if:
-
-          steps.scan.outputs.skip == 'false'
-
-
-        run: |
-
-
-          find upload -type f ! -name ".gitkeep" -delete
