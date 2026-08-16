@@ -1,226 +1,204 @@
-const path = require("path");
+const fs=require("fs");
 
 
-// ===============================
-// 清理特殊字符
-// ===============================
 
-function cleanText(text){
+function loadConfig(){
+
+    return JSON.parse(
+
+        fs.readFileSync(
+
+            "config.json",
+
+            "utf8"
+
+        )
+
+    );
+
+}
 
 
-    return text
 
-        // 去除扩展名
-        .replace(/\.[^/.]+$/, "")
 
-        // 删除特殊符号
-        .replace(/[()[\]{}&@#!?,.'""]/g,"")
 
-        // 空格转 -
-        .replace(/\s+/g,"-")
 
-        // 多个 - 合并
-        .replace(/-+/g,"-")
+function normalizeName(name){
 
-        // 去除首尾 -
-        .replace(/^-|-$/g,"");
+
+    return name
+
+    .toLowerCase()
+
+    .replace(
+
+        /[^\w\s-]/g,
+
+        ""
+
+    )
+
+    .replace(
+
+        /\s+/g,
+
+        "-"
+
+    )
+
+    .replace(
+
+        /-+/g,
+
+        "-"
+
+    )
+
+    .replace(
+
+        /^-|-$/g,
+
+        ""
+
+    );
 
 
 }
 
 
 
-// ===============================
-// Unicode 拉丁化
-// 处理欧洲语言
-// ===============================
-
-function normalizeLatin(text){
-
-
-    return text
-
-        .normalize("NFD")
-
-        .replace(/[\u0300-\u036f]/g,"");
-
-
-}
 
 
 
-// ===============================
-// 简易中文拼音转换
-// ===============================
-
-function chineseToPinyin(text){
 
 
-    const map={
+function renameFile(
 
-        "晴":"qing",
+    filename,
 
-        "天":"tian",
+    index
 
-        "圣":"sheng",
-
-        "诞":"dan",
-
-        "快":"kuai",
-
-        "乐":"le"
-
-    };
+){
 
 
-    let result="";
+    const config=
+
+    loadConfig();
 
 
-    for(
-        let char of text
+
+    if(
+
+        !config.rename.enabled
+
     ){
 
-
-        if(map[char]){
-
-            result += "-" + map[char];
-
-        }
-
-        else{
-
-            result += char;
-
-        }
-
+        return filename;
 
     }
 
 
-    return result;
 
 
 
-}
+    const ext=
+
+    filename
+
+    .split(".")
+
+    .pop()
+
+    .toLowerCase();
 
 
 
-// ===============================
-// 日文/韩文基础处理
-// 后续可接API增强
-// ===============================
-
-function otherLanguage(text){
 
 
-    return text
+    const original=
 
-        .replace(/[^\x00-\x7F]/g,"");
+    filename
 
+    .replace(
 
+        /\.[^/.]+$/,
 
-}
+        ""
+
+    );
 
 
 
-// ===============================
-// 文件编号
-// ===============================
-
-function generateID(number){
 
 
-    return String(number)
+    const name=
 
-        .padStart(3,"0");
+    normalizeName(
 
+        original
 
-}
+    );
 
 
 
-// ===============================
-// 主函数
-// ===============================
 
 
-function renameFile(
-    filename,
-    id
-){
+    const number=
 
+    String(index)
 
-    let name =
-        path.basename(filename);
+    .padStart(
 
+        3,
 
+        "0"
 
-    let extension =
-        path.extname(name)
-        .toLowerCase();
+    );
 
 
 
-    let base =
-        cleanText(name);
 
 
+    return (
 
-    // 中文处理
+        number
 
-    base =
-        chineseToPinyin(base);
-
-
-
-    // 去重音
-
-    base =
-        normalizeLatin(base);
-
-
-
-    // 其他字符处理
-
-    base =
-        otherLanguage(base);
-
-
-
-    // 小写
-
-    base =
-        base.toLowerCase();
-
-
-
-    // 最终清理
-
-    base =
-        cleanText(base);
-
-
-
-    const finalName =
-        generateID(id)
         +
+
         "-"
+
         +
-        base
+
+        name
+
         +
-        extension;
 
+        "."
 
+        +
 
-    return finalName;
+        ext
+
+    );
+
 
 
 }
+
+
+
+
+
 
 
 
 module.exports={
 
-    renameFile
+
+    renameFile,
+
+
+    normalizeName
+
 
 };
