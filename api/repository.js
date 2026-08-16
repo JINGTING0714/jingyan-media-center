@@ -1,89 +1,28 @@
-const fs = require("fs");
-const path = require("path");
+const fs=require("fs");
+
+const path=require("path");
+
+const {
+ createRepository,
+ generateRepositoryName
+}
+=require("./github");
 
 
-const configPath =
-    path.join(
-        __dirname,
-        "../config.json"
-    );
+
 
 
 function loadConfig(){
 
-    const data =
-        fs.readFileSync(
-            configPath,
-            "utf-8"
-        );
 
-    return JSON.parse(data);
+ return JSON.parse(
 
-}
+ fs.readFileSync(
+ "config.json",
+ "utf8"
+ )
 
-
-
-// 获取仓库列表
-
-function getRepositories(type){
-
-
-    const config =
-        loadConfig();
-
-
-    const list =
-        config.storage.repositories[type];
-
-
-    if(!list){
-
-        throw new Error(
-            "Unknown media type"
-        );
-
-    }
-
-
-    return list;
-
-
-}
-
-
-
-// 模拟获取仓库大小
-// 后续连接GitHub API
-
-function getRepositorySize(repo){
-
-
-    const statusPath =
-        path.join(
-            __dirname,
-            "../storage-status.json"
-        );
-
-
-    if(
-        fs.existsSync(statusPath)
-    ){
-
-        const status =
-            JSON.parse(
-                fs.readFileSync(
-                    statusPath,
-                    "utf-8"
-                )
-            );
-
-
-        return status[repo] || 0;
-
-    }
-
-
-    return 0;
+ );
 
 
 }
@@ -91,159 +30,180 @@ function getRepositorySize(repo){
 
 
 
-// 保存仓库状态
-
-function saveRepositorySize(
-    repo,
-    size
-){
-
-
-    const statusPath =
-        path.join(
-            __dirname,
-            "../storage-status.json"
-        );
-
-
-    let status={};
 
 
 
-    if(
-        fs.existsSync(statusPath)
-    ){
-
-        status =
-            JSON.parse(
-                fs.readFileSync(
-                    statusPath,
-                    "utf-8"
-                )
-            );
-
-    }
+function saveConfig(data){
 
 
+ fs.writeFileSync(
 
-    status[repo]=size;
+ "config.json",
 
+ JSON.stringify(
+ data,
+ null,
+ 2
+ )
 
-
-    fs.writeFileSync(
-        statusPath,
-        JSON.stringify(
-            status,
-            null,
-            2
-        )
-    );
+ );
 
 
 }
 
 
 
-// 选择仓库
-
-function selectRepository(
-    type,
-    fileSizeMB
-){
-
-
-    const config =
-        loadConfig();
 
 
 
-    const max =
-        config.storage
-        .maxRepositorySizeMB;
+
+
+async function selectRepository(type){
+
+
+ const config=
+ loadConfig();
 
 
 
-    const repositories =
-        getRepositories(type);
+ const list=
+ config.storage
+ .repositories[type];
 
 
 
-    for(
-        let repo of repositories
-    ){
+ if(!list){
 
+  throw new Error(
+   "Invalid media type"
+  );
 
-        const used =
-            getRepositorySize(
-                repo
-            );
-
-
-
-        if(
-            used + fileSizeMB
-            <= max
-        ){
-
-            return {
-
-                repo,
-
-                used,
-
-                remain:
-                    max-used-fileSizeMB
-
-            };
-
-        }
-
-
-    }
+ }
 
 
 
-    // 如果全部满
+ for(
+  const repo of list
+ ){
 
-    if(
-        config.storage.autoSwitchRepository
-    ){
+  if(
+   repo.sizeMB <
+   config.storage.maxRepositorySizeMB
+  ){
 
+    return repo;
 
-        return {
+  }
 
-            needCreate:true,
-
-
-            message:
-            "Create next repository"
-
-        };
-
-
-    }
+ }
 
 
 
-    throw new Error(
-        "No available repository"
-    );
+
+
+ // 已满，自动创建
+
+
+ const index=
+ list.length+1;
+
+
+
+ const name=
+ generateRepositoryName(
+ type,
+ index
+ );
+
+
+
+
+ const auth=
+ require("../auth.json");
+
+
+
+ const result=
+ await createRepository({
+
+ username:
+ auth.owner.username,
+
+
+ token:
+ auth.users[0].token,
+
+
+ name
+
+ });
+
+
+
+
+
+ const newRepo={
+
+
+ id:
+ `${type}-${index}`,
+
+ repo:
+ result.repo,
+
+
+ branch:
+ "main",
+
+
+ folder:
+ type==="audio"
+ ?
+ "music"
+ :
+ type,
+
+
+ database:
+ `data/${type}.json`,
+
+
+ sizeMB:0
+
+
+ };
+
+
+
+
+
+ list.push(
+ newRepo
+ );
+
+
+
+
+ saveConfig(
+ config
+ );
+
+
+
+
+
+ return newRepo;
+
+
 
 }
+
 
 
 
 
 module.exports={
 
-
-    getRepositories,
-
-
-    selectRepository,
-
-
-    saveRepositorySize
-
+ selectRepository
 
 };
