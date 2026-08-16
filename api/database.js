@@ -1,363 +1,283 @@
-const fs = require("fs");
 const path = require("path");
+const fs = require("fs");
 
 
+const {
+    getFile,
+    upsertTextFile
+} = require("./github");
 
 
-
-function loadConfig(){
-
+function loadConfig() {
 
     return JSON.parse(
-
         fs.readFileSync(
             "config.json",
             "utf8"
         )
-
     );
 
 }
 
 
+async function readRepositoryDatabase(
+    repository
+) {
+
+    const result =
+        await getFile(
+
+            repository.repo,
+
+            repository.database,
+
+            repository.branch
+
+        );
 
 
+    if (!result) {
 
-function ensureFile(file){
+        return [];
 
-
-    const dir =
-    path.dirname(file);
-
+    }
 
 
-    if(
-        !fs.existsSync(dir)
-    ){
+    const data =
+        JSON.parse(
+            result.content || "[]"
+        );
 
-        fs.mkdirSync(
-            dir,
-            {
-                recursive:true
-            }
+
+    if (!Array.isArray(data)) {
+
+        throw new Error(
+            `Database must be an array: ${repository.repo}/${repository.database}`
         );
 
     }
 
 
-
-    if(
-        !fs.existsSync(file)
-    ){
-
-        fs.writeFileSync(
-
-            file,
-
-            JSON.stringify(
-                [],
-                null,
-                2
-            )
-
-        );
-
-    }
-
+    return data;
 
 }
 
 
-
-
-
-
-
-function readDatabase(file){
-
-
-    ensureFile(file);
-
-
-
-    return JSON.parse(
-
-        fs.readFileSync(
-            file,
-            "utf8"
-        )
-
-    );
-
-
-}
-
-
-
-
-
-
-function writeDatabase(
-    file,
-    data
-){
-
-
-    ensureFile(file);
-
-
-
-    fs.writeFileSync(
-
-        file,
-
-        JSON.stringify(
-            data,
-            null,
-            2
-        )
-
-    );
-
-
-}
-
-
-
-
-
-
-
-function getDatabase(type){
-
+function generateMediaID(
+    type,
+    sequence
+) {
 
     const config =
-    loadConfig();
+        loadConfig();
 
 
-
-    return config.database[type];
-
-
-}
-
-
-
-
-
-
-
-function generateID(type,list){
+    const settings =
+        config.mediaTypes[type];
 
 
     const prefix =
-    type
-    +
-    "-";
-
-
-
-    const number =
-    String(
-        list.length+1
-    )
-    .padStart(
-        6,
-        "0"
-    );
-
+        settings.idPrefix;
 
 
     return (
-        prefix
-        +
-        number
+        prefix +
+        "-" +
+        String(sequence)
+            .padStart(
+                6,
+                "0"
+            )
     );
-
 
 }
 
 
-
-
-
-
-
-
-function addRecord(
-
+function buildRecord(
+    repository,
     type,
-
+    sequence,
     item
+) {
 
-){
-
-
-    const database =
-    getDatabase(type);
-
-
-
-    const list =
-    readDatabase(database);
+    const extension =
+        path.extname(
+            item.filename
+        )
+        .replace(".", "")
+        .toLowerCase();
 
 
+    const originalTitle =
+        path.basename(
+            item.originalName,
+            path.extname(
+                item.originalName
+            )
+        );
 
-    const record={
 
+    return {
 
         id:
-        generateID(
-            type,
-            list
-        ),
+            generateMediaID(
+                type,
+                sequence
+            ),
 
+        sequence,
 
+        title:
+            originalTitle,
+
+        originalName:
+            item.originalName,
+
+        filename:
+            item.filename,
 
         type,
 
+        format:
+            extension,
 
+        sizeMB:
+            Number(
+                item.sizeMB
+                    .toFixed(3)
+            ),
 
-        name:
-        item.name,
+        repository: {
 
+            id:
+                repository.id,
 
+            name:
+                repository.repo
+                    .split("/")[1],
 
-        repository:
-        item.repository,
+            fullName:
+                repository.repo
 
-
+        },
 
         path:
-        item.path,
+            item.path,
 
-
-
-        cdn:
-        item.cdn,
-
-
+        url:
+            item.cdn,
 
         createdAt:
-        new Date()
-        .toISOString()
+            new Date()
+                .toISOString(),
 
+        source:
+            "upload"
 
     };
 
+}
+
+
+async function addRecord(
+    repository,
+    type,
+    sequence,
+    item
+) {
+
+    const list =
+        await readRepositoryDatabase(
+            repository
+        );
+
+
+    const record =
+        buildRecord(
+            repository,
+            type,
+            sequence,
+            item
+        );
 
 
     list.push(record);
 
 
+    await upsertTextFile(
 
-    writeDatabase(
+        repository.repo,
 
-        database,
+        repository.database,
 
-        list
+        JSON.stringify(
+            list,
+            null,
+            2
+        ) + "\n",
+
+        repository.branch,
+
+        `Update ${type} database`
 
     );
-
 
 
     return record;
 
-
 }
 
 
-
-
-
-
-
-
-function removeMedia(
-
-    type,
-
+async function removeMedia(
+    repository,
     id
+) {
 
-){
-
-
-    const database =
-    getDatabase(type);
-
-
-
-    let list =
-    readDatabase(database);
+    const list =
+        await readRepositoryDatabase(
+            repository
+        );
 
 
+    const newList =
+        list.filter(
+            item =>
+                item.id !== id
+        );
 
-    list =
-    list.filter(
 
-        item =>
-        item.id !== id
+    await upsertTextFile(
+
+        repository.repo,
+
+        repository.database,
+
+        JSON.stringify(
+            newList,
+            null,
+            2
+        ) + "\n",
+
+        repository.branch,
+
+        `Remove media ${id}`
 
     );
-
-
-
-    writeDatabase(
-
-        database,
-
-        list
-
-    );
-
 
 
     return true;
 
-
 }
 
 
+module.exports = {
 
-
-
-
-
-function getMedia(type){
-
-
-    const database =
-    getDatabase(type);
-
-
-
-    return readDatabase(database);
-
-
-}
-
-
-
-
-
-
-
-module.exports={
-
+    readRepositoryDatabase,
 
     addRecord,
 
-
     removeMedia,
 
-
-    getMedia,
-
-
-    readDatabase,
-
-
-    writeDatabase
-
+    generateMediaID
 
 };
