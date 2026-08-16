@@ -16,6 +16,24 @@
   },
 
 
+  "database": {
+
+
+    "image":
+    "data/image.json",
+
+
+    "audio":
+    "data/music.json",
+
+
+    "video":
+    "data/video.json"
+
+
+  },
+
+
   "limits": {
 
     "image": {
