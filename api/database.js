@@ -20,7 +20,6 @@ function loadConfig(){
 
 
 
-
 function ensureFile(file){
 
 
@@ -33,14 +32,17 @@ function ensureFile(file){
 
 
         fs.mkdirSync(
+
             dir,
+
             {
                 recursive:true
             }
+
         );
 
-
     }
+
 
 
 
@@ -51,20 +53,14 @@ function ensureFile(file){
 
             file,
 
-            JSON.stringify(
-                [],
-                null,
-                2
-            )
+            "[]"
 
         );
-
 
     }
 
 
 }
-
 
 
 
@@ -78,19 +74,20 @@ function readDatabase(file){
     ensureFile(file);
 
 
-
     return JSON.parse(
 
         fs.readFileSync(
+
             file,
+
             "utf8"
+
         )
 
     );
 
 
 }
-
 
 
 
@@ -116,9 +113,13 @@ function writeDatabase(
         file,
 
         JSON.stringify(
+
             data,
+
             null,
+
             2
+
         )
 
     );
@@ -133,70 +134,23 @@ function writeDatabase(
 
 
 
-function getDatabase(type){
-
-
-    const config=
-    loadConfig();
-
-
-
-    return config.database[type];
-
-
-}
-
-
-
-
-
-
-
-
-function getNextID(type){
-
-
-    const list=
-    getMedia(type);
-
-
-
-    return String(
-
-        list.length + 1
-
-    )
-    .padStart(
-        6,
-        "0"
-    );
-
-
-}
-
-
-
-
-
-
-
-
 function addRecord(
 
-    type,
+    repository,
 
     item
 
 ){
 
 
-    const file=
-    getDatabase(type);
+    const database =
+    repository.database;
 
 
 
-    const list=
-    readDatabase(file);
+    const list =
+    readDatabase(database);
+
 
 
 
@@ -205,41 +159,39 @@ function addRecord(
 
         id:
 
-        `${type}-${getNextID(type)}`,
+        Date.now()
+        .toString(),
 
 
-
-        type,
-
+        type:item.type,
 
 
-        name:
-        item.name,
-
+        name:item.name,
 
 
         repository:
-        item.repository,
-
+        repository.repo,
 
 
         path:
         item.path,
 
 
-
         cdn:
         item.cdn,
 
 
+        sizeMB:
+        item.sizeMB,
+
 
         createdAt:
-
         new Date()
         .toISOString()
 
 
     };
+
 
 
 
@@ -249,7 +201,7 @@ function addRecord(
 
     writeDatabase(
 
-        file,
+        database,
 
         list
 
@@ -267,75 +219,17 @@ function addRecord(
 
 
 
+function getMedia(repository){
 
 
+    return readDatabase(
 
-function removeMedia(
-
-    type,
-
-    id
-
-){
-
-
-    const file=
-    getDatabase(type);
-
-
-
-    let list=
-    readDatabase(file);
-
-
-
-    list=
-    list.filter(
-
-        item=>
-
-        item.id!==id
+        repository.database
 
     );
 
 
-
-    writeDatabase(
-
-        file,
-
-        list
-
-    );
-
-
-
-    return true;
-
-
 }
-
-
-
-
-
-
-
-
-
-function getMedia(type){
-
-
-    const file=
-    getDatabase(type);
-
-
-
-    return readDatabase(file);
-
-
-}
-
 
 
 
@@ -348,13 +242,7 @@ module.exports={
     addRecord,
 
 
-    removeMedia,
-
-
     getMedia,
-
-
-    getNextID,
 
 
     readDatabase,
