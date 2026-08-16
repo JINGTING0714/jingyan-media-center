@@ -1,122 +1,98 @@
-const fs=require("fs");
+const fs = require("fs");
 
 
-
-
-function loadConfig(){
+function loadConfig() {
 
     return JSON.parse(
-
         fs.readFileSync(
-
             "config.json",
-
             "utf8"
-
         )
-
     );
 
 }
 
 
-
-
-
-
 function generateCDN(
-
     repo,
-
     branch,
+    filePath
+) {
 
-    file
-
-){
-
-
-    const config=
-
-    loadConfig();
+    const config =
+        loadConfig();
 
 
-
-
-
-    if(
-
+    if (
+        !config.cdn ||
         !config.cdn.enabled
-
-    ){
+    ) {
 
         return null;
 
     }
 
 
-
-
-
-
-    if(
-
+    if (
         config.cdn.provider
+        !== "jsdelivr"
+    ) {
 
-        ===
-
-        "jsdelivr"
-
-    ){
-
-
-        return (
-
-            "https://cdn.jsdelivr.net/gh/"
-
-            +
-
-            repo
-
-            +
-
-            "@"
-
-            +
-
-            branch
-
-            +
-
-            "/"
-
-            +
-
-            file
-
+        throw new Error(
+            `Unsupported CDN provider: ${config.cdn.provider}`
         );
-
 
     }
 
 
+    if (
+        config.cdn.includeBranch
+    ) {
+
+        return (
+            "https://cdn.jsdelivr.net/gh/" +
+            repo +
+            "@" +
+            branch +
+            "/" +
+            filePath
+        );
+
+    }
 
 
-
-    return null;
-
-
+    return (
+        "https://cdn.jsdelivr.net/gh/" +
+        repo +
+        "/" +
+        filePath
+    );
 
 }
 
 
+function generateRepositoryCDN(
+    repository,
+    filePath
+) {
+
+    return generateCDN(
+
+        repository.repo,
+
+        repository.branch || "main",
+
+        filePath
+
+    );
+
+}
 
 
+module.exports = {
 
+    generateCDN,
 
-module.exports={
-
-
-    generateCDN
-
+    generateRepositoryCDN
 
 };
