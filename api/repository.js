@@ -1,7 +1,5 @@
 const fs=require("fs");
 
-const path=require("path");
-
 const {
  createRepository,
  generateRepositoryName
@@ -31,8 +29,6 @@ function loadConfig(){
 
 
 
-
-
 function saveConfig(data){
 
 
@@ -41,9 +37,13 @@ function saveConfig(data){
  "config.json",
 
  JSON.stringify(
+
  data,
+
  null,
+
  2
+
  )
 
  );
@@ -61,14 +61,16 @@ function saveConfig(data){
 async function selectRepository(type){
 
 
+
  const config=
  loadConfig();
 
 
 
+
  const list=
- config.storage
- .repositories[type];
+ config.storage.repositories[type];
+
 
 
 
@@ -79,6 +81,7 @@ async function selectRepository(type){
   );
 
  }
+
 
 
 
@@ -101,7 +104,6 @@ async function selectRepository(type){
 
 
 
- // 已满，自动创建
 
 
  const index=
@@ -109,34 +111,48 @@ async function selectRepository(type){
 
 
 
+
+
  const name=
  generateRepositoryName(
+
  type,
+
  index
+
  );
 
 
 
 
- const auth=
- require("../auth.json");
+
+
+ const token=
+ process.env.GH_TOKEN;
+
+
+
+ if(!token){
+
+    throw new Error(
+      "GH_TOKEN missing"
+    );
+
+ }
+
 
 
 
  const result=
  await createRepository({
 
- username:
- auth.owner.username,
+    token,
 
-
- token:
- auth.users[0].token,
-
-
- name
+    name
 
  });
+
+
 
 
 
@@ -148,12 +164,14 @@ async function selectRepository(type){
  id:
  `${type}-${index}`,
 
+
  repo:
  result.repo,
 
 
  branch:
  "main",
+
 
 
  folder:
@@ -164,8 +182,10 @@ async function selectRepository(type){
  type,
 
 
+
  database:
  `data/${type}.json`,
+
 
 
  sizeMB:0
@@ -184,6 +204,7 @@ async function selectRepository(type){
 
 
 
+
  saveConfig(
  config
  );
@@ -197,6 +218,9 @@ async function selectRepository(type){
 
 
 }
+
+
+
 
 
 
