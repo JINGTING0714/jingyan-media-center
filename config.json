@@ -1,64 +1,41 @@
 {
   "system": "jingyan-media-center",
-
-  "version": "5.0",
-
+  "version": "6.0",
   "mode": "automatic",
 
-
   "github": {
-
     "api": "https://api.github.com",
-
     "autoCreateRepository": true,
-
     "private": false
-
   },
 
 
   "cdn": {
-
     "provider": "jsdelivr",
-
     "enabled": true
-
   },
 
 
   "limits": {
 
-
     "image": {
-
       "maxSizeMB": 15
-
     },
-
 
     "audio": {
-
       "maxSizeMB": 30
-
     },
 
-
     "video": {
-
       "maxSizeMB": 30
-
     }
-
 
   },
 
 
-
   "storage": {
 
-
     "maxRepositorySizeMB": 700,
-
 
     "autoSwitchRepository": true,
 
@@ -69,19 +46,12 @@
       "image": [
 
         {
-
           "id": "image-01",
-
           "repo": "JINGTING0714/jingyan-image-01",
-
           "branch": "main",
-
           "folder": "image",
-
           "database": "data/image.json",
-
           "sizeMB": 0
-
         }
 
       ],
@@ -91,19 +61,12 @@
       "audio": [
 
         {
-
           "id": "media-01",
-
           "repo": "JINGTING0714/jingyan-media-01",
-
           "branch": "main",
-
           "folder": "music",
-
           "database": "data/music.json",
-
           "sizeMB": 0
-
         }
 
       ],
@@ -113,25 +76,17 @@
       "video": [
 
         {
-
           "id": "video-01",
-
           "repo": "JINGTING0714/jingyan-video-01",
-
           "branch": "main",
-
           "folder": "video",
-
           "database": "data/video.json",
-
           "sizeMB": 0
-
         }
 
       ]
 
     }
-
 
   },
 
@@ -171,34 +126,14 @@
 
 
 
-  "sources": {
+  "database": {
 
 
-    "image": {
+    "image": "data/image.json",
 
-      "folder": "image",
+    "audio": "data/music.json",
 
-      "json": "data/image.json"
-
-    },
-
-
-    "audio": {
-
-      "folder": "music",
-
-      "json": "data/music.json"
-
-    },
-
-
-    "video": {
-
-      "folder": "video",
-
-      "json": "data/video.json"
-
-    }
+    "video": "data/video.json"
 
 
   },
@@ -210,29 +145,21 @@
 
     "upload": true,
 
-
     "rename": true,
-
 
     "generateID": true,
 
-
     "autoCreateRepository": true,
-
 
     "autoSwitchRepository": true,
 
-
     "updateDatabase": true,
 
-
     "generateCDN": true,
-
 
     "refreshCache": true
 
 
   }
-
 
 }
