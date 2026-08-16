@@ -1,20 +1,55 @@
-const path = require("path");
 const fs = require("fs");
+const path = require("path");
 
 
 const {
+
     getFile,
+
     upsertTextFile
+
 } = require("./github");
+
+
+const CONFIG_FILE =
+    "config.json";
 
 
 function loadConfig() {
 
     return JSON.parse(
+
         fs.readFileSync(
-            "config.json",
+
+            CONFIG_FILE,
+
             "utf8"
+
         )
+
+    );
+
+}
+
+
+function saveConfig(
+    config
+) {
+
+    fs.writeFileSync(
+
+        CONFIG_FILE,
+
+        JSON.stringify(
+
+            config,
+
+            null,
+
+            2
+
+        ) + "\n"
+
     );
 
 }
@@ -45,14 +80,23 @@ async function readRepositoryDatabase(
 
     const data =
         JSON.parse(
-            result.content || "[]"
+
+            result.content ||
+            "[]"
+
         );
 
 
-    if (!Array.isArray(data)) {
+    if (
+        !Array.isArray(
+            data
+        )
+    ) {
 
         throw new Error(
+
             `Database must be an array: ${repository.repo}/${repository.database}`
+
         );
 
     }
@@ -63,9 +107,88 @@ async function readRepositoryDatabase(
 }
 
 
+function getRecordSequence(
+    record
+) {
+
+    if (
+
+        Number.isInteger(
+            Number(
+                record.sequence
+            )
+        ) &&
+
+        Number(
+            record.sequence
+        ) > 0
+
+    ) {
+
+        return Number(
+            record.sequence
+        );
+
+    }
+
+
+    if (
+        record.filename
+    ) {
+
+        const match =
+            String(
+                record.filename
+            ).match(
+                /^(\d+)-/
+            );
+
+
+        if (match) {
+
+            return Number(
+                match[1]
+            );
+
+        }
+
+    }
+
+
+    if (
+        record.id
+    ) {
+
+        const match =
+            String(
+                record.id
+            ).match(
+                /-(\d+)$/
+            );
+
+
+        if (match) {
+
+            return Number(
+                match[1]
+            );
+
+        }
+
+    }
+
+
+    return 0;
+
+}
+
+
 function generateMediaID(
+
     type,
+
     sequence
+
 ) {
 
     const config =
@@ -76,44 +199,249 @@ function generateMediaID(
         config.mediaTypes[type];
 
 
-    const prefix =
-        settings.idPrefix;
+    if (!settings) {
+
+        throw new Error(
+            `Invalid media type: ${type}`
+        );
+
+    }
 
 
     return (
-        prefix +
+
+        settings.idPrefix +
+
         "-" +
-        String(sequence)
-            .padStart(
-                6,
-                "0"
-            )
+
+        String(
+            sequence
+        ).padStart(
+            6,
+            "0"
+        )
+
     );
 
 }
 
 
-function buildRecord(
-    repository,
+async function findRecordByHash(
+
     type,
+
+    sha256
+
+) {
+
+    const config =
+        loadConfig();
+
+
+    const repositories =
+
+        config.storage
+            .repositories[type] ||
+
+        [];
+
+
+    let pending =
+        null;
+
+
+    for (
+        const repository
+        of repositories
+    ) {
+
+        const list =
+            await readRepositoryDatabase(
+                repository
+            );
+
+
+        for (
+            const record
+            of list
+        ) {
+
+            if (
+
+                record.sha256 !==
+                sha256
+
+            ) {
+
+                continue;
+
+            }
+
+
+            const result = {
+
+                repository,
+
+                record
+
+            };
+
+
+            if (
+
+                record.status ===
+                "complete"
+
+            ) {
+
+                return result;
+
+            }
+
+
+            if (!pending) {
+
+                pending =
+                    result;
+
+            }
+
+        }
+
+    }
+
+
+    return pending;
+
+}
+
+
+async function getRemoteMaxSequence(
+    type
+) {
+
+    const config =
+        loadConfig();
+
+
+    const repositories =
+
+        config.storage
+            .repositories[type] ||
+
+        [];
+
+
+    let maxSequence =
+        Number(
+
+            config.counters[type] ||
+            0
+
+        );
+
+
+    for (
+        const repository
+        of repositories
+    ) {
+
+        const list =
+            await readRepositoryDatabase(
+                repository
+            );
+
+
+        for (
+            const record
+            of list
+        ) {
+
+            maxSequence =
+                Math.max(
+
+                    maxSequence,
+
+                    getRecordSequence(
+                        record
+                    )
+
+                );
+
+        }
+
+    }
+
+
+    return maxSequence;
+
+}
+
+
+async function reserveSequence(
+    type
+) {
+
+    const maxSequence =
+        await getRemoteMaxSequence(
+            type
+        );
+
+
+    const next =
+        maxSequence + 1;
+
+
+    const config =
+        loadConfig();
+
+
+    config.counters[type] =
+        next;
+
+
+    saveConfig(
+        config
+    );
+
+
+    return next;
+
+}
+
+
+function buildPendingRecord(
+
+    repository,
+
+    type,
+
     sequence,
+
     item
+
 ) {
 
     const extension =
         path.extname(
             item.filename
         )
-        .replace(".", "")
+        .replace(
+            ".",
+            ""
+        )
         .toLowerCase();
 
 
     const originalTitle =
         path.basename(
+
             item.originalName,
+
             path.extname(
                 item.originalName
             )
+
         );
 
 
@@ -121,11 +449,23 @@ function buildRecord(
 
         id:
             generateMediaID(
+
                 type,
+
                 sequence
+
             ),
 
+        operationId:
+            `${type}:${item.sha256}`,
+
+        sha256:
+            item.sha256,
+
         sequence,
+
+        status:
+            "pending",
 
         title:
             originalTitle,
@@ -143,8 +483,13 @@ function buildRecord(
 
         sizeMB:
             Number(
-                item.sizeMB
-                    .toFixed(3)
+
+                Number(
+                    item.sizeMB
+                ).toFixed(
+                    3
+                )
+
             ),
 
         repository: {
@@ -167,23 +512,31 @@ function buildRecord(
         url:
             item.cdn,
 
+        source:
+            "upload",
+
         createdAt:
             new Date()
                 .toISOString(),
 
-        source:
-            "upload"
+        uploadedAt:
+            null
 
     };
 
 }
 
 
-async function addRecord(
+async function upsertPendingRecord(
+
     repository,
+
     type,
+
     sequence,
+
     item
+
 ) {
 
     const list =
@@ -192,16 +545,78 @@ async function addRecord(
         );
 
 
-    const record =
-        buildRecord(
-            repository,
-            type,
-            sequence,
-            item
+    const operationId =
+        `${type}:${item.sha256}`;
+
+
+    const existing =
+        list.find(
+
+            record =>
+
+                record.operationId ===
+                operationId ||
+
+                record.sha256 ===
+                item.sha256
+
         );
 
 
-    list.push(record);
+    if (existing) {
+
+        return existing;
+
+    }
+
+
+    const id =
+        generateMediaID(
+
+            type,
+
+            sequence
+
+        );
+
+
+    const conflictingId =
+        list.find(
+
+            record =>
+                record.id === id
+
+        );
+
+
+    if (conflictingId) {
+
+        throw new Error(
+
+            `Database ID already exists: ${id}`
+
+        );
+
+    }
+
+
+    const record =
+        buildPendingRecord(
+
+            repository,
+
+            type,
+
+            sequence,
+
+            item
+
+        );
+
+
+    list.push(
+        record
+    );
 
 
     await upsertTextFile(
@@ -211,14 +626,18 @@ async function addRecord(
         repository.database,
 
         JSON.stringify(
+
             list,
+
             null,
+
             2
+
         ) + "\n",
 
         repository.branch,
 
-        `Update ${type} database`
+        `Create pending ${type} record ${record.id}`
 
     );
 
@@ -228,9 +647,107 @@ async function addRecord(
 }
 
 
-async function removeMedia(
+async function markRecordComplete(
+
     repository,
+
+    operationId,
+
+    patch = {}
+
+) {
+
+    const list =
+        await readRepositoryDatabase(
+            repository
+        );
+
+
+    const index =
+        list.findIndex(
+
+            record =>
+
+                record.operationId ===
+                operationId
+
+        );
+
+
+    if (
+        index === -1
+    ) {
+
+        throw new Error(
+
+            `Pending database record not found: ${operationId}`
+
+        );
+
+    }
+
+
+    const current =
+        list[index];
+
+
+    const completed = {
+
+        ...current,
+
+        ...patch,
+
+        status:
+            "complete",
+
+        uploadedAt:
+
+            current.uploadedAt ||
+
+            new Date()
+                .toISOString()
+
+    };
+
+
+    list[index] =
+        completed;
+
+
+    await upsertTextFile(
+
+        repository.repo,
+
+        repository.database,
+
+        JSON.stringify(
+
+            list,
+
+            null,
+
+            2
+
+        ) + "\n",
+
+        repository.branch,
+
+        `Complete ${completed.id}`
+
+    );
+
+
+    return completed;
+
+}
+
+
+async function removeMedia(
+
+    repository,
+
     id
+
 ) {
 
     const list =
@@ -241,8 +758,10 @@ async function removeMedia(
 
     const newList =
         list.filter(
+
             item =>
                 item.id !== id
+
         );
 
 
@@ -253,9 +772,13 @@ async function removeMedia(
         repository.database,
 
         JSON.stringify(
+
             newList,
+
             null,
+
             2
+
         ) + "\n",
 
         repository.branch,
@@ -274,7 +797,13 @@ module.exports = {
 
     readRepositoryDatabase,
 
-    addRecord,
+    findRecordByHash,
+
+    reserveSequence,
+
+    upsertPendingRecord,
+
+    markRecordComplete,
 
     removeMedia,
 
