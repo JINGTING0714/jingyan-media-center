@@ -1,7 +1,7 @@
 {
   "system": "upload-auth",
 
-  "version": "4.0",
+  "version": "5.0",
 
 
   "owner": {
@@ -20,7 +20,7 @@
 
       "username": "JINGTING0714",
 
-      "token": "OWNER_TOKEN",
+      "token": "OWNER_TOKEN_PLACEHOLDER",
 
       "role": "owner",
 
@@ -34,7 +34,7 @@
 
       "username": "friend01",
 
-      "token": "USER_TOKEN_001",
+      "token": "USER_TOKEN_PLACEHOLDER",
 
       "role": "uploader",
 
@@ -66,7 +66,6 @@
 
 
     "uploader": {
-
 
       "upload": true,
 
@@ -155,6 +154,38 @@
   },
 
 
+  "repositoryTemplate": {
+
+
+    "image": {
+
+      "prefix": "jingyan-image-",
+
+      "startNumber": 1
+
+    },
+
+
+    "audio": {
+
+      "prefix": "jingyan-media-",
+
+      "startNumber": 1
+
+    },
+
+
+    "video": {
+
+      "prefix": "jingyan-video-",
+
+      "startNumber": 1
+
+    }
+
+  },
+
+
 
   "upload": {
 
@@ -189,7 +220,6 @@
     ],
 
 
-
     "limits": {
 
 
@@ -213,7 +243,6 @@
 
       }
 
-
     }
 
   },
@@ -231,8 +260,8 @@
 
     "maxUsers": 20
 
-
   },
+
 
 
   "automation": {
@@ -254,7 +283,6 @@
 
 
     "refreshCache": true
-
 
   }
 
