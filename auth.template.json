@@ -1,21 +1,26 @@
 {
   "system": "upload-auth",
 
-  "version": "5.0",
+  "version": "6.0",
 
 
   "owner": {
+
 
     "username": "JINGTING0714",
 
     "role": "owner"
 
+
   },
+
 
 
   "users": [
 
+
     {
+
       "id": "001",
 
       "username": "JINGTING0714",
@@ -26,10 +31,12 @@
 
       "status": "active"
 
+
     },
 
 
     {
+
       "id": "002",
 
       "username": "friend01",
@@ -40,15 +47,20 @@
 
       "status": "active"
 
+
     }
 
+
   ],
+
+
 
 
   "roles": {
 
 
     "owner": {
+
 
       "upload": true,
 
@@ -60,12 +72,17 @@
 
       "users": true,
 
-      "repository": true
+      "repository": true,
+
+      "github": true
+
 
     },
 
 
+
     "uploader": {
+
 
       "upload": true,
 
@@ -77,11 +94,48 @@
 
       "users": false,
 
-      "repository": false
+      "repository": false,
+
+      "github": false
+
 
     }
 
+
   },
+
+
+
+
+  "github": {
+
+
+    "username": "JINGTING0714",
+
+
+    "token": "OWNER_TOKEN_PLACEHOLDER",
+
+
+    "permission": {
+
+
+      "createRepository": true,
+
+
+      "updateConfig": true,
+
+
+      "updateAuth": true
+
+
+    }
+
+
+  },
+
+
+
+
 
 
   "repositories": {
@@ -101,11 +155,12 @@
 
         "database": "data/image.json",
 
-        "maxSizeMB": 700
+        "maxSizeMB":700
 
       }
 
     ],
+
 
 
 
@@ -123,11 +178,12 @@
 
         "database": "data/music.json",
 
-        "maxSizeMB": 700
+        "maxSizeMB":700
 
       }
 
     ],
+
 
 
 
@@ -145,13 +201,17 @@
 
         "database": "data/video.json",
 
-        "maxSizeMB": 700
+        "maxSizeMB":700
 
       }
 
     ]
 
+
   },
+
+
+
 
 
   "repositoryTemplate": {
@@ -159,31 +219,44 @@
 
     "image": {
 
+
       "prefix": "jingyan-image-",
 
-      "startNumber": 1
+
+      "startNumber":1
+
 
     },
 
 
     "audio": {
 
-      "prefix": "jingyan-media-",
 
-      "startNumber": 1
+      "prefix":"jingyan-media-",
+
+
+      "startNumber":1
+
 
     },
 
 
     "video": {
 
-      "prefix": "jingyan-video-",
 
-      "startNumber": 1
+      "prefix":"jingyan-video-",
+
+
+      "startNumber":1
+
 
     }
 
+
   },
+
+
+
 
 
 
@@ -194,6 +267,7 @@
 
 
     "allowed": [
+
 
       "jpg",
 
@@ -217,7 +291,9 @@
 
       "webm"
 
+
     ],
+
 
 
     "limits": {
@@ -225,65 +301,83 @@
 
       "image": {
 
-        "maxSizeMB": 15
+
+        "maxSizeMB":15
+
 
       },
 
 
       "audio": {
 
-        "maxSizeMB": 30
+
+        "maxSizeMB":30
+
 
       },
 
 
       "video": {
 
-        "maxSizeMB": 30
+
+        "maxSizeMB":30
+
 
       }
 
+
     }
 
+
   },
+
+
 
 
 
   "security": {
 
 
-    "requireToken": true,
+    "requireToken":true,
 
 
-    "allowPublicUpload": false,
+    "allowPublicUpload":false,
 
 
-    "maxUsers": 20
+    "maxUsers":20
+
 
   },
+
+
 
 
 
   "automation": {
 
 
-    "rename": true,
+    "rename":true,
 
 
-    "generateID": true,
+    "generateID":true,
 
 
-    "autoSwitchRepository": true,
+    "autoCreateRepository":true,
 
 
-    "updateDatabase": true,
+    "autoSwitchRepository":true,
 
 
-    "generateCDN": true,
+    "updateDatabase":true,
 
 
-    "refreshCache": true
+    "generateCDN":true,
+
+
+    "refreshCache":true
+
 
   }
+
 
 }
