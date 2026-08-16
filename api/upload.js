@@ -1,5 +1,5 @@
-const fs=require("fs");
-const path=require("path");
+const fs = require("fs");
+const path = require("path");
 
 
 const {
@@ -8,8 +8,7 @@ const {
 
 
 const {
-    selectRepository,
-    updateRepositorySize
+    selectRepository
 }=require("./repository");
 
 
@@ -19,7 +18,7 @@ const {
 
 
 const {
-    generateCDN
+    generateRepositoryCDN
 }=require("./cdn");
 
 
@@ -30,25 +29,16 @@ const {
 
 
 
-
 function loadConfig(){
 
     return JSON.parse(
-
         fs.readFileSync(
-
             "config.json",
-
             "utf8"
-
         )
-
     );
 
 }
-
-
-
 
 
 
@@ -56,150 +46,114 @@ function loadConfig(){
 function detectType(file){
 
 
-    const ext=
-
+    const ext =
     path.extname(file)
-
     .replace(".","")
-
     .toLowerCase();
 
 
 
-    const map={
+    const images=[
+        "jpg",
+        "jpeg",
+        "png",
+        "webp",
+        "gif"
+    ];
 
 
-        image:[
-
-            "jpg",
-
-            "jpeg",
-
-            "png",
-
-            "webp",
-
-            "gif"
-
-        ],
+    const audio=[
+        "mp3",
+        "wav",
+        "flac",
+        "aac"
+    ];
 
 
-
-        audio:[
-
-            "mp3",
-
-            "wav",
-
-            "flac",
-
-            "aac"
-
-        ],
+    const video=[
+        "mp4",
+        "webm"
+    ];
 
 
 
-        video:[
-
-            "mp4",
-
-            "webm"
-
-        ]
+    if(images.includes(ext))
+        return "image";
 
 
-    };
+    if(audio.includes(ext))
+        return "audio";
 
 
-
-
-    for(
-
-        const type in map
-
-    ){
-
-
-        if(
-
-            map[type]
-
-            .includes(ext)
-
-        ){
-
-            return type;
-
-        }
-
-
-    }
-
-
+    if(video.includes(ext))
+        return "video";
 
 
     return null;
 
-
 }
 
 
 
 
 
+function checkSize(file,type){
 
 
-function getSizeMB(file){
+    const config=loadConfig();
 
 
-    const size=
-
-    fs.statSync(file)
-
-    .size;
-
-
-
-    return size /
-
-    1024 /
-
+    const sizeMB =
+    fs.statSync(file).size
+    /
+    1024
+    /
     1024;
 
 
+
+    const limit =
+    config.limits[type]
+    .maxSizeMB;
+
+
+
+    if(sizeMB > limit){
+
+        throw new Error(
+
+            `${type} file too large ${sizeMB.toFixed(2)}MB`
+
+        );
+
+    }
+
+
 }
 
 
 
 
 
-
-
-
-
-async function processUpload(
-
-    file,
-
-    index
-
-){
+async function processUpload(file){
 
 
     const config=
-
     loadConfig();
 
 
 
-
     const type=
-
     detectType(file);
 
 
 
     if(!type){
+
+        console.log(
+            "Unsupported:",
+            file
+        );
 
         return;
 
@@ -207,76 +161,38 @@ async function processUpload(
 
 
 
-
-
-    const sizeMB=
-
-    getSizeMB(file);
-
-
-
-
-    if(
-
-        sizeMB
-
-        >
-
-        config.limits[type].maxSizeMB
-
-    ){
-
-        throw new Error(
-
-            "File too large"
-
-        );
-
-    }
-
-
-
-
-
-    const repository=
-
-    await selectRepository(
-
+    checkSize(
+        file,
         type
-
     );
-
-
 
 
 
     const newName=
-
     renameFile(
-
-        path.basename(file),
-
-        index
-
+        path.basename(file)
     );
 
 
 
+    const repository=
+    await selectRepository(
+        type,
+        config
+    );
 
 
-    const target=
 
-    repository.folder
-
-    +
-
-    "/"
-
-    +
-
-    newName;
+    const targetPath=
+    `${repository.folder}/${newName}`;
 
 
+
+
+    console.log(
+        "Uploading:",
+        targetPath
+    );
 
 
 
@@ -288,30 +204,22 @@ async function processUpload(
 
         file,
 
-        target
+        targetPath
 
     );
-
-
 
 
 
 
 
     const cdn=
+    generateRepositoryCDN(
 
-    generateCDN(
+        repository,
 
-        repository.repo,
-
-        repository.branch,
-
-        target
+        newName
 
     );
-
-
-
 
 
 
@@ -319,19 +227,21 @@ async function processUpload(
 
     addRecord(
 
-        repository,
+        type,
 
         {
 
-            type,
-
             name:newName,
 
-            path:target,
+            repository:
+            repository.repo,
 
-            cdn,
 
-            sizeMB
+            path:
+            targetPath,
+
+
+            cdn
 
         }
 
@@ -342,29 +252,16 @@ async function processUpload(
 
 
 
+    // 删除临时文件
 
-    updateRepositorySize(
-
-        type,
-
-        repository.id,
-
-        sizeMB
-
-    );
-
-
+    fs.unlinkSync(file);
 
 
 
     console.log(
-
-        "Uploaded:",
-
-        cdn
-
+        "Completed:",
+        newName
     );
-
 
 
 }
@@ -373,22 +270,28 @@ async function processUpload(
 
 
 
-
-
-
-
 async function run(){
 
 
-    const dir="upload";
+
+    console.log(
+        "Jingyan Media Upload Start"
+    );
 
 
 
-    if(
+    const uploadDir=
+    "upload";
 
-        !fs.existsSync(dir)
 
-    ){
+
+    if(!fs.existsSync(uploadDir)){
+
+
+        console.log(
+            "upload folder missing"
+        );
+
 
         return;
 
@@ -398,57 +301,32 @@ async function run(){
 
 
 
-
     const files=
-
-    fs.readdirSync(dir);
-
+    fs.readdirSync(uploadDir);
 
 
 
-    let index=1;
+
+    for(const file of files){
 
 
-
-    for(
-
-        const file of files
-
-    ){
-
-
-        const full=
-
+        const fullPath=
         path.join(
-
-            dir,
-
+            uploadDir,
             file
-
         );
 
 
 
         if(
-
-            fs.statSync(full)
-
+            fs.statSync(fullPath)
             .isFile()
-
         ){
 
 
             await processUpload(
-
-                full,
-
-                index
-
+                fullPath
             );
-
-
-
-            index++;
 
 
         }
@@ -458,9 +336,12 @@ async function run(){
 
 
 
+    console.log(
+        "All upload finished"
+    );
+
+
 }
-
-
 
 
 
@@ -469,21 +350,13 @@ if(require.main===module){
 
 
     run()
+    .catch(err=>{
 
-    .catch(
+        console.error(err);
 
-        err=>{
+        process.exit(1);
 
-
-            console.error(err);
-
-
-            process.exit(1);
-
-
-        }
-
-    );
+    });
 
 
 }
@@ -492,14 +365,10 @@ if(require.main===module){
 
 module.exports={
 
-
-    run,
-
+    detectType,
 
     processUpload,
 
-
-    detectType
-
+    run
 
 };
