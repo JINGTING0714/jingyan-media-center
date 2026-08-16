@@ -2,10 +2,19 @@ const fs = require("fs");
 
 
 const {
+
     createRepository,
+
     repositoryExists,
+
+    getRepositoryInfo,
+
     getRepositorySizeMB,
+
+    getFile,
+
     upsertTextFile
+
 } = require("./github");
 
 
@@ -16,25 +25,36 @@ const CONFIG_FILE =
 function loadConfig() {
 
     return JSON.parse(
+
         fs.readFileSync(
+
             CONFIG_FILE,
+
             "utf8"
+
         )
+
     );
 
 }
 
 
-function saveConfig(config) {
+function saveConfig(
+    config
+) {
 
     fs.writeFileSync(
 
         CONFIG_FILE,
 
         JSON.stringify(
+
             config,
+
             null,
+
             2
+
         ) + "\n"
 
     );
@@ -50,6 +70,7 @@ function getMediaSettings(
     const settings =
         config.mediaTypes[type];
 
+
     if (!settings) {
 
         throw new Error(
@@ -58,59 +79,302 @@ function getMediaSettings(
 
     }
 
+
     return settings;
 
 }
 
 
-function getRepositoryStatus(
-    usedMB,
-    targetMB,
-    toleranceMB
+function parseMB(
+    value
 ) {
 
     if (
-        usedMB >
-        targetMB + toleranceMB
+        typeof value ===
+        "number"
     ) {
 
-        return "full";
+        return Number.isFinite(
+            value
+        )
+            ? value
+            : 0;
 
     }
 
 
     if (
-        usedMB >=
-        targetMB
+        typeof value ===
+        "string"
     ) {
 
-        return "near-limit";
+        const parsed =
+            parseFloat(
+
+                value
+                    .replace(
+                        /mb/ig,
+                        ""
+                    )
+                    .trim()
+
+            );
+
+
+        return Number.isFinite(
+            parsed
+        )
+            ? parsed
+            : 0;
 
     }
 
 
-    return "active";
+    return 0;
+
+}
+
+
+function getRepositoryIndex(
+    repository
+) {
+
+    const match =
+        String(
+
+            repository.repo ||
+            ""
+
+        ).match(
+            /-(\d+)$/
+        );
+
+
+    return match
+        ? Number(
+            match[1]
+        )
+        : 0;
+
+}
+
+
+function getHighestRepositoryIndex(
+    list
+) {
+
+    return list.reduce(
+
+        (
+            highest,
+            repository
+        ) =>
+
+            Math.max(
+
+                highest,
+
+                getRepositoryIndex(
+                    repository
+                )
+
+            ),
+
+        0
+
+    );
+
+}
+
+
+function buildRepositoryDescriptor(
+
+    config,
+
+    type,
+
+    index,
+
+    fullName,
+
+    branch = "main"
+
+) {
+
+    const settings =
+        getMediaSettings(
+            config,
+            type
+        );
+
+
+    return {
+
+        id:
+            `${type}-${String(
+                index
+            ).padStart(
+                2,
+                "0"
+            )}`,
+
+        repo:
+            fullName,
+
+        branch,
+
+        folder:
+            settings.folder,
+
+        database:
+            settings.database,
+
+        status:
+            settings.status,
+
+        marker:
+            settings.marker,
+
+        sizeMB:
+            0,
+
+        state:
+            "active"
+
+    };
+
+}
+
+
+async function readJsonFile(
+
+    repo,
+
+    filePath,
+
+    branch = "main"
+
+) {
+
+    const result =
+        await getFile(
+
+            repo,
+
+            filePath,
+
+            branch
+
+        );
+
+
+    if (!result) {
+
+        return null;
+
+    }
+
+
+    if (!result.content) {
+
+        return null;
+
+    }
+
+
+    try {
+
+        return JSON.parse(
+            result.content
+        );
+
+    } catch {
+
+        return null;
+
+    }
+
+}
+
+
+async function readRepositoryStatus(
+    repository
+) {
+
+    return readJsonFile(
+
+        repository.repo,
+
+        repository.status,
+
+        repository.branch
+
+    );
+
+}
+
+
+async function readRepositoryMarker(
+    repository
+) {
+
+    return readJsonFile(
+
+        repository.repo,
+
+        repository.marker,
+
+        repository.branch
+
+    );
+
+}
+
+
+function getStatusState(
+    status
+) {
+
+    if (!status) {
+
+        return "active";
+
+    }
+
+
+    return (
+
+        status.state ||
+
+        status.status ||
+
+        "active"
+
+    );
 
 }
 
 
 async function writeRepositoryStatus(
+
     repository,
+
     type,
+
     usedMB,
-    config
+
+    config,
+
+    state = "active",
+
+    extra = {}
+
 ) {
 
-    const targetMB =
-        config.storage
-            .targetRepositorySizeMB;
-
-    const toleranceMB =
-        config.storage
-            .overflowToleranceMB;
-
-
     const status = {
+
+        system:
+            config.system,
 
         repository:
             repository.repo,
@@ -122,24 +386,33 @@ async function writeRepositoryStatus(
 
         usedMB:
             Number(
-                usedMB.toFixed(2)
+
+                Number(
+                    usedMB || 0
+                ).toFixed(
+                    3
+                )
+
             ),
 
-        targetMB,
+        targetMB:
+            config.storage
+                .targetRepositorySizeMB,
 
         overflowToleranceMB:
-            toleranceMB,
+            config.storage
+                .overflowToleranceMB,
 
         status:
-            getRepositoryStatus(
-                usedMB,
-                targetMB,
-                toleranceMB
-            ),
+            state,
+
+        state,
 
         updatedAt:
             new Date()
-                .toISOString()
+                .toISOString(),
+
+        ...extra
 
     };
 
@@ -162,14 +435,378 @@ async function writeRepositoryStatus(
 
     );
 
+
+    return status;
+
 }
 
 
-function getNextRepositoryIndex(
-    list
+async function ensureRepositoryInitialized(
+
+    repository,
+
+    type,
+
+    config
+
 ) {
 
-    let highest = 0;
+    const marker =
+        await readRepositoryMarker(
+            repository
+        );
+
+
+    if (!marker) {
+
+        await upsertTextFile(
+
+            repository.repo,
+
+            repository.marker,
+
+            JSON.stringify(
+
+                {
+
+                    system:
+                        config.system,
+
+                    type,
+
+                    repositoryId:
+                        repository.id,
+
+                    repository:
+                        repository.repo,
+
+                    createdAt:
+                        new Date()
+                            .toISOString()
+
+                },
+
+                null,
+
+                2
+
+            ) + "\n",
+
+            repository.branch,
+
+            "Initialize repository marker"
+
+        );
+
+    }
+
+
+    const keepPath =
+        `${repository.folder}/.gitkeep`;
+
+
+    if (
+
+        !await getFile(
+
+            repository.repo,
+
+            keepPath,
+
+            repository.branch
+
+        )
+
+    ) {
+
+        await upsertTextFile(
+
+            repository.repo,
+
+            keepPath,
+
+            "\n",
+
+            repository.branch,
+
+            "Initialize media folder"
+
+        );
+
+    }
+
+
+    if (
+
+        !await getFile(
+
+            repository.repo,
+
+            repository.database,
+
+            repository.branch
+
+        )
+
+    ) {
+
+        await upsertTextFile(
+
+            repository.repo,
+
+            repository.database,
+
+            "[]\n",
+
+            repository.branch,
+
+            "Initialize media database"
+
+        );
+
+    }
+
+
+    if (
+
+        !await getFile(
+
+            repository.repo,
+
+            repository.status,
+
+            repository.branch
+
+        )
+
+    ) {
+
+        await writeRepositoryStatus(
+
+            repository,
+
+            type,
+
+            0,
+
+            config,
+
+            "active"
+
+        );
+
+    }
+
+
+    return repository;
+
+}
+
+
+async function canAdoptRepository(
+
+    fullName,
+
+    type,
+
+    config
+
+) {
+
+    if (
+
+        !await repositoryExists(
+            fullName
+        )
+
+    ) {
+
+        return false;
+
+    }
+
+
+    const indexMatch =
+        fullName.match(
+            /-(\d+)$/
+        );
+
+
+    const index =
+        indexMatch
+            ? Number(
+                indexMatch[1]
+            )
+            : 0;
+
+
+    const info =
+        await getRepositoryInfo(
+            fullName
+        );
+
+
+    const repository =
+        buildRepositoryDescriptor(
+
+            config,
+
+            type,
+
+            index,
+
+            fullName,
+
+            info.default_branch ||
+            "main"
+
+        );
+
+
+    const marker =
+        await readRepositoryMarker(
+            repository
+        );
+
+
+    if (
+
+        marker &&
+
+        marker.system ===
+        config.system &&
+
+        marker.type ===
+        type
+
+    ) {
+
+        return true;
+
+    }
+
+
+    const expectedDescription =
+        `Jingyan automatic ${type} storage`;
+
+
+    return Boolean(
+
+        info &&
+
+        info.owner &&
+
+        info.owner.login &&
+
+        info.owner.login
+            .toLowerCase() ===
+
+        String(
+            config.github.owner
+        ).toLowerCase() &&
+
+        info.description ===
+        expectedDescription
+
+    );
+
+}
+
+
+function registerRepository(
+
+    config,
+
+    type,
+
+    repository
+
+) {
+
+    const list =
+        config.storage
+            .repositories[type];
+
+
+    const existing =
+        list.find(
+
+            item =>
+
+                item.repo ===
+                repository.repo ||
+
+                item.id ===
+                repository.id
+
+        );
+
+
+    if (existing) {
+
+        Object.assign(
+
+            existing,
+
+            repository
+
+        );
+
+
+        return existing;
+
+    }
+
+
+    list.push(
+        repository
+    );
+
+
+    list.sort(
+
+        (a, b) =>
+
+            getRepositoryIndex(a) -
+
+            getRepositoryIndex(b)
+
+    );
+
+
+    return repository;
+
+}
+
+
+async function reconcileRepositories(
+    type
+) {
+
+    const config =
+        loadConfig();
+
+
+    const list =
+        config.storage
+            .repositories[type];
+
+
+    if (
+        !Array.isArray(
+            list
+        )
+    ) {
+
+        throw new Error(
+            `Repository list missing: ${type}`
+        );
+
+    }
+
+
+    let changed =
+        false;
 
 
     for (
@@ -177,36 +814,424 @@ function getNextRepositoryIndex(
         of list
     ) {
 
-        const match =
-            String(
-                repository.repo
-            ).match(
-                /-(\d+)$/
+        const settings =
+            getMediaSettings(
+                config,
+                type
             );
 
 
-        if (match) {
+        repository.folder =
+            repository.folder ||
+            settings.folder;
 
-            highest =
-                Math.max(
-                    highest,
-                    Number(match[1])
+
+        repository.database =
+            repository.database ||
+            settings.database;
+
+
+        repository.status =
+            repository.status ||
+            settings.status;
+
+
+        repository.marker =
+            repository.marker ||
+            settings.marker;
+
+
+        repository.branch =
+            repository.branch ||
+            "main";
+
+
+        await ensureRepositoryInitialized(
+
+            repository,
+
+            type,
+
+            config
+
+        );
+
+    }
+
+
+    let index =
+        getHighestRepositoryIndex(
+            list
+        ) + 1;
+
+
+    while (true) {
+
+        const settings =
+            getMediaSettings(
+                config,
+                type
+            );
+
+
+        const name =
+
+            settings.repositoryPrefix +
+
+            String(
+                index
+            ).padStart(
+                2,
+                "0"
+            );
+
+
+        const fullName =
+            `${config.github.owner}/${name}`;
+
+
+        const exists =
+            await repositoryExists(
+                fullName
+            );
+
+
+        if (!exists) {
+
+            break;
+
+        }
+
+
+        if (
+
+            await canAdoptRepository(
+
+                fullName,
+
+                type,
+
+                config
+
+            )
+
+        ) {
+
+            const info =
+                await getRepositoryInfo(
+                    fullName
                 );
+
+
+            const repository =
+                buildRepositoryDescriptor(
+
+                    config,
+
+                    type,
+
+                    index,
+
+                    fullName,
+
+                    info.default_branch ||
+                    "main"
+
+                );
+
+
+            await ensureRepositoryInitialized(
+
+                repository,
+
+                type,
+
+                config
+
+            );
+
+
+            registerRepository(
+
+                config,
+
+                type,
+
+                repository
+
+            );
+
+
+            changed =
+                true;
+
+        }
+
+
+        index++;
+
+    }
+
+
+    const currentList =
+        config.storage
+            .repositories[type];
+
+
+    let activeId =
+        config.storage
+            .activeRepository[type];
+
+
+    let active =
+        currentList.find(
+
+            repository =>
+
+                repository.id ===
+                activeId
+
+        );
+
+
+    if (
+        !active &&
+        currentList.length > 0
+    ) {
+
+        active =
+            currentList[
+                currentList.length - 1
+            ];
+
+
+        config.storage
+            .activeRepository[type] =
+            active.id;
+
+
+        changed =
+            true;
+
+    }
+
+
+    if (active) {
+
+        const activeStatus =
+            await readRepositoryStatus(
+                active
+            );
+
+
+        if (
+
+            getStatusState(
+                activeStatus
+            ) === "sealed"
+
+        ) {
+
+            const last =
+                currentList[
+                    currentList.length - 1
+                ];
+
+
+            if (
+                last &&
+                last.id !==
+                active.id
+            ) {
+
+                const lastStatus =
+                    await readRepositoryStatus(
+                        last
+                    );
+
+
+                if (
+
+                    getStatusState(
+                        lastStatus
+                    ) !==
+                    "sealed"
+
+                ) {
+
+                    config.storage
+                        .activeRepository[type] =
+                        last.id;
+
+
+                    changed =
+                        true;
+
+                }
+
+            }
 
         }
 
     }
 
 
-    return highest + 1;
+    if (changed) {
+
+        saveConfig(
+            config
+        );
+
+    }
+
+
+    return config;
 
 }
 
 
-async function findAvailableRepositoryName(
-    type,
-    config
+async function refreshRepositorySize(
+    repository
 ) {
+
+    let apiSize =
+        0;
+
+
+    try {
+
+        apiSize =
+            await getRepositorySizeMB(
+                repository.repo
+            );
+
+    } catch (error) {
+
+        console.warn(
+
+            `Repository size API warning for ${repository.repo}: ${error.message}`
+
+        );
+
+    }
+
+
+    const status =
+        await readRepositoryStatus(
+            repository
+        );
+
+
+    const statusSize =
+        status
+
+            ? Math.max(
+
+                parseMB(
+                    status.usedMB
+                ),
+
+                parseMB(
+                    status.used
+                )
+
+            )
+
+            : 0;
+
+
+    const savedSize =
+        parseMB(
+            repository.sizeMB
+        );
+
+
+    return Math.max(
+
+        apiSize,
+
+        statusSize,
+
+        savedSize
+
+    );
+
+}
+
+
+async function sealRepository(
+
+    repository,
+
+    type,
+
+    config,
+
+    usedMB,
+
+    reason =
+        "capacity"
+
+) {
+
+    await writeRepositoryStatus(
+
+        repository,
+
+        type,
+
+        usedMB,
+
+        config,
+
+        "sealed",
+
+        {
+
+            sealedAt:
+                new Date()
+                    .toISOString(),
+
+            reason
+
+        }
+
+    );
+
+
+    repository.state =
+        "sealed";
+
+
+    repository.sizeMB =
+        Number(
+
+            usedMB.toFixed(
+                3
+            )
+
+        );
+
+
+    saveConfig(
+        config
+    );
+
+}
+
+
+async function findNextRepositorySlot(
+
+    type,
+
+    config
+
+) {
+
+    const list =
+        config.storage
+            .repositories[type];
+
 
     const settings =
         getMediaSettings(
@@ -215,34 +1240,28 @@ async function findAvailableRepositoryName(
         );
 
 
-    const owner =
-        config.github.owner;
-
-
-    const list =
-        config.storage
-            .repositories[type];
-
-
     let index =
-        getNextRepositoryIndex(
+        getHighestRepositoryIndex(
             list
-        );
+        ) + 1;
 
 
     while (true) {
 
         const name =
+
             settings.repositoryPrefix +
-            String(index)
-                .padStart(
-                    2,
-                    "0"
-                );
+
+            String(
+                index
+            ).padStart(
+                2,
+                "0"
+            );
 
 
         const fullName =
-            `${owner}/${name}`;
+            `${config.github.owner}/${name}`;
 
 
         const exists =
@@ -254,8 +1273,46 @@ async function findAvailableRepositoryName(
         if (!exists) {
 
             return {
+
                 index,
-                name
+
+                name,
+
+                fullName,
+
+                exists:
+                    false
+
+            };
+
+        }
+
+
+        if (
+
+            await canAdoptRepository(
+
+                fullName,
+
+                type,
+
+                config
+
+            )
+
+        ) {
+
+            return {
+
+                index,
+
+                name,
+
+                fullName,
+
+                exists:
+                    true
+
             };
 
         }
@@ -269,128 +1326,170 @@ async function findAvailableRepositoryName(
 
 
 async function createNewRepository(
+
     type,
-    config
+
+    providedConfig =
+        null
+
 ) {
 
-    const settings =
-        getMediaSettings(
-            config,
+    const config =
+
+        providedConfig ||
+
+        await reconcileRepositories(
             type
         );
 
 
-    const {
-        index,
-        name
-    } =
-        await findAvailableRepositoryName(
+    const slot =
+        await findNextRepositorySlot(
+
             type,
+
             config
+
         );
 
 
-    console.log(
-        `Creating repository: ${name}`
-    );
+    let repository;
 
 
-    const result =
-        await createRepository({
+    if (slot.exists) {
 
-            name,
-
-            description:
-                `Jingyan automatic ${type} storage`,
-
-            privateRepo:
-                Boolean(
-                    config.github.private
-                )
-
-        });
+        const info =
+            await getRepositoryInfo(
+                slot.fullName
+            );
 
 
-    const repository = {
+        repository =
+            buildRepositoryDescriptor(
 
-        id:
-            `${type}-${String(index)
-                .padStart(2, "0")}`,
+                config,
 
-        repo:
-            result.repo,
+                type,
 
-        branch:
-            result.defaultBranch,
+                slot.index,
 
-        folder:
-            settings.folder,
+                slot.fullName,
 
-        database:
-            settings.database,
+                info.default_branch ||
+                "main"
 
-        status:
-            settings.status,
-
-        sizeMB:
-            0
-
-    };
+            );
 
 
-    await upsertTextFile(
+        console.log(
 
-        repository.repo,
+            `Recovering repository: ${slot.fullName}`
 
-        `${repository.folder}/.gitkeep`,
+        );
 
-        "",
+    } else {
 
-        repository.branch,
+        if (
 
-        "Initialize media folder"
+            !config.github
+                .autoCreateRepository
 
-    );
+        ) {
 
+            throw new Error(
 
-    await upsertTextFile(
+                `Automatic repository creation disabled for ${type}`
 
-        repository.repo,
+            );
 
-        repository.database,
-
-        "[]\n",
-
-        repository.branch,
-
-        "Initialize media database"
-
-    );
+        }
 
 
-    await writeRepositoryStatus(
+        console.log(
+
+            `Creating repository: ${slot.name}`
+
+        );
+
+
+        const result =
+            await createRepository({
+
+                expectedOwner:
+                    config.github.owner,
+
+                name:
+                    slot.name,
+
+                description:
+                    `Jingyan automatic ${type} storage`,
+
+                privateRepo:
+                    Boolean(
+                        config.github.private
+                    )
+
+            });
+
+
+        repository =
+            buildRepositoryDescriptor(
+
+                config,
+
+                type,
+
+                slot.index,
+
+                result.repo,
+
+                result.defaultBranch
+
+            );
+
+    }
+
+
+    await ensureRepositoryInitialized(
 
         repository,
 
         type,
-
-        0,
 
         config
 
     );
 
 
+    registerRepository(
+
+        config,
+
+        type,
+
+        repository
+
+    );
+
+
     config.storage
-        .repositories[type]
-        .push(repository);
+        .activeRepository[type] =
+        repository.id;
 
 
-    saveConfig(config);
+    repository.state =
+        "active";
+
+
+    saveConfig(
+        config
+    );
 
 
     console.log(
+
         `Repository ready: ${repository.repo}`
+
     );
 
 
@@ -399,60 +1498,30 @@ async function createNewRepository(
 }
 
 
-async function refreshRepositorySize(
-    repository
-) {
-
-    try {
-
-        const apiSize =
-            await getRepositorySizeMB(
-                repository.repo
-            );
-
-
-        const savedSize =
-            Number(
-                repository.sizeMB || 0
-            );
-
-
-        return Math.max(
-            apiSize,
-            savedSize
-        );
-
-    } catch (error) {
-
-        console.warn(
-            `Could not read repository size for ${repository.repo}: ${error.message}`
-        );
-
-
-        return Number(
-            repository.sizeMB || 0
-        );
-
-    }
-
-}
-
-
 async function selectRepository(
+
     type,
+
     incomingSizeMB
+
 ) {
 
-    const config =
-        loadConfig();
+    let config =
+        await reconcileRepositories(
+            type
+        );
 
 
-    const list =
+    let list =
         config.storage
             .repositories[type];
 
 
-    if (!Array.isArray(list)) {
+    if (
+        !Array.isArray(
+            list
+        )
+    ) {
 
         throw new Error(
             `Repository list missing: ${type}`
@@ -461,117 +1530,192 @@ async function selectRepository(
     }
 
 
-    const targetMB =
-        config.storage
-            .targetRepositorySizeMB;
-
-
-    const toleranceMB =
-        config.storage
-            .overflowToleranceMB;
-
-
-    const hardLimitMB =
-        targetMB +
-        toleranceMB;
-
-
-    for (
-        const repository
-        of list
+    if (
+        list.length === 0
     ) {
 
-        const usedMB =
-            await refreshRepositorySize(
-                repository
-            );
+        return createNewRepository(
 
+            type,
 
-        repository.sizeMB =
-            Number(
-                usedMB.toFixed(3)
-            );
+            config
 
-
-        const predicted =
-            usedMB +
-            incomingSizeMB;
-
-
-        if (
-            predicted <=
-            hardLimitMB
-        ) {
-
-            saveConfig(config);
-
-            return repository;
-
-        }
+        );
 
     }
 
 
-    saveConfig(config);
-
-
-    if (
+    let activeId =
         config.storage
-            .autoSwitchRepository &&
-        config.github
-            .autoCreateRepository
-    ) {
+            .activeRepository[type];
 
-        return createNewRepository(
-            type,
+
+    let repository =
+        list.find(
+
+            item =>
+
+                item.id ===
+                activeId
+
+        );
+
+
+    if (!repository) {
+
+        repository =
+            list[
+                list.length - 1
+            ];
+
+
+        config.storage
+            .activeRepository[type] =
+            repository.id;
+
+
+        saveConfig(
             config
         );
 
     }
 
 
-    throw new Error(
-        `No available repository for ${type}`
+    const remoteStatus =
+        await readRepositoryStatus(
+            repository
+        );
+
+
+    if (
+
+        getStatusState(
+            remoteStatus
+        ) ===
+        "sealed"
+
+    ) {
+
+        return createNewRepository(
+
+            type,
+
+            config
+
+        );
+
+    }
+
+
+    const usedMB =
+        await refreshRepositorySize(
+            repository
+        );
+
+
+    repository.sizeMB =
+        Number(
+
+            usedMB.toFixed(
+                3
+            )
+
+        );
+
+
+    const hardLimitMB =
+
+        config.storage
+            .targetRepositorySizeMB +
+
+        config.storage
+            .overflowToleranceMB;
+
+
+    const predictedMB =
+
+        usedMB +
+
+        Number(
+            incomingSizeMB || 0
+        );
+
+
+    if (
+
+        predictedMB <=
+        hardLimitMB
+
+    ) {
+
+        repository.state =
+            "active";
+
+
+        saveConfig(
+            config
+        );
+
+
+        return repository;
+
+    }
+
+
+    if (
+
+        !config.storage
+            .autoSwitchRepository
+
+    ) {
+
+        throw new Error(
+
+            `Repository capacity reached for ${type}: ${repository.repo}`
+
+        );
+
+    }
+
+
+    await sealRepository(
+
+        repository,
+
+        type,
+
+        config,
+
+        usedMB,
+
+        "next-file-would-exceed-limit"
+
+    );
+
+
+    config =
+        loadConfig();
+
+
+    return createNewRepository(
+
+        type,
+
+        config
+
     );
 
 }
 
 
-function reserveSequence(type) {
-
-    const config =
-        loadConfig();
-
-
-    if (
-        typeof config.counters[type]
-        !== "number"
-    ) {
-
-        config.counters[type] = 0;
-
-    }
-
-
-    config.counters[type]++;
-
-
-    const sequence =
-        config.counters[type];
-
-
-    saveConfig(config);
-
-
-    return sequence;
-
-}
-
-
 async function updateRepositoryAfterUpload(
+
     type,
+
     repositoryId,
+
     fileSizeMB
+
 ) {
 
     const config =
@@ -582,56 +1726,195 @@ async function updateRepositoryAfterUpload(
         config.storage
             .repositories[type]
             .find(
+
                 item =>
+
                     item.id ===
                     repositoryId
+
             );
 
 
     if (!repository) {
 
         throw new Error(
+
             `Repository not found: ${repositoryId}`
+
         );
 
     }
+
+
+    const cachedAfterUpload =
+
+        parseMB(
+            repository.sizeMB
+        ) +
+
+        Number(
+            fileSizeMB || 0
+        );
+
+
+    const refreshed =
+        await refreshRepositorySize(
+            repository
+        );
+
+
+    const usedMB =
+        Math.max(
+
+            cachedAfterUpload,
+
+            refreshed
+
+        );
+
+
+    const currentStatus =
+        await readRepositoryStatus(
+            repository
+        );
+
+
+    const state =
+
+        getStatusState(
+            currentStatus
+        ) === "sealed"
+
+            ? "sealed"
+
+            : "active";
+
+
+    await writeRepositoryStatus(
+
+        repository,
+
+        type,
+
+        usedMB,
+
+        config,
+
+        state
+
+    );
 
 
     repository.sizeMB =
         Number(
-            (
-                Number(
-                    repository.sizeMB || 0
-                ) +
-                Number(fileSizeMB || 0)
-            ).toFixed(3)
-        );
 
-
-    saveConfig(config);
-
-
-    try {
-
-        await writeRepositoryStatus(
-
-            repository,
-
-            type,
-
-            repository.sizeMB,
-
-            config
+            usedMB.toFixed(
+                3
+            )
 
         );
 
-    } catch (error) {
 
-        console.warn(
-            `Status update warning: ${error.message}`
+    repository.state =
+        state;
+
+
+    saveConfig(
+        config
+    );
+
+
+    return repository;
+
+}
+
+
+async function syncRepositoryStatus(
+
+    type,
+
+    repositoryId
+
+) {
+
+    const config =
+        loadConfig();
+
+
+    const repository =
+        config.storage
+            .repositories[type]
+            .find(
+
+                item =>
+
+                    item.id ===
+                    repositoryId
+
+            );
+
+
+    if (!repository) {
+
+        throw new Error(
+
+            `Repository not found: ${repositoryId}`
+
         );
 
     }
+
+
+    const usedMB =
+        await refreshRepositorySize(
+            repository
+        );
+
+
+    const currentStatus =
+        await readRepositoryStatus(
+            repository
+        );
+
+
+    const state =
+        getStatusState(
+            currentStatus
+        );
+
+
+    await writeRepositoryStatus(
+
+        repository,
+
+        type,
+
+        usedMB,
+
+        config,
+
+        state
+
+    );
+
+
+    repository.sizeMB =
+        Number(
+
+            usedMB.toFixed(
+                3
+            )
+
+        );
+
+
+    repository.state =
+        state;
+
+
+    saveConfig(
+        config
+    );
 
 
     return repository;
@@ -641,12 +1924,20 @@ async function updateRepositoryAfterUpload(
 
 module.exports = {
 
+    loadConfig,
+
+    saveConfig,
+
+    reconcileRepositories,
+
     selectRepository,
 
-    reserveSequence,
+    createNewRepository,
 
     updateRepositoryAfterUpload,
 
-    createNewRepository
+    syncRepositoryStatus,
+
+    readRepositoryStatus
 
 };
