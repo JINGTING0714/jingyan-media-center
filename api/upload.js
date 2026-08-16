@@ -33,16 +33,21 @@ const {
 
 
 
+
+
 function loadConfig(){
 
   return JSON.parse(
+
     fs.readFileSync(
       "config.json",
       "utf8"
     )
+
   );
 
 }
+
 
 
 
@@ -102,11 +107,13 @@ function detectType(file){
 
 
 
+
+
 async function processUpload(file){
 
 
-
-  const config=loadConfig();
+  const config=
+  loadConfig();
 
 
 
@@ -136,6 +143,8 @@ async function processUpload(file){
 
 
 
+
+
   const repository=
   selectRepository(
     type,
@@ -144,8 +153,23 @@ async function processUpload(file){
 
 
 
+
+
+  if(!repository){
+
+    throw new Error(
+      "No repository available for "+type
+    );
+
+  }
+
+
+
+
+
   const targetPath=
   `${repository.folder}/${newName}`;
+
 
 
 
@@ -160,15 +184,19 @@ async function processUpload(file){
 
 
 
+
+
   await uploadFile(
 
     repository.repo,
 
-    targetPath,
+    file,
 
-    file
+    targetPath
 
   );
+
+
 
 
 
@@ -187,6 +215,9 @@ async function processUpload(file){
 
 
 
+
+
+  const record=
   addRecord(
 
     type,
@@ -194,6 +225,7 @@ async function processUpload(file){
     {
 
       name:newName,
+
 
       repository:
       repository.repo,
@@ -203,16 +235,23 @@ async function processUpload(file){
       targetPath,
 
 
-      cdn,
+      cdn
 
-
-      time:
-      new Date()
-      .toISOString()
 
     }
 
   );
+
+
+
+
+
+
+  console.log(
+    "Database saved:",
+    record.id
+  );
+
 
 
 
@@ -223,7 +262,14 @@ async function processUpload(file){
     newName
   );
 
+
 }
+
+
+
+
+
+
 
 
 
@@ -238,8 +284,10 @@ async function run(){
 
 
 
+
   const uploadDir=
   "upload";
+
 
 
 
@@ -253,7 +301,9 @@ async function run(){
 
     return;
 
+
   }
+
 
 
 
@@ -261,6 +311,8 @@ async function run(){
 
   const files=
   fs.readdirSync(uploadDir);
+
+
 
 
 
@@ -276,9 +328,12 @@ async function run(){
 
 
 
+
     if(
+
       fs.statSync(fullPath)
       .isFile()
+
     ){
 
 
@@ -295,6 +350,7 @@ async function run(){
 
 
 
+
   console.log(
     "All upload finished"
   );
@@ -304,19 +360,22 @@ async function run(){
 
 
 
-
-// GitHub Actions入口
-
 if(require.main===module){
 
+
   run()
+
   .catch(err=>{
+
 
     console.error(err);
 
+
     process.exit(1);
 
+
   });
+
 
 }
 
@@ -326,10 +385,14 @@ if(require.main===module){
 
 module.exports={
 
-  detectType,
 
-  processUpload,
+ detectType,
 
-  run
+
+ processUpload,
+
+
+ run
+
 
 };
