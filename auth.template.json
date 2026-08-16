@@ -1,0 +1,261 @@
+{
+  "system": "upload-auth",
+
+  "version": "4.0",
+
+
+  "owner": {
+
+    "username": "JINGTING0714",
+
+    "role": "owner"
+
+  },
+
+
+  "users": [
+
+    {
+      "id": "001",
+
+      "username": "JINGTING0714",
+
+      "token": "OWNER_TOKEN",
+
+      "role": "owner",
+
+      "status": "active"
+
+    },
+
+
+    {
+      "id": "002",
+
+      "username": "friend01",
+
+      "token": "USER_TOKEN_001",
+
+      "role": "uploader",
+
+      "status": "active"
+
+    }
+
+  ],
+
+
+  "roles": {
+
+
+    "owner": {
+
+      "upload": true,
+
+      "delete": true,
+
+      "manage": true,
+
+      "config": true,
+
+      "users": true,
+
+      "repository": true
+
+    },
+
+
+    "uploader": {
+
+
+      "upload": true,
+
+      "delete": false,
+
+      "manage": false,
+
+      "config": false,
+
+      "users": false,
+
+      "repository": false
+
+    }
+
+  },
+
+
+  "repositories": {
+
+
+    "image": [
+
+      {
+
+        "id": "image-01",
+
+        "repo": "JINGTING0714/jingyan-image-01",
+
+        "branch": "main",
+
+        "folder": "image",
+
+        "database": "data/image.json",
+
+        "maxSizeMB": 700
+
+      }
+
+    ],
+
+
+
+    "audio": [
+
+      {
+
+        "id": "media-01",
+
+        "repo": "JINGTING0714/jingyan-media-01",
+
+        "branch": "main",
+
+        "folder": "music",
+
+        "database": "data/music.json",
+
+        "maxSizeMB": 700
+
+      }
+
+    ],
+
+
+
+    "video": [
+
+      {
+
+        "id": "video-01",
+
+        "repo": "JINGTING0714/jingyan-video-01",
+
+        "branch": "main",
+
+        "folder": "video",
+
+        "database": "data/video.json",
+
+        "maxSizeMB": 700
+
+      }
+
+    ]
+
+  },
+
+
+
+  "upload": {
+
+
+    "autoDetect": true,
+
+
+    "allowed": [
+
+      "jpg",
+
+      "jpeg",
+
+      "png",
+
+      "webp",
+
+      "gif",
+
+      "mp3",
+
+      "wav",
+
+      "flac",
+
+      "aac",
+
+      "mp4",
+
+      "webm"
+
+    ],
+
+
+
+    "limits": {
+
+
+      "image": {
+
+        "maxSizeMB": 15
+
+      },
+
+
+      "audio": {
+
+        "maxSizeMB": 30
+
+      },
+
+
+      "video": {
+
+        "maxSizeMB": 30
+
+      }
+
+
+    }
+
+  },
+
+
+
+  "security": {
+
+
+    "requireToken": true,
+
+
+    "allowPublicUpload": false,
+
+
+    "maxUsers": 20
+
+
+  },
+
+
+  "automation": {
+
+
+    "rename": true,
+
+
+    "generateID": true,
+
+
+    "autoSwitchRepository": true,
+
+
+    "updateDatabase": true,
+
+
+    "generateCDN": true,
+
+
+    "refreshCache": true
+
+
+  }
+
+}
