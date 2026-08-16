@@ -5,34 +5,24 @@
 
   "mode": "automatic",
 
-
   "cdn": {
-
     "provider": "jsdelivr",
-
     "enabled": true
-
   },
 
 
   "limits": {
 
     "image": {
-
       "maxSizeMB": 15
-
     },
 
     "audio": {
-
       "maxSizeMB": 30
-
     },
 
     "video": {
-
       "maxSizeMB": 30
-
     }
 
   },
@@ -40,34 +30,22 @@
 
   "storage": {
 
-
     "maxRepositorySizeMB": 700,
-
 
     "autoSwitchRepository": true,
 
-
     "repositories": {
 
-
       "image": [
-
         "JINGTING0714/jingyan-image-01"
-
       ],
-
 
       "audio": [
-
         "JINGTING0714/jingyan-media-01"
-
       ],
 
-
       "video": [
-
         "JINGTING0714/jingyan-video-01"
-
       ]
 
     }
@@ -77,38 +55,25 @@
 
   "sources": {
 
-
     "image": {
-
       "folder": "image",
-
       "json": "data/image.json"
-
     },
-
 
     "audio": {
-
       "folder": "music",
-
       "json": "data/music.json"
-
     },
 
-
     "video": {
-
       "folder": "video",
-
       "json": "data/video.json"
-
     }
 
   },
 
 
   "automation": {
-
 
     "upload": true,
 
