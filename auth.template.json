@@ -1,7 +1,7 @@
 {
-  "system": "upload-auth",
+  "system": "jingyan-media-auth",
 
-  "version": "6.0",
+  "version": "7.0",
 
 
   "owner": {
@@ -16,6 +16,7 @@
   "users": [
 
     {
+
       "id": "001",
 
       "username": "JINGTING0714",
@@ -28,15 +29,15 @@
 
     },
 
-
     {
+
       "id": "002",
 
       "username": "friend01",
 
       "token": "USER_TOKEN_PLACEHOLDER",
 
-      "role": "uploader",
+      "role": "upload",
 
       "status": "active"
 
@@ -56,52 +57,32 @@
 
       "delete": true,
 
-      "manage": true,
+      "modify": true,
 
-      "config": true,
+      "manageUsers": true,
 
-      "users": true,
-
-      "repository": true
-
+      "createRepository": true
 
     },
 
 
-
-    "uploader": {
+    "upload": {
 
 
       "upload": true,
 
       "delete": false,
 
-      "manage": false,
+      "modify": false,
 
-      "config": false,
+      "manageUsers": false,
 
-      "users": false,
-
-      "repository": false
-
+      "createRepository": false
 
     }
 
 
-  },
-
-
-
-  "security": {
-
-
-    "requireToken": true,
-
-    "allowPublicUpload": false,
-
-    "maxUsers": 20
-
-
   }
+
 
 }
