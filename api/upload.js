@@ -2,77 +2,304 @@ const fs = require("fs");
 const path = require("path");
 
 
-const config = require("../config.json");
+const {
+    verifyToken
+}=require("./auth");
 
 
-function getRepository(type){
+const {
+    renameFile
+}=require("./rename");
 
-    if(type==="image"){
-        return config.repositories.image;
+
+const {
+    selectRepository
+}=require("./repository");
+
+
+const {
+    uploadFile
+}=require("./github");
+
+
+const {
+    generateRepositoryCDN
+}=require("./cdn");
+
+
+const {
+    addMedia,
+    generateMediaData
+}=require("./database");
+
+
+
+
+
+function detectType(filename){
+
+
+    const ext =
+
+    path.extname(filename)
+    .replace(".","")
+    .toLowerCase();
+
+
+
+    if(
+        [
+            "jpg",
+            "jpeg",
+            "png",
+            "webp",
+            "gif"
+        ]
+        .includes(ext)
+    ){
+
+        return "image";
+
     }
 
 
-    if(type==="music" || type==="audio"){
-        return config.repositories.music;
+
+    if(
+        [
+            "mp3",
+            "wav",
+            "flac",
+            "aac"
+        ]
+        .includes(ext)
+    ){
+
+        return "audio";
+
     }
 
 
-    if(type==="video"){
-        return config.repositories.video;
+
+    if(
+        [
+            "mp4",
+            "webm"
+        ]
+        .includes(ext)
+    ){
+
+        return "video";
+
     }
 
 
-    throw new Error("Unknown media type");
+
+    throw new Error(
+        "Unsupported file type"
+    );
+
 
 }
 
 
 
-function createID(type){
-
-    const time = Date.now();
-
-    return type + "-" + time;
-
-}
 
 
 
-function createMediaData(file,type){
+
+async function upload(
+
+    file,
+
+    token
+
+){
 
 
-    const repo = getRepository(type);
+
+    const user = verifyToken(token);
+
+
+
+    if(!user){
+
+        throw new Error(
+            "Unauthorized"
+        );
+
+    }
+
+
+
+
+
+
+    const type =
+
+    detectType(
+        file.name
+    );
+
+
+
+
+
+
+    const newName =
+
+    renameFile(
+        file.name
+    );
+
+
+
+
+
+
+
+    const repository =
+
+    selectRepository(
+        type
+    );
+
+
+
+
+
+
+
+
+    const githubPath =
+
+    repository.folder
+
+    +
+
+    "/"
+
+    +
+
+    newName;
+
+
+
+
+
+
+
+
+
+    await uploadFile(
+
+
+        repository.repo,
+
+
+        githubPath,
+
+
+        file.buffer
+
+
+    );
+
+
+
+
+
+
+
+
+
+    const cdn =
+
+    generateRepositoryCDN(
+
+        repository,
+
+        newName
+
+    );
+
+
+
+
+
+
+
+
+
+    const data =
+
+    generateMediaData(
+
+        type,
+
+        newName,
+
+        cdn
+
+    );
+
+
+
+
+
+
+
+
+    addMedia(
+
+        type,
+
+        data
+
+    );
+
+
+
+
+
 
 
     return {
 
-        id:createID(type),
 
-        name:file.name,
-
-        type:type,
-
-        size:file.size,
+        success:true,
 
 
-        repository:repo.current,
+        type,
 
 
-        data:repo.data,
+        filename:newName,
 
 
-        status:"waiting"
+        repository:repository.repo,
+
+
+        url:cdn,
+
+
+        data
 
 
     };
 
 
+
 }
+
+
+
+
 
 
 
 module.exports={
 
-    createMediaData
+    upload,
+
+    detectType
 
 };
