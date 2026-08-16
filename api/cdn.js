@@ -1,19 +1,28 @@
-const fs = require("fs");
+const fs=require("fs");
+
+
 
 
 
 function loadConfig(){
 
+
     return JSON.parse(
 
         fs.readFileSync(
+
             "config.json",
+
             "utf8"
+
         )
 
     );
 
+
 }
+
+
 
 
 
@@ -29,7 +38,10 @@ function generateCDN(
 ){
 
 
-    const config = loadConfig();
+
+    const config=
+    loadConfig();
+
 
 
 
@@ -49,15 +61,12 @@ function generateCDN(
 
 
 
-    const provider =
 
-        config.cdn.provider;
+    if(
 
+        config.cdn.provider==="jsdelivr"
 
-
-
-
-    if(provider==="jsdelivr"){
+    ){
 
 
         return (
@@ -88,7 +97,10 @@ function generateCDN(
     return null;
 
 
+
 }
+
+
 
 
 
@@ -103,6 +115,16 @@ function generateRepositoryCDN(
     filename
 
 ){
+
+
+
+    if(!repository){
+
+        return null;
+
+    }
+
+
 
 
     return generateCDN(
@@ -122,7 +144,10 @@ function generateRepositoryCDN(
     );
 
 
+
 }
+
+
 
 
 
@@ -139,6 +164,7 @@ function generateRawCDN(
     file
 
 ){
+
 
 
     return (
@@ -166,6 +192,7 @@ function generateRawCDN(
         file
 
     );
+
 
 
 }
