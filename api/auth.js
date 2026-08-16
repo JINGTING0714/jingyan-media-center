@@ -2,7 +2,7 @@ const fs = require("fs");
 const path = require("path");
 
 
-const authPath = path.join(
+const authFile = path.join(
     __dirname,
     "../auth.template.json"
 );
@@ -11,25 +11,11 @@ const authPath = path.join(
 
 function loadAuth(){
 
-
-    if(!fs.existsSync(authPath)){
-
-        throw new Error(
-            "auth.template.json missing"
-        );
-
-    }
-
-
-
     return JSON.parse(
 
         fs.readFileSync(
-
-            authPath,
-
+            authFile,
             "utf8"
-
         )
 
     );
@@ -40,23 +26,20 @@ function loadAuth(){
 
 
 
-
 function verifyToken(token){
 
 
-    const auth =
-    loadAuth();
+    const auth = loadAuth();
 
 
 
     if(!token){
 
-
         return {
 
             success:false,
 
-            message:"Token missing"
+            message:"Missing token"
 
         };
 
@@ -64,9 +47,7 @@ function verifyToken(token){
 
 
 
-
-    const user =
-    auth.users.find(
+    const user = auth.users.find(
 
         u => u.token === token
 
@@ -74,10 +55,7 @@ function verifyToken(token){
 
 
 
-
-
     if(!user){
-
 
         return {
 
@@ -91,12 +69,7 @@ function verifyToken(token){
 
 
 
-
-
-    if(
-        user.status !== "active"
-    ){
-
+    if(user.status !== "active"){
 
         return {
 
@@ -106,11 +79,7 @@ function verifyToken(token){
 
         };
 
-
     }
-
-
-
 
 
 
@@ -135,9 +104,7 @@ function verifyToken(token){
         },
 
 
-
         permissions:
-
         auth.roles[user.role]
 
 
@@ -174,7 +141,6 @@ function checkPermission(
 
 
 
-
     return Boolean(
 
         result.permissions[permission]
@@ -189,14 +155,10 @@ function checkPermission(
 
 
 
-
 module.exports={
-
 
     verifyToken,
 
-
     checkPermission
-
 
 };
