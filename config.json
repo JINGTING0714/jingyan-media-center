@@ -1,92 +1,238 @@
 {
   "system": "jingyan-media-center",
 
-  "version": "4.0",
+  "version": "5.0",
 
   "mode": "automatic",
 
+
+  "github": {
+
+    "api": "https://api.github.com",
+
+    "autoCreateRepository": true,
+
+    "private": false
+
+  },
+
+
   "cdn": {
+
     "provider": "jsdelivr",
+
     "enabled": true
+
   },
 
 
   "limits": {
 
+
     "image": {
+
       "maxSizeMB": 15
+
     },
+
 
     "audio": {
+
       "maxSizeMB": 30
+
     },
 
+
     "video": {
+
       "maxSizeMB": 30
+
     }
 
+
   },
+
 
 
   "storage": {
 
+
     "maxRepositorySizeMB": 700,
+
 
     "autoSwitchRepository": true,
 
+
     "repositories": {
 
+
       "image": [
-        "JINGTING0714/jingyan-image-01"
+
+        {
+
+          "id": "image-01",
+
+          "repo": "JINGTING0714/jingyan-image-01",
+
+          "branch": "main",
+
+          "folder": "image",
+
+          "database": "data/image.json",
+
+          "sizeMB": 0
+
+        }
+
       ],
+
+
 
       "audio": [
-        "JINGTING0714/jingyan-media-01"
+
+        {
+
+          "id": "media-01",
+
+          "repo": "JINGTING0714/jingyan-media-01",
+
+          "branch": "main",
+
+          "folder": "music",
+
+          "database": "data/music.json",
+
+          "sizeMB": 0
+
+        }
+
       ],
 
+
+
       "video": [
-        "JINGTING0714/jingyan-video-01"
+
+        {
+
+          "id": "video-01",
+
+          "repo": "JINGTING0714/jingyan-video-01",
+
+          "branch": "main",
+
+          "folder": "video",
+
+          "database": "data/video.json",
+
+          "sizeMB": 0
+
+        }
+
       ]
 
     }
 
+
   },
+
+
+
+  "repositoryTemplate": {
+
+
+    "image": {
+
+      "prefix": "jingyan-image-",
+
+      "startNumber": 1
+
+    },
+
+
+    "audio": {
+
+      "prefix": "jingyan-media-",
+
+      "startNumber": 1
+
+    },
+
+
+    "video": {
+
+      "prefix": "jingyan-video-",
+
+      "startNumber": 1
+
+    }
+
+
+  },
+
 
 
   "sources": {
 
+
     "image": {
+
       "folder": "image",
+
       "json": "data/image.json"
+
     },
+
 
     "audio": {
+
       "folder": "music",
+
       "json": "data/music.json"
+
     },
 
+
     "video": {
+
       "folder": "video",
+
       "json": "data/video.json"
+
     }
+
 
   },
 
 
+
   "automation": {
+
 
     "upload": true,
 
+
     "rename": true,
+
 
     "generateID": true,
 
+
+    "autoCreateRepository": true,
+
+
+    "autoSwitchRepository": true,
+
+
     "updateDatabase": true,
+
 
     "generateCDN": true,
 
+
     "refreshCache": true
 
+
   }
+
 
 }
