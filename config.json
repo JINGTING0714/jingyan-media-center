@@ -1,30 +1,25 @@
 {
   "system": "jingyan-media-center",
-  "version": "7.0",
+  "version": "8.0",
   "mode": "automatic",
+
   "github": {
-    "api": "https://api.github.com",
+    "owner": "JINGTING0714",
     "private": false,
     "autoCreateRepository": true
   },
+
   "cdn": {
     "provider": "jsdelivr",
-    "enabled": true
+    "enabled": true,
+    "includeBranch": true
   },
-  "limits": {
-    "image": {
-      "maxSizeMB": 15
-    },
-    "audio": {
-      "maxSizeMB": 30
-    },
-    "video": {
-      "maxSizeMB": 30
-    }
-  },
+
   "storage": {
-    "maxRepositorySizeMB": 700,
+    "targetRepositorySizeMB": 700,
+    "overflowToleranceMB": 10,
     "autoSwitchRepository": true,
+
     "repositories": {
       "image": [
         {
@@ -33,9 +28,11 @@
           "branch": "main",
           "folder": "image",
           "database": "data/image.json",
+          "status": "data/status.json",
           "sizeMB": 0
         }
       ],
+
       "audio": [
         {
           "id": "audio-01",
@@ -43,9 +40,11 @@
           "branch": "main",
           "folder": "music",
           "database": "data/music.json",
-          "sizeMB": 1.1138153076171875
+          "status": "data/status.json",
+          "sizeMB": 0
         }
       ],
+
       "video": [
         {
           "id": "video-01",
@@ -53,46 +52,80 @@
           "branch": "main",
           "folder": "video",
           "database": "data/video.json",
+          "status": "data/status.json",
           "sizeMB": 0
         }
       ]
     }
   },
-  "repositoryTemplate": {
+
+  "mediaTypes": {
     "image": {
-      "prefix": "jingyan-image-",
-      "startNumber": 1
+      "extensions": [
+        "jpg",
+        "jpeg",
+        "png",
+        "webp",
+        "gif"
+      ],
+      "maxSizeMB": 15,
+      "folder": "image",
+      "database": "data/image.json",
+      "status": "data/status.json",
+      "idPrefix": "image",
+      "repositoryPrefix": "jingyan-image-"
     },
+
     "audio": {
-      "prefix": "jingyan-media-",
-      "startNumber": 1
+      "extensions": [
+        "mp3",
+        "wav",
+        "flac",
+        "aac"
+      ],
+      "maxSizeMB": 30,
+      "folder": "music",
+      "database": "data/music.json",
+      "status": "data/status.json",
+      "idPrefix": "music",
+      "repositoryPrefix": "jingyan-media-"
     },
+
     "video": {
-      "prefix": "jingyan-video-",
-      "startNumber": 1
+      "extensions": [
+        "mp4",
+        "webm"
+      ],
+      "maxSizeMB": 30,
+      "folder": "video",
+      "database": "data/video.json",
+      "status": "data/status.json",
+      "idPrefix": "video",
+      "repositoryPrefix": "jingyan-video-"
     }
   },
+
+  "counters": {
+    "image": 0,
+    "audio": 2,
+    "video": 0
+  },
+
   "rename": {
     "enabled": true,
     "format": "number-name-extension",
-    "allow": [
-      "a-z",
-      "0-9",
-      "-",
-      "."
-    ]
+    "numberDigits": 3
   },
-  "database": {
-    "enabled": true,
-    "autoUpdate": true
-  },
+
   "automation": {
     "upload": true,
     "rename": true,
     "generateID": true,
     "generateCDN": true,
     "updateDatabase": true,
+    "updateStatus": true,
     "autoCreateRepository": true,
-    "autoSwitchRepository": true
+    "autoSwitchRepository": true,
+    "deleteTemporaryFile": true
   }
 }
