@@ -1,17 +1,19 @@
 const https = require("https");
+const fs = require("fs");
+
 
 
 function githubRequest(
   method,
   path,
   token,
-  data = null
-) {
+  data=null
+){
 
-  return new Promise((resolve, reject)=>{
+  return new Promise((resolve,reject)=>{
 
 
-    const options = {
+    const options={
 
       hostname:"api.github.com",
 
@@ -19,27 +21,36 @@ function githubRequest(
 
       method,
 
+
       headers:{
+
 
         "Authorization":
         `Bearer ${token}`,
 
+
         "User-Agent":
         "jingyan-media-center",
+
 
         "Accept":
         "application/vnd.github+json",
 
+
         "Content-Type":
         "application/json"
+
 
       }
 
     };
 
 
+
     const req=https.request(
+
       options,
+
       res=>{
 
 
@@ -58,30 +69,58 @@ function githubRequest(
           "end",
           ()=>{
 
+
+            let result;
+
+
             try{
 
-              resolve(
-                JSON.parse(body)
-              );
+              result=
+              JSON.parse(body);
 
-            }catch(e){
+            }catch{
 
-              resolve(body);
+              result=body;
 
             }
 
+
+
+            if(
+              res.statusCode>=400
+            ){
+
+              reject(
+                new Error(
+                  JSON.stringify(result)
+                )
+              );
+
+              return;
+
+            }
+
+
+
+            resolve(result);
+
+
           }
+
         );
 
 
       }
+
     );
+
 
 
     req.on(
       "error",
       reject
     );
+
 
 
     if(data){
@@ -105,6 +144,37 @@ function githubRequest(
 
 
 
+
+
+function getToken(){
+
+
+  const token=
+  process.env.GH_TOKEN;
+
+
+
+  if(!token){
+
+    throw new Error(
+      "GH_TOKEN missing"
+    );
+
+  }
+
+
+  return token;
+
+
+}
+
+
+
+
+
+
+
+
 async function createRepository({
 
  username,
@@ -113,12 +183,13 @@ async function createRepository({
 
  name,
 
- description
+ description=""
+
 
 }){
 
 
-  const result =
+  const result=
   await githubRequest(
 
     "POST",
@@ -129,32 +200,30 @@ async function createRepository({
 
     {
 
+
       name,
+
 
       description,
 
+
       private:false,
 
+
       auto_init:true
+
 
     }
 
   );
 
 
-  if(!result.full_name){
-
-    throw new Error(
-      "GitHub repository creation failed"
-    );
-
-  }
-
 
   return {
 
 
     success:true,
+
 
     repo:
     result.full_name,
@@ -175,9 +244,98 @@ async function createRepository({
 
 
 
+
+
+async function uploadFile(
+
+ repo,
+
+ filePath,
+
+ targetPath
+
+
+){
+
+
+  const token=
+  getToken();
+
+
+
+  const content=
+  fs.readFileSync(
+    filePath
+  )
+  .toString("base64");
+
+
+
+
+  const result=
+  await githubRequest(
+
+
+    "PUT",
+
+
+    `/repos/${repo}/contents/${targetPath}`,
+
+
+    token,
+
+
+    {
+
+
+      message:
+      `Upload ${targetPath}`,
+
+
+      content
+
+
+    }
+
+
+  );
+
+
+
+  return {
+
+
+    success:true,
+
+
+    sha:
+    result.content.sha,
+
+
+    path:
+    targetPath
+
+
+  };
+
+
+}
+
+
+
+
+
+
+
+
+
+
 function generateRepositoryName(
-type,
-index
+
+ type,
+
+ index
+
 ){
 
 
@@ -199,10 +357,13 @@ index
   };
 
 
+
   return (
 
     map[type]
+
     +
+
     String(index)
     .padStart(2,"0")
 
@@ -216,6 +377,7 @@ index
 
 
 
+
 module.exports={
 
 
@@ -223,6 +385,9 @@ module.exports={
 
 
  createRepository,
+
+
+ uploadFile,
 
 
  generateRepositoryName
