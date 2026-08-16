@@ -3,9 +3,7 @@ const fs=require("fs");
 
 
 
-
 function loadConfig(){
-
 
     return JSON.parse(
 
@@ -19,10 +17,7 @@ function loadConfig(){
 
     );
 
-
 }
-
-
 
 
 
@@ -33,21 +28,22 @@ function generateCDN(
 
     repo,
 
-    filePath
+    branch,
+
+    file
 
 ){
 
 
-
     const config=
+
     loadConfig();
 
 
 
 
-    if(
 
-        !config.cdn ||
+    if(
 
         !config.cdn.enabled
 
@@ -64,7 +60,11 @@ function generateCDN(
 
     if(
 
-        config.cdn.provider==="jsdelivr"
+        config.cdn.provider
+
+        ===
+
+        "jsdelivr"
 
     ){
 
@@ -79,11 +79,19 @@ function generateCDN(
 
             +
 
+            "@"
+
+            +
+
+            branch
+
+            +
+
             "/"
 
             +
 
-            filePath
+            file
 
         );
 
@@ -105,114 +113,10 @@ function generateCDN(
 
 
 
-
-
-
-function generateRepositoryCDN(
-
-    repository,
-
-    filename
-
-){
-
-
-
-    if(!repository){
-
-        return null;
-
-    }
-
-
-
-
-    return generateCDN(
-
-        repository.repo,
-
-        repository.folder
-
-        +
-
-        "/"
-
-        +
-
-        filename
-
-    );
-
-
-
-}
-
-
-
-
-
-
-
-
-
-function generateRawCDN(
-
-    repo,
-
-    branch,
-
-    file
-
-){
-
-
-
-    return (
-
-        "https://cdn.jsdelivr.net/gh/"
-
-        +
-
-        repo
-
-        +
-
-        "@"
-
-        +
-
-        branch
-
-        +
-
-        "/"
-
-        +
-
-        file
-
-    );
-
-
-
-}
-
-
-
-
-
-
-
 module.exports={
 
 
-    generateCDN,
-
-
-    generateRepositoryCDN,
-
-
-    generateRawCDN
+    generateCDN
 
 
 };
