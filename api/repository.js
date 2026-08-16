@@ -1,8 +1,14 @@
 const fs=require("fs");
 
+
 const {
+
     createRepository
+
 }=require("./github");
+
+
+
 
 
 
@@ -12,17 +18,25 @@ function loadConfig(){
     return JSON.parse(
 
         fs.readFileSync(
+
             "config.json",
+
             "utf8"
+
         )
 
     );
+
 
 }
 
 
 
-function saveConfig(data){
+
+
+
+
+function saveConfig(config){
 
 
     fs.writeFileSync(
@@ -30,9 +44,13 @@ function saveConfig(data){
         "config.json",
 
         JSON.stringify(
-            data,
+
+            config,
+
             null,
+
             2
+
         )
 
     );
@@ -40,25 +58,6 @@ function saveConfig(data){
 
 }
 
-
-
-
-
-function getRepositories(
-
-    type
-
-){
-
-
-    const config=
-    loadConfig();
-
-
-    return config.storage.repositories[type];
-
-
-}
 
 
 
@@ -77,28 +76,36 @@ async function createNewRepository(
 
 
     const list=
+
     config.storage.repositories[type];
 
 
 
     const index=
-    list.length + 1;
+
+    list.length+1;
 
 
 
     const template=
+
     config.repositoryTemplate[type];
+
 
 
 
     const name=
 
-    template.prefix
-    +
+    template.prefix+
+
     String(index)
+
     .padStart(
+
         2,
+
         "0"
+
     );
 
 
@@ -117,7 +124,9 @@ async function createNewRepository(
 
 
 
+
     const repo={
+
 
 
         id:
@@ -140,13 +149,13 @@ async function createNewRepository(
 
         folder:
 
-        config.sources[type].folder,
+        config.storage.repositories[type][0].folder,
 
 
 
         database:
 
-        config.database[type],
+        config.storage.repositories[type][0].database,
 
 
 
@@ -161,6 +170,7 @@ async function createNewRepository(
 
 
 
+
     list.push(repo);
 
 
@@ -170,6 +180,7 @@ async function createNewRepository(
 
 
     return repo;
+
 
 
 }
@@ -190,19 +201,26 @@ async function selectRepository(
 
 
     const config=
+
     loadConfig();
 
 
 
+
     const list=
-    getRepositories(type);
+
+    config.storage.repositories[type];
+
 
 
 
 
     for(
+
         const repo of list
+
     ){
+
 
 
         if(
@@ -223,8 +241,6 @@ async function selectRepository(
 
 
     }
-
-
 
 
 
@@ -251,14 +267,12 @@ async function selectRepository(
 
 
 
-
-
-
     throw new Error(
 
-        "No available repository"
+        "Repository full"
 
     );
+
 
 
 }
@@ -274,7 +288,7 @@ function updateRepositorySize(
 
     type,
 
-    repoId,
+    id,
 
     size
 
@@ -282,24 +296,24 @@ function updateRepositorySize(
 
 
     const config=
+
     loadConfig();
 
-
-
-    const list=
-    config.storage.repositories[type];
 
 
 
     const repo=
 
-    list.find(
+    config.storage.repositories[type]
+
+    .find(
 
         r=>
 
-        r.id===repoId
+        r.id===id
 
     );
+
 
 
 
@@ -324,17 +338,13 @@ function updateRepositorySize(
 
 
 
-
 module.exports={
 
 
     selectRepository,
 
 
-    updateRepositorySize,
-
-
-    getRepositories
+    updateRepositorySize
 
 
 };
