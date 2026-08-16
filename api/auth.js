@@ -2,49 +2,61 @@ const fs = require("fs");
 const path = require("path");
 
 
-// 读取权限配置
 const authPath = path.join(
     __dirname,
     "../auth.template.json"
 );
 
 
+
 function loadAuth(){
 
+
     if(!fs.existsSync(authPath)){
+
         throw new Error(
-            "auth.template.json not found"
+            "auth.template.json missing"
         );
+
     }
 
 
-    const data = fs.readFileSync(
-        authPath,
-        "utf-8"
+
+    return JSON.parse(
+
+        fs.readFileSync(
+
+            authPath,
+
+            "utf8"
+
+        )
+
     );
-
-
-    return JSON.parse(data);
 
 }
 
 
 
-// 根据token查找用户
+
+
 
 function verifyToken(token){
 
 
-    const auth = loadAuth();
+    const auth =
+    loadAuth();
+
 
 
     if(!token){
+
 
         return {
 
             success:false,
 
-            message:"Missing token"
+            message:"Token missing"
 
         };
 
@@ -52,13 +64,20 @@ function verifyToken(token){
 
 
 
-    const user = auth.users.find(
+
+    const user =
+    auth.users.find(
+
         u => u.token === token
+
     );
 
 
 
+
+
     if(!user){
+
 
         return {
 
@@ -72,7 +91,11 @@ function verifyToken(token){
 
 
 
-    if(user.status !== "active"){
+
+
+    if(
+        user.status !== "active"
+    ){
 
 
         return {
@@ -83,7 +106,11 @@ function verifyToken(token){
 
         };
 
+
     }
+
+
+
 
 
 
@@ -108,8 +135,10 @@ function verifyToken(token){
         },
 
 
+
         permissions:
-            auth.roles[user.role]
+
+        auth.roles[user.role]
 
 
     };
@@ -119,16 +148,21 @@ function verifyToken(token){
 
 
 
-// 检查指定权限
+
+
+
 
 function checkPermission(
+
     token,
+
     permission
+
 ){
 
 
     const result =
-        verifyToken(token);
+    verifyToken(token);
 
 
 
@@ -140,59 +174,19 @@ function checkPermission(
 
 
 
+
     return Boolean(
 
         result.permissions[permission]
 
     );
 
-}
-
-
-
-// 获取用户列表（只有owner）
-
-function getUsers(token){
-
-
-    const result =
-        verifyToken(token);
-
-
-
-    if(
-        !result.success ||
-        result.user.role !== "owner"
-    ){
-
-        return {
-
-            success:false,
-
-            message:"Permission denied"
-
-        };
-
-    }
-
-
-
-    const auth = loadAuth();
-
-
-    return {
-
-
-        success:true,
-
-
-        users:auth.users
-
-
-    };
-
 
 }
+
+
+
+
 
 
 
@@ -202,10 +196,7 @@ module.exports={
     verifyToken,
 
 
-    checkPermission,
-
-
-    getUsers
+    checkPermission
 
 
 };
