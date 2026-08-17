@@ -1,15 +1,30 @@
 name: Media Upload Automation
 
 on:
+
   push:
     paths:
       - "upload/**"
 
   workflow_dispatch:
 
+    inputs:
+
+      web_job_id:
+
+        description: "Upload job ID created by jingyan-media-app"
+
+        required: false
+
+        type: string
+
+
 concurrency:
+
   group: jingyan-media-pipeline
+
   cancel-in-progress: false
+
 
 jobs:
 
@@ -17,31 +32,73 @@ jobs:
 
     runs-on: ubuntu-latest
 
+
     permissions:
+
       contents: write
+
+      id-token: write
+
+
+    env:
+
+      WEB_JOB_ID: ${{ inputs.web_job_id }}
+
+      APP_URL: https://jingyan-media-app.jingyancdn.workers.dev
+
 
     steps:
 
+
       - name: Checkout
+
         uses: actions/checkout@v4
+
         with:
+
           fetch-depth: 0
 
 
+
       - name: Setup Node
+
         uses: actions/setup-node@v4
+
         with:
+
           node-version: 22
 
 
+
       - name: Check Upload Files
+
         id: check
+
         shell: bash
+
         run: |
+
+          set -e
+
+          if [ -n "${WEB_JOB_ID}" ]; then
+
+            echo "Web upload job detected: ${WEB_JOB_ID}"
+
+            echo "mode=web" >> "$GITHUB_OUTPUT"
+
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+
+            exit 0
+
+          fi
+
 
           echo "Checking upload folder..."
 
+
           if [ ! -d "upload" ]; then
+
+            echo "mode=standard" >> "$GITHUB_OUTPUT"
 
             echo "skip=true" >> "$GITHUB_OUTPUT"
 
@@ -55,6 +112,8 @@ jobs:
 
           echo "Detected files: $count"
 
+          echo "mode=standard" >> "$GITHUB_OUTPUT"
+
 
           if [ "$count" -eq 0 ]; then
 
@@ -67,20 +126,49 @@ jobs:
           fi
 
 
+
       - name: Install Dependencies
+
         if: steps.check.outputs.skip == 'false'
+
         run: |
 
           npm install --omit=dev --package-lock=false
 
 
-      - name: Run Media Upload
-        id: media_upload
-        if: steps.check.outputs.skip == 'false'
+
+      - name: Run Web Media Upload
+
+        id: web_upload
+
+        if: steps.check.outputs.mode == 'web'
 
         env:
+
           GH_TOKEN: ${{ secrets.MEDIA_TOKEN }}
+
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+        run: |
+
+          node api/web-upload-runner.js run "$WEB_JOB_ID"
+
+
+
+      - name: Run Standard Media Upload
+
+        id: standard_upload
+
+        if: steps.check.outputs.mode == 'standard' && steps.check.outputs.skip == 'false'
+
+        env:
+
+          GH_TOKEN: ${{ secrets.MEDIA_TOKEN }}
+
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
         run: |
@@ -88,7 +176,11 @@ jobs:
           node api/upload.js
 
 
+
       - name: Save Automation State
+
+        id: save_state
+
         if: always() && steps.check.outputs.skip == 'false'
 
         shell: bash
@@ -154,3 +246,17 @@ jobs:
           echo "Failed to push automation state after 3 attempts."
 
           exit 1
+
+
+
+      - name: Report Web Upload Result
+
+        if: always() && steps.check.outputs.mode == 'web'
+
+        env:
+
+          PIPELINE_OK: ${{ steps.web_upload.outcome == 'success' && steps.save_state.outcome == 'success' }}
+
+        run: |
+
+          node api/web-upload-runner.js callback "$WEB_JOB_ID"
