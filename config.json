@@ -1,6 +1,6 @@
 {
   "system": "jingyan-media-center",
-  "version": "9.0",
+  "version": "10.0",
   "mode": "automatic",
 
   "github": {
@@ -10,9 +10,17 @@
   },
 
   "cdn": {
-    "provider": "jsdelivr",
+    "provider": "cloudflare-static-assets",
     "enabled": true,
-    "includeBranch": true
+    "workerName": "jingyan-media-cdn",
+    "accountSubdomain": "jingyancdn",
+    "baseURL": "https://jingyan-media-cdn.jingyancdn.workers.dev",
+    "manifestFile": "data/cdn-manifest.json",
+    "compatibilityDate": "2026-08-17",
+    "maxAssets": 20000,
+    "warningAssets": 18000,
+    "maxAssetSizeMiB": 25,
+    "reconcileDatabasesOnPublish": true
   },
 
   "storage": {
@@ -82,6 +90,7 @@
       ],
       "maxSizeMB": 15,
       "folder": "image",
+      "cdnFolder": "image",
       "database": "data/image.json",
       "status": "data/status.json",
       "marker": "data/repository.json",
@@ -96,8 +105,9 @@
         "flac",
         "aac"
       ],
-      "maxSizeMB": 30,
+      "maxSizeMB": 24,
       "folder": "music",
+      "cdnFolder": "audio",
       "database": "data/music.json",
       "status": "data/status.json",
       "marker": "data/repository.json",
@@ -110,8 +120,9 @@
         "mp4",
         "webm"
       ],
-      "maxSizeMB": 30,
+      "maxSizeMB": 24,
       "folder": "video",
+      "cdnFolder": "video",
       "database": "data/video.json",
       "status": "data/status.json",
       "marker": "data/repository.json",
