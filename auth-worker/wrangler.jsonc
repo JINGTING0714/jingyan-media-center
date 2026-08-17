@@ -1,13 +1,14 @@
 {
   "name": "jingyan-media-app",
-  "main": "src/index.mjs",
+  "main": "src/app.mjs",
   "compatibility_date": "2026-08-17",
   "workers_dev": true,
 
   "secrets": {
     "required": [
       "AUTH_PEPPER",
-      "TURNSTILE_SECRET"
+      "TURNSTILE_SECRET",
+      "GITHUB_UPLOAD_TOKEN"
     ]
   },
 
@@ -15,13 +16,24 @@
     "COOKIE_NAME": "jy_session",
     "SESSION_TTL_DAYS": "180",
     "SESSION_REFRESH_HOURS": "24",
+
     "INVITE_DEFAULT_TTL_DAYS": "30",
     "PAIRING_TTL_MINUTES": "10",
     "RECOVERY_TTL_MINUTES": "30",
+
     "TURNSTILE_REQUIRED": "true",
     "TURNSTILE_REQUIRE_ACTION": "true",
     "TURNSTILE_EXPECTED_HOSTNAME": "jingyan-media-app.jingyancdn.workers.dev",
-    "TURNSTILE_SITE_KEY": "0x4AAAAAAESbkU04OZtwVxyX"
+    "TURNSTILE_SITE_KEY": "0x4AAAAAAESbkU04OZtwVxyX",
+
+    "GITHUB_OWNER": "JINGTING0714",
+    "GITHUB_REPO": "jingyan-media-center",
+    "GITHUB_UPLOAD_WORKFLOW": "upload.yml",
+    "GITHUB_UPLOAD_REF": "main",
+
+    "MEDIA_CDN_BASE_URL": "https://jingyan-media-cdn.jingyancdn.workers.dev",
+
+    "UPLOAD_STAGING_TTL_SECONDS": "21600"
   },
 
   "d1_databases": [
@@ -30,6 +42,13 @@
       "database_name": "jingyan-media-auth",
       "database_id": "b622c541-ebdb-4740-be12-ac356fbb62c7",
       "migrations_dir": "migrations"
+    }
+  ],
+
+  "kv_namespaces": [
+    {
+      "binding": "UPLOAD_STAGING",
+      "id": "bb5f5e8bd8364a7bb4d4fe8227a3e32b"
     }
   ],
 
@@ -42,5 +61,15 @@
         "period": 60
       }
     }
-  ]
+  ],
+
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "run_worker_first": [
+      "/api/*"
+    ],
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "none"
+  }
 }
