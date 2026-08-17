@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+name="viewport"
+content="width=device-width, initial-scale=1.0">
+
+<meta
+name="color-scheme"
+content="light">
+
+<title>
+Jingyan Media Center
+</title>
+
+<meta
+name="description"
+content="Jingyan Media Center 媒体上传与统一 CDN 管理中心">
+
+<link
+rel="stylesheet"
+href="/style.css">
+
+<script
+src="/app.js"
+defer>
+</script>
+
+</head>
+
+
+<body>
+
+
+<div class="site-shell">
+
+
+<header class="topbar">
+
+<div class="brand-block">
+
+<div class="brand-mark">
+J
+</div>
+
+<div>
+
+<div class="brand-name">
+Jingyan Media Center
+</div>
+
+<div class="brand-subtitle">
+智能媒体上传与统一 CDN
+</div>
+
+</div>
+
+</div>
+
+
+<nav class="topnav">
+
+<a
+href="/"
+class="nav-link active">
+上传中心
+</a>
+
+<a
+href="/account"
+class="nav-link"
+id="accountLink">
+账户
+</a>
+
+<a
+href="/admin"
+class="nav-link hidden"
+id="adminLink">
+管理后台
+</a>
+
+</nav>
+
+
+<div
+class="identity"
+id="identity">
+
+<span class="identity-status">
+正在检查登录状态…
+</span>
+
+</div>
+
+</header>
+
+
+
+<main>
+
+
+<section class="hero">
+
+<div>
+
+<div class="eyebrow">
+JINGYAN MEDIA SYSTEM
+</div>
+
+<h1>
+一个入口，
+<br>
+完成媒体发布。
+</h1>
+
+<p>
+上传图片、音频与视频。
+系统自动完成命名、去重、GitHub 分仓、CDN 发布和统一链接生成。
+</p>
+
+</div>
+
+
+<div class="hero-status">
+
+<div class="status-dot"></div>
+
+<div>
+
+<strong>
+GitHub + Cloudflare
+</strong>
+
+<span>
+自动媒体流水线
+</span>
+
+</div>
+
+</div>
+
+</section>
+
+
+
+<section
+class="auth-gate card hidden"
+id="authGate">
+
+<div class="section-heading">
+
+<div>
+
+<span class="section-kicker">
+ACCESS
+</span>
+
+<h2>
+需要身份验证
+</h2>
+
+</div>
+
+</div>
+
+<p class="gate-copy">
+如果这是第一次使用，请使用 Owner 发给你的一次性邀请码激活。已经激活过但更换了设备，可以使用设备配对或恢复码。
+</p>
+
+<div class="action-row">
+
+<a
+class="button primary"
+href="/activate">
+使用邀请码激活
+</a>
+
+<a
+class="button secondary"
+href="/device">
+新设备配对
+</a>
+
+<a
+class="button secondary"
+href="/recover">
+恢复登录
+</a>
+
+</div>
+
+</section>
+
+
+
+<section
+class="upload-layout hidden"
+id="authenticatedArea">
+
+
+<div class="main-column">
+
+
+<section class="card upload-card">
+
+<div class="section-heading">
+
+<div>
+
+<span class="section-kicker">
+UPLOAD
+</span>
+
+<h2>
+上传媒体
+</h2>
+
+</div>
+
+<div class="permission-pill">
+已通过权限验证
+</div>
+
+</div>
+
+
+<div
+class="drop-zone"
+id="dropZone"
+tabindex="0"
+role="button"
+aria-label="选择媒体文件">
+
+<div class="drop-icon">
+＋
+</div>
+
+<h3>
+拖拽文件到这里
+</h3>
+
+<p>
+或点击选择文件
+</p>
+
+<div class="type-list">
+
+<span>
+图片 ≤ 15 MiB
+</span>
+
+<span>
+音频 ≤ 24 MiB
+</span>
+
+<span>
+视频 ≤ 24 MiB
+</span>
+
+</div>
+
+<button
+type="button"
+class="button primary"
+id="selectButton">
+选择文件
+</button>
+
+<input
+id="fileInput"
+type="file"
+multiple
+hidden
+accept=".jpg,.jpeg,.png,.webp,.gif,.mp3,.wav,.flac,.aac,.mp4,.webm">
+
+</div>
+
+</section>
+
+
+
+<section class="card">
+
+<div class="section-heading">
+
+<div>
+
+<span class="section-kicker">
+QUEUE
+</span>
+
+<h2>
+当前上传
+</h2>
+
+</div>
+
+</div>
+
+<div
+class="empty-state"
+id="queueEmpty">
+还没有正在处理的文件
+</div>
+
+<div
+class="job-list"
+id="queueList">
+</div>
+
+</section>
+
+
+
+<section class="card">
+
+<div class="section-heading">
+
+<div>
+
+<span class="section-kicker">
+HISTORY
+</span>
+
+<h2>
+最近记录
+</h2>
+
+</div>
+
+<button
+type="button"
+class="text-button"
+id="refreshHistory">
+刷新
+</button>
+
+</div>
+
+<div
+class="empty-state"
+id="historyEmpty">
+暂无上传记录
+</div>
+
+<div
+class="job-list"
+id="historyList">
+</div>
+
+</section>
+
+
+</div>
+
+
+
+<aside class="side-column">
+
+
+<section class="card compact-card">
+
+<span class="section-kicker">
+ACCOUNT
+</span>
+
+<h2 id="welcomeName">
+—
+</h2>
+
+<div
+class="role-badge"
+id="roleBadge">
+—
+</div>
+
+<div
+class="permission-list"
+id="permissionList">
+</div>
+
+</section>
+
+
+
+<section class="card compact-card">
+
+<span class="section-kicker">
+PIPELINE
+</span>
+
+<h2>
+自动处理流程
+</h2>
+
+<ol class="pipeline">
+
+<li>
+
+<span>
+01
+</span>
+
+<div>
+
+<strong>
+身份与权限
+</strong>
+
+<small>
+D1 Session
+</small>
+
+</div>
+
+</li>
+
+<li>
+
+<span>
+02
+</span>
+
+<div>
+
+<strong>
+临时接收
+</strong>
+
+<small>
+Cloudflare KV
+</small>
+
+</div>
+
+</li>
+
+<li>
+
+<span>
+03
+</span>
+
+<div>
+
+<strong>
+自动处理
+</strong>
+
+<small>
+GitHub Actions
+</small>
+
+</div>
+
+</li>
+
+<li>
+
+<span>
+04
+</span>
+
+<div>
+
+<strong>
+源仓分发
+</strong>
+
+<small>
+GitHub Media Repositories
+</small>
+
+</div>
+
+</li>
+
+<li>
+
+<span>
+05
+</span>
+
+<div>
+
+<strong>
+统一 CDN
+</strong>
+
+<small>
+Cloudflare Static Assets
+</small>
+
+</div>
+
+</li>
+
+</ol>
+
+</section>
+
+
+
+<section class="card compact-card limits-card">
+
+<span class="section-kicker">
+FORMATS
+</span>
+
+<h2>
+支持格式
+</h2>
+
+<p>
+<strong>图片</strong>
+JPG · JPEG · PNG · WEBP · GIF
+</p>
+
+<p>
+<strong>音频</strong>
+MP3 · WAV · FLAC · AAC
+</p>
+
+<p>
+<strong>视频</strong>
+MP4 · WEBM
+</p>
+
+</section>
+
+
+</aside>
+
+
+</section>
+
+
+</main>
+
+
+
+<footer>
+
+<span>
+Jingyan Media Center
+</span>
+
+<span>
+GitHub source · Cloudflare delivery
+</span>
+
+</footer>
+
+
+</div>
+
+
+<div
+class="toast"
+id="toast"
+role="status">
+</div>
+
+
+</body>
+
+</html>
