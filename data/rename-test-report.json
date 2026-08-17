@@ -1,13 +1,526 @@
 {
   "version": 1,
-  "status": "not-run",
-  "startedAt": null,
-  "completedAt": null,
-  "environment": {},
-  "summary": {
-    "total": 0,
-    "passed": 0,
-    "failed": 0
+  "status": "fail",
+  "startedAt": "2026-08-17T06:48:55.538Z",
+  "completedAt": "2026-08-17T06:48:55.634Z",
+  "environment": {
+    "node": "v22.23.2",
+    "platform": "linux",
+    "architecture": "x64"
   },
-  "results": []
+  "summary": {
+    "total": 11,
+    "passed": 9,
+    "failed": 2
+  },
+  "results": [
+    {
+      "id": "chinese",
+      "description": "Chinese + semantic words + duplicate extension",
+      "input": "方大同 - 测试 Live feat. 王力宏.jpg.jpg",
+      "sequence": 999,
+      "output": "999-fang-da-tong-ce-shi-live-feat-wang-li-hong.jpg",
+      "status": "pass",
+      "checks": [
+        {
+          "name": "ascii-only",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "safe-filename",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "correct-sequence",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "correct-extension",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "no-repeated-extension",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "language-hint-removed",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "no-unicode-fallback",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "exact-output",
+          "passed": true,
+          "details": {
+            "expected": "999-fang-da-tong-ce-shi-live-feat-wang-li-hong.jpg",
+            "actual": "999-fang-da-tong-ce-shi-live-feat-wang-li-hong.jpg"
+          }
+        }
+      ],
+      "error": null
+    },
+    {
+      "id": "japanese-explicit",
+      "description": "Japanese pure Kanji with explicit language hint",
+      "input": "[ja]宇多田光 - First Love.jpg",
+      "sequence": 999,
+      "output": "999-yu-duo-tian-guang-first-love.jpg",
+      "status": "pass",
+      "checks": [
+        {
+          "name": "ascii-only",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "safe-filename",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "correct-sequence",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "correct-extension",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "no-repeated-extension",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "language-hint-removed",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "no-unicode-fallback",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "contains:first-love",
+          "passed": true,
+          "details": {
+            "fragment": "first-love"
+          }
+        }
+      ],
+      "error": null
+    },
+    {
+      "id": "japanese-auto",
+      "description": "Japanese auto detection with Katakana",
+      "input": "宇多田ヒカル - First Love.jpg",
+      "sequence": 999,
+      "output": "999-yu-duo-tian-u30d2-u30ab-u30eb-first-love.jpg",
+      "status": "fail",
+      "checks": [
+        {
+          "name": "ascii-only",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "safe-filename",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "correct-sequence",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "correct-extension",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "no-repeated-extension",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "language-hint-removed",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "no-unicode-fallback",
+          "passed": false,
+          "details": null
+        },
+        {
+          "name": "contains:first-love",
+          "passed": true,
+          "details": {
+            "fragment": "first-love"
+          }
+        }
+      ],
+      "error": null
+    },
+    {
+      "id": "korean",
+      "description": "Korean Revised Romanization",
+      "input": "[ko]방탄소년단 - Dynamite.jpg",
+      "sequence": 999,
+      "output": null,
+      "status": "error",
+      "checks": [],
+      "error": "Error: @romanize/korean does not export romanize()\n    at getKoreanRomanizer (/home/runner/work/jingyan-media-center/jingyan-media-center/api/rename.js:181:15)\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at async transliterateKorean (/home/runner/work/jingyan-media-center/jingyan-media-center/api/rename.js:553:9)\n    at async normalizeName (/home/runner/work/jingyan-media-center/jingyan-media-center/api/rename.js:880:13)\n    at async renameFile (/home/runner/work/jingyan-media-center/jingyan-media-center/api/rename.js:961:9)\n    at async runCase (/home/runner/work/jingyan-media-center/jingyan-media-center/api/rename-test.js:407:13)\n    at async run (/home/runner/work/jingyan-media-center/jingyan-media-center/api/rename-test.js:655:13)"
+    },
+    {
+      "id": "russian",
+      "description": "Cyrillic transliteration",
+      "input": "Моя песня.jpg",
+      "sequence": 999,
+      "output": "999-moya-pesnya.jpg",
+      "status": "pass",
+      "checks": [
+        {
+          "name": "ascii-only",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "safe-filename",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "correct-sequence",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "correct-extension",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "no-repeated-extension",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "language-hint-removed",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "no-unicode-fallback",
+          "passed": true,
+          "details": null
+        }
+      ],
+      "error": null
+    },
+    {
+      "id": "arabic",
+      "description": "Arabic transliteration",
+      "input": "أغنية جميلة.jpg",
+      "sequence": 999,
+      "output": "999-aghnyt-jmylt.jpg",
+      "status": "pass",
+      "checks": [
+        {
+          "name": "ascii-only",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "safe-filename",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "correct-sequence",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "correct-extension",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "no-repeated-extension",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "language-hint-removed",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "no-unicode-fallback",
+          "passed": true,
+          "details": null
+        }
+      ],
+      "error": null
+    },
+    {
+      "id": "persian",
+      "description": "Persian transliteration",
+      "input": "آهنگ زیبا.jpg",
+      "sequence": 999,
+      "output": "999-ahng-zyba.jpg",
+      "status": "pass",
+      "checks": [
+        {
+          "name": "ascii-only",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "safe-filename",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "correct-sequence",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "correct-extension",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "no-repeated-extension",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "language-hint-removed",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "no-unicode-fallback",
+          "passed": true,
+          "details": null
+        }
+      ],
+      "error": null
+    },
+    {
+      "id": "greek",
+      "description": "Greek transliteration",
+      "input": "Αγάπη μου.jpg",
+      "sequence": 999,
+      "output": "999-agapi-moy.jpg",
+      "status": "pass",
+      "checks": [
+        {
+          "name": "ascii-only",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "safe-filename",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "correct-sequence",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "correct-extension",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "no-repeated-extension",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "language-hint-removed",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "no-unicode-fallback",
+          "passed": true,
+          "details": null
+        }
+      ],
+      "error": null
+    },
+    {
+      "id": "vietnamese",
+      "description": "Vietnamese diacritics",
+      "input": "Tình yêu mùa hè.jpg",
+      "sequence": 999,
+      "output": "999-tinh-yeu-mua-he.jpg",
+      "status": "pass",
+      "checks": [
+        {
+          "name": "ascii-only",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "safe-filename",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "correct-sequence",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "correct-extension",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "no-repeated-extension",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "language-hint-removed",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "no-unicode-fallback",
+          "passed": true,
+          "details": null
+        }
+      ],
+      "error": null
+    },
+    {
+      "id": "latin-diacritics",
+      "description": "Latin diacritics",
+      "input": "Beyoncé - Déjà Vu.jpg",
+      "sequence": 999,
+      "output": "999-beyonce-deja-vu.jpg",
+      "status": "pass",
+      "checks": [
+        {
+          "name": "ascii-only",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "safe-filename",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "correct-sequence",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "correct-extension",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "no-repeated-extension",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "language-hint-removed",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "no-unicode-fallback",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "exact-output",
+          "passed": true,
+          "details": {
+            "expected": "999-beyonce-deja-vu.jpg",
+            "actual": "999-beyonce-deja-vu.jpg"
+          }
+        }
+      ],
+      "error": null
+    },
+    {
+      "id": "existing-sequence",
+      "description": "Existing sequence must be stripped before new sequence",
+      "input": "003-Artist - Song Live Remix feat. Guest.mp3.mp3",
+      "sequence": 999,
+      "output": "999-artist-song-live-remix-feat-guest.mp3",
+      "status": "pass",
+      "checks": [
+        {
+          "name": "ascii-only",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "safe-filename",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "correct-sequence",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "correct-extension",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "no-repeated-extension",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "language-hint-removed",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "no-unicode-fallback",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "exact-output",
+          "passed": true,
+          "details": {
+            "expected": "999-artist-song-live-remix-feat-guest.mp3",
+            "actual": "999-artist-song-live-remix-feat-guest.mp3"
+          }
+        }
+      ],
+      "error": null
+    }
+  ]
 }
