@@ -2,10 +2,10 @@
   "version": 1,
   "worker": "jingyan-media-cdn",
   "baseURL": "https://jingyan-media-cdn.jingyancdn.workers.dev",
-  "updatedAt": "2026-08-17T11:23:00.023Z",
-  "lastPublishedAt": "2026-08-17T11:23:00.022Z",
-  "lastVersionId": "5fbb3ac7-47e4-4593-ae07-f60831f18a52",
-  "lastDeploymentId": "e25be4e2-afc7-486c-b21f-8a27be01f5c4",
+  "updatedAt": "2026-08-17T11:34:23.515Z",
+  "lastPublishedAt": "2026-08-17T11:34:23.515Z",
+  "lastVersionId": "70f3667c-af84-42f5-80e2-5f676ec90548",
+  "lastDeploymentId": "e9fce606-c1fe-41da-975d-64c27217b988",
   "assets": {
     "/audio/001-christmas.mp3": {
       "hash": "6c23ab88513bb99a558582c6f14cef89",
@@ -110,6 +110,19 @@
         "path": "image/005-website-test.jpg"
       },
       "addedAt": "2026-08-17T11:22:47.936Z"
+    },
+    "/audio/005-hito-rie-sleepwalk.mp3": {
+      "hash": "3f3e22032f3e896a9aa92ecf146db516",
+      "size": 10205437,
+      "sha256": "b5f50f9391cc44d40215311622f6153efdd35e687af7e3d4bdf9c2d47e19cd6b",
+      "type": "audio",
+      "mediaId": "music-000005",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/005-hito-rie-sleepwalk.mp3"
+      },
+      "addedAt": "2026-08-17T11:34:15.435Z"
     }
   }
 }
