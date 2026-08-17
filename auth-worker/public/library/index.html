@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+name="viewport"
+content="width=device-width, initial-scale=1.0">
+
+<meta
+name="color-scheme"
+content="light">
+
+<title>
+媒体库 · Jingyan Media Center
+</title>
+
+<meta
+name="description"
+content="Jingyan Media Center Owner 媒体库">
+
+<link
+rel="stylesheet"
+href="/style.css">
+
+<link
+rel="stylesheet"
+href="/library.css">
+
+<script
+src="/library.js"
+defer>
+</script>
+
+</head>
+
+
+<body>
+
+
+<div class="site-shell">
+
+
+<header class="topbar">
+
+<div class="brand-block">
+
+<div class="brand-mark">
+J
+</div>
+
+<div>
+
+<div class="brand-name">
+Jingyan Media Center
+</div>
+
+<div class="brand-subtitle">
+Unified Media Library
+</div>
+
+</div>
+
+</div>
+
+
+<nav class="topnav">
+
+<a
+href="/"
+class="nav-link">
+上传中心
+</a>
+
+<a
+href="/library"
+class="nav-link active">
+媒体库
+</a>
+
+<a
+href="/admin"
+class="nav-link">
+管理后台
+</a>
+
+<a
+href="/account"
+class="nav-link">
+账户
+</a>
+
+</nav>
+
+
+<div
+class="identity"
+id="libraryIdentity">
+
+<span class="identity-status">
+正在验证 Owner…
+</span>
+
+</div>
+
+</header>
+
+
+
+<main class="library-page">
+
+
+<section class="library-hero">
+
+<div>
+
+<span class="eyebrow">
+MEDIA LIBRARY
+</span>
+
+<h1>
+你的全部媒体，
+<br>
+集中在这里。
+</h1>
+
+<p>
+统一查看 Cloudflare CDN 中已发布的图片、音频和视频，同时保留其 GitHub 源仓位置、媒体 ID 与完整性信息。
+</p>
+
+</div>
+
+
+<div class="manifest-status">
+
+<span class="status-dot"></span>
+
+<div>
+
+<strong>
+CDN Manifest
+</strong>
+
+<small id="manifestUpdated">
+正在读取…
+</small>
+
+</div>
+
+</div>
+
+</section>
+
+
+
+<section class="library-summary">
+
+<button
+type="button"
+class="library-stat active"
+data-type="all">
+
+<span>
+全部媒体
+</span>
+
+<strong id="countAll">
+—
+</strong>
+
+</button>
+
+
+<button
+type="button"
+class="library-stat"
+data-type="image">
+
+<span>
+图片
+</span>
+
+<strong id="countImage">
+—
+</strong>
+
+</button>
+
+
+<button
+type="button"
+class="library-stat"
+data-type="audio">
+
+<span>
+音频
+</span>
+
+<strong id="countAudio">
+—
+</strong>
+
+</button>
+
+
+<button
+type="button"
+class="library-stat"
+data-type="video">
+
+<span>
+视频
+</span>
+
+<strong id="countVideo">
+—
+</strong>
+
+</button>
+
+</section>
+
+
+
+<section class="card library-toolbar">
+
+<div class="search-box">
+
+<span>
+⌕
+</span>
+
+<input
+id="searchInput"
+type="search"
+placeholder="搜索文件名、Media ID、SHA256、仓库…"
+autocomplete="off">
+
+</div>
+
+
+<div class="toolbar-actions">
+
+<span
+class="result-count"
+id="resultCount">
+—
+</span>
+
+<button
+type="button"
+class="button secondary"
+id="refreshLibrary">
+刷新
+</button>
+
+</div>
+
+</section>
+
+
+
+<section
+class="library-loading"
+id="libraryLoading">
+
+正在读取媒体库…
+
+</section>
+
+
+
+<section
+class="library-empty hidden"
+id="libraryEmpty">
+
+没有找到符合条件的媒体。
+
+</section>
+
+
+
+<section
+class="media-grid hidden"
+id="mediaGrid">
+</section>
+
+
+
+<nav
+class="pagination hidden"
+id="pagination"
+aria-label="媒体分页">
+
+<button
+type="button"
+class="button secondary"
+id="previousPage">
+上一页
+</button>
+
+<span id="pageText">
+—
+</span>
+
+<button
+type="button"
+class="button secondary"
+id="nextPage">
+下一页
+</button>
+
+</nav>
+
+
+</main>
+
+
+
+<footer>
+
+<span>
+Jingyan Media Center
+</span>
+
+<span>
+GitHub source · Cloudflare delivery
+</span>
+
+</footer>
+
+
+</div>
+
+
+<div
+class="toast"
+id="toast"
+role="status">
+</div>
+
+
+</body>
+
+</html>
