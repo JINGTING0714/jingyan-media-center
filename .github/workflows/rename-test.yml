@@ -1,0 +1,106 @@
+name: Rename System Test
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: jingyan-media-pipeline
+  cancel-in-progress: false
+
+jobs:
+
+  test:
+
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+
+      - name: Install Dependencies
+        run: npm install --omit=dev --package-lock=false
+
+
+      - name: Run Rename Tests
+        id: rename_test
+        run: node api/rename-test.js
+
+
+      - name: Save Rename Test Report
+        if: always()
+
+        shell: bash
+
+        run: |
+
+          set -e
+
+          git config user.name "github-actions[bot]"
+
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+
+          git add data/rename-test-report.json
+
+
+          if git diff --cached --quiet; then
+
+            echo "No rename test report changes."
+
+            exit 0
+
+          fi
+
+
+          git commit -m "chore: update rename test report"
+
+
+          for attempt in 1 2 3; do
+
+            echo "Push attempt: $attempt"
+
+
+            git fetch origin main
+
+
+            if ! git rebase origin/main; then
+
+              echo "Rebase conflict. Aborting safely."
+
+              git rebase --abort || true
+
+              exit 1
+
+            fi
+
+
+            if git push origin HEAD:main; then
+
+              echo "Rename test report pushed."
+
+              exit 0
+
+            fi
+
+
+            sleep $((attempt * 2))
+
+          done
+
+
+          echo "Failed to push rename test report."
+
+          exit 1
