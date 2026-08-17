@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+name="viewport"
+content="width=device-width, initial-scale=1.0">
+
+<meta
+name="color-scheme"
+content="light">
+
+<title>
+管理后台 · Jingyan Media Center
+</title>
+
+<meta
+name="description"
+content="Jingyan Media Center Owner 管理后台">
+
+<link
+rel="stylesheet"
+href="/style.css">
+
+<link
+rel="stylesheet"
+href="/admin.css">
+
+<script
+src="/admin.js"
+defer>
+</script>
+
+</head>
+
+
+<body>
+
+
+<div class="site-shell">
+
+
+<header class="topbar">
+
+<div class="brand-block">
+
+<div class="brand-mark">
+J
+</div>
+
+<div>
+
+<div class="brand-name">
+Jingyan Media Center
+</div>
+
+<div class="brand-subtitle">
+Owner Control Center
+</div>
+
+</div>
+
+</div>
+
+
+<nav class="topnav">
+
+<a
+href="/"
+class="nav-link">
+上传中心
+</a>
+
+<a
+href="/account"
+class="nav-link">
+账户
+</a>
+
+<a
+href="/admin"
+class="nav-link active">
+管理后台
+</a>
+
+</nav>
+
+
+<div
+class="identity"
+id="adminIdentity">
+
+<span class="identity-status">
+正在验证 Owner…
+</span>
+
+</div>
+
+</header>
+
+
+
+<main class="admin-page">
+
+
+<section class="admin-hero">
+
+<div>
+
+<span class="eyebrow">
+OWNER CONTROL
+</span>
+
+<h1>
+管理你的媒体系统。
+</h1>
+
+<p>
+用户、邀请码、精确权限、登录设备与安全审计，都从这里控制。
+</p>
+
+</div>
+
+
+<button
+type="button"
+class="button secondary"
+id="refreshAdmin">
+刷新数据
+</button>
+
+</section>
+
+
+
+<section class="admin-summary">
+
+<article class="summary-card">
+
+<span>
+全部用户
+</span>
+
+<strong id="summaryUsers">
+—
+</strong>
+
+<small>
+Owner + Uploader
+</small>
+
+</article>
+
+
+<article class="summary-card">
+
+<span>
+活跃上传者
+</span>
+
+<strong id="summaryUploaders">
+—
+</strong>
+
+<small>
+当前可登录
+</small>
+
+</article>
+
+
+<article class="summary-card">
+
+<span>
+有效邀请码
+</span>
+
+<strong id="summaryInvites">
+—
+</strong>
+
+<small>
+尚未使用
+</small>
+
+</article>
+
+
+<article class="summary-card">
+
+<span>
+最近审计记录
+</span>
+
+<strong id="summaryAudit">
+—
+</strong>
+
+<small>
+最近返回记录
+</small>
+
+</article>
+
+</section>
+
+
+
+<section
+class="secret-panel hidden"
+id="secretPanel">
+
+<div>
+
+<span class="section-kicker">
+ONE-TIME SECRET
+</span>
+
+<h2 id="secretTitle">
+一次性代码
+</h2>
+
+<p id="secretHint">
+此内容只显示这一次。
+</p>
+
+</div>
+
+<div class="secret-value-row">
+
+<code id="secretValue"></code>
+
+<button
+type="button"
+class="button primary"
+id="copySecret">
+复制
+</button>
+
+<button
+type="button"
+class="button secondary"
+id="closeSecret">
+关闭
+</button>
+
+</div>
+
+</section>
+
+
+
+<div class="admin-grid">
+
+
+<div class="admin-main-column">
+
+
+<section class="card admin-card">
+
+<div class="section-heading">
+
+<div>
+
+<span class="section-kicker">
+INVITE
+</span>
+
+<h2>
+创建一人一码邀请
+</h2>
+
+</div>
+
+<span class="admin-safe-badge">
+一次使用
+</span>
+
+</div>
+
+
+<form id="inviteForm">
+
+
+<div class="admin-form-grid">
+
+<label class="admin-field">
+
+<span>
+显示名称
+</span>
+
+<input
+id="inviteName"
+class="admin-input"
+maxlength="80"
+required
+autocomplete="off"
+placeholder="例如：Alex">
+
+</label>
+
+
+<label class="admin-field">
+
+<span>
+邀请码有效期
+</span>
+
+<select
+id="inviteExpiry"
+class="admin-select">
+
+<option value="7">
+7 天
+</option>
+
+<option
+value="30"
+selected>
+30 天
+</option>
+
+<option value="90">
+90 天
+</option>
+
+<option value="365">
+365 天
+</option>
+
+<option value="never">
+永不过期
+</option>
+
+</select>
+
+</label>
+
+</div>
+
+
+<label class="admin-field">
+
+<span>
+备注
+</span>
+
+<textarea
+id="inviteNote"
+class="admin-textarea"
+maxlength="200"
+rows="3"
+placeholder="可选，仅 Owner 可见"></textarea>
+
+</label>
+
+
+<div class="admin-subheading">
+
+<div>
+
+<strong>
+精确权限
+</strong>
+
+<p>
+真正授权由服务器端权限决定。
+</p>
+
+</div>
+
+<button
+type="button"
+class="text-button"
+id="resetInvitePermissions">
+恢复上传者默认值
+</button>
+
+</div>
+
+
+<div
+class="permission-grid"
+id="invitePermissions">
+</div>
+
+
+<div class="admin-form-actions">
+
+<button
+type="submit"
+class="button primary">
+生成邀请码
+</button>
+
+</div>
+
+</form>
+
+</section>
+
+
+
+<section class="card admin-card">
+
+<div class="section-heading">
+
+<div>
+
+<span class="section-kicker">
+USERS
+</span>
+
+<h2>
+用户与权限
+</h2>
+
+</div>
+
+</div>
+
+
+<div
+class="admin-empty hidden"
+id="usersEmpty">
+暂无用户
+</div>
+
+<div
+class="entity-list"
+id="usersList">
+</div>
+
+</section>
+
+
+</div>
+
+
+
+<aside class="admin-side-column">
+
+
+<section class="card admin-card">
+
+<div class="section-heading">
+
+<div>
+
+<span class="section-kicker">
+INVITES
+</span>
+
+<h2>
+邀请码
+</h2>
+
+</div>
+
+</div>
+
+
+<div
+class="admin-empty hidden"
+id="invitesEmpty">
+暂无邀请码
+</div>
+
+<div
+class="entity-list compact"
+id="invitesList">
+</div>
+
+</section>
+
+
+
+<section class="card admin-card">
+
+<div class="section-heading">
+
+<div>
+
+<span class="section-kicker">
+AUDIT
+</span>
+
+<h2>
+安全审计
+</h2>
+
+</div>
+
+</div>
+
+
+<div
+class="admin-empty hidden"
+id="auditEmpty">
+暂无审计记录
+</div>
+
+<div
+class="audit-list"
+id="auditList">
+</div>
+
+</section>
+
+
+</aside>
+
+
+</div>
+
+
+</main>
+
+
+
+<footer>
+
+<span>
+Jingyan Media Center
+</span>
+
+<span>
+Owner-only administration
+</span>
+
+</footer>
+
+
+</div>
+
+
+<div
+class="toast"
+id="toast"
+role="status">
+</div>
+
+
+</body>
+
+</html>
