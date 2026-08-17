@@ -68,9 +68,14 @@
     "binding": "ASSETS",
     "run_worker_first": [
       "/api/*",
+
       "/admin",
       "/admin/",
-      "/admin/index.html"
+      "/admin/index.html",
+
+      "/library",
+      "/library/",
+      "/library/index.html"
     ],
     "html_handling": "auto-trailing-slash",
     "not_found_handling": "none"
