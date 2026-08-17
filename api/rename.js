@@ -12,41 +12,30 @@ const CONFIG_FILE =
 const HAN_REGEX =
     /[\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF]/u;
 
-
 const HAN_SEQUENCE_REGEX =
     /[\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF]+/gu;
-
 
 const JAPANESE_KANA_REGEX =
     /[\u3040-\u30FF\u31F0-\u31FF]/u;
 
+const JAPANESE_KANA_SEQUENCE_REGEX =
+    /[\u3040-\u30FF\u31F0-\u31FF]+/gu;
 
 const HANGUL_REGEX =
     /[\u1100-\u11FF\u3130-\u318F\uAC00-\uD7AF]/u;
-
 
 const HANGUL_SEQUENCE_REGEX =
     /[\u1100-\u11FF\u3130-\u318F\uAC00-\uD7AF]+/gu;
 
 
-let pinyinFunction =
-    null;
+let pinyinFunction = null;
+let transliterateFunction = null;
+let koreanRomanizeFunction = null;
 
-
-let transliterateFunction =
-    null;
-
-
-let koreanRomanizeFunction =
-    null;
-
-
-let kuroshiroInstance =
-    null;
-
-
-let kuroshiroPromise =
-    null;
+let kuroshiroConstructor = null;
+let kuromojiAnalyzerConstructor = null;
+let kuroshiroInstance = null;
+let kuroshiroPromise = null;
 
 
 function loadConfig() {
@@ -61,21 +50,128 @@ function loadConfig() {
 }
 
 
-function getDefaultExport(
-    module
-) {
+function unwrapDefaultExport(value) {
 
-    if (
-        module &&
-        module.default
+    let current = value;
+
+    const visited =
+        new Set();
+
+
+    for (
+        let depth = 0;
+        depth < 8;
+        depth++
     ) {
 
-        return module.default;
+        if (
+            !current ||
+            typeof current !== "object"
+        ) {
+
+            break;
+
+        }
+
+
+        if (
+            visited.has(current)
+        ) {
+
+            break;
+
+        }
+
+
+        visited.add(current);
+
+
+        if (
+            current.default === undefined ||
+            current.default === current
+        ) {
+
+            break;
+
+        }
+
+
+        current =
+            current.default;
 
     }
 
 
-    return module;
+    return current;
+
+}
+
+
+function findNamedFunction(
+    value,
+    name
+) {
+
+    let current = value;
+
+    const visited =
+        new Set();
+
+
+    for (
+        let depth = 0;
+        depth < 8;
+        depth++
+    ) {
+
+        if (!current) {
+
+            break;
+
+        }
+
+
+        if (
+            typeof current[name] ===
+            "function"
+        ) {
+
+            return current[name];
+
+        }
+
+
+        if (
+            typeof current !==
+            "object" ||
+            visited.has(current)
+        ) {
+
+            break;
+
+        }
+
+
+        visited.add(current);
+
+
+        if (
+            current.default === undefined ||
+            current.default === current
+        ) {
+
+            break;
+
+        }
+
+
+        current =
+            current.default;
+
+    }
+
+
+    return null;
 
 }
 
@@ -95,10 +191,14 @@ async function getPinyin() {
         );
 
 
-    if (
-        typeof module.pinyin !==
-        "function"
-    ) {
+    const pinyin =
+        findNamedFunction(
+            module,
+            "pinyin"
+        );
+
+
+    if (!pinyin) {
 
         throw new Error(
             "pinyin-pro does not export pinyin()"
@@ -108,7 +208,7 @@ async function getPinyin() {
 
 
     pinyinFunction =
-        module.pinyin;
+        pinyin;
 
 
     return pinyinFunction;
@@ -132,7 +232,7 @@ async function getGeneralTransliterator() {
 
 
     const transliterate =
-        getDefaultExport(
+        unwrapDefaultExport(
             module
         );
 
@@ -158,7 +258,7 @@ async function getGeneralTransliterator() {
 }
 
 
-async function getKoreanRomanizer() {
+function getKoreanRomanizer() {
 
     if (koreanRomanizeFunction) {
 
@@ -168,28 +268,116 @@ async function getKoreanRomanizer() {
 
 
     const module =
-        await import(
+        require(
             "@romanize/korean"
         );
 
 
-    if (
-        typeof module.romanize !==
-        "function"
-    ) {
+    const romanize =
+        findNamedFunction(
+            module,
+            "romanize"
+        );
+
+
+    if (!romanize) {
 
         throw new Error(
-            "@romanize/korean does not export romanize()"
+            "@romanize/korean romanize() export invalid"
         );
 
     }
 
 
     koreanRomanizeFunction =
-        module.romanize;
+        romanize;
 
 
     return koreanRomanizeFunction;
+
+}
+
+
+function getKuroshiroConstructor() {
+
+    if (kuroshiroConstructor) {
+
+        return kuroshiroConstructor;
+
+    }
+
+
+    const module =
+        require(
+            "kuroshiro"
+        );
+
+
+    const Kuroshiro =
+        unwrapDefaultExport(
+            module
+        );
+
+
+    if (
+        typeof Kuroshiro !==
+        "function"
+    ) {
+
+        throw new Error(
+            "kuroshiro constructor export invalid"
+        );
+
+    }
+
+
+    kuroshiroConstructor =
+        Kuroshiro;
+
+
+    return kuroshiroConstructor;
+
+}
+
+
+function getKuromojiAnalyzerConstructor() {
+
+    if (kuromojiAnalyzerConstructor) {
+
+        return kuromojiAnalyzerConstructor;
+
+    }
+
+
+    const module =
+        require(
+            "kuroshiro-analyzer-kuromoji"
+        );
+
+
+    const KuromojiAnalyzer =
+        unwrapDefaultExport(
+            module
+        );
+
+
+    if (
+        typeof KuromojiAnalyzer !==
+        "function"
+    ) {
+
+        throw new Error(
+            "kuroshiro-analyzer-kuromoji constructor export invalid"
+        );
+
+    }
+
+
+    kuromojiAnalyzerConstructor =
+        KuromojiAnalyzer;
+
+
+    return kuromojiAnalyzerConstructor;
 
 }
 
@@ -214,52 +402,12 @@ async function getKuroshiro() {
         (
             async () => {
 
-                const kuroshiroModule =
-                    await import(
-                        "kuroshiro"
-                    );
-
-
-                const analyzerModule =
-                    await import(
-                        "kuroshiro-analyzer-kuromoji"
-                    );
-
-
                 const Kuroshiro =
-                    getDefaultExport(
-                        kuroshiroModule
-                    );
+                    getKuroshiroConstructor();
 
 
                 const KuromojiAnalyzer =
-                    getDefaultExport(
-                        analyzerModule
-                    );
-
-
-                if (
-                    typeof Kuroshiro !==
-                    "function"
-                ) {
-
-                    throw new Error(
-                        "kuroshiro export invalid"
-                    );
-
-                }
-
-
-                if (
-                    typeof KuromojiAnalyzer !==
-                    "function"
-                ) {
-
-                    throw new Error(
-                        "kuroshiro-analyzer-kuromoji export invalid"
-                    );
-
-                }
+                    getKuromojiAnalyzerConstructor();
 
 
                 const instance =
@@ -395,18 +543,14 @@ function stripRepeatedExtension(
     let basename =
         path.basename(
             raw,
-            path.extname(
-                raw
-            )
+            path.extname(raw)
         );
 
 
     while (
         basename
             .toLowerCase()
-            .endsWith(
-                extension
-            )
+            .endsWith(extension)
     ) {
 
         basename =
@@ -444,11 +588,10 @@ async function transliterateChinese(
 
     const matches =
         Array.from(
-            String(
-                text
-            ).matchAll(
-                HAN_SEQUENCE_REGEX
-            )
+            String(text)
+                .matchAll(
+                    HAN_SEQUENCE_REGEX
+                )
         );
 
 
@@ -462,12 +605,8 @@ async function transliterateChinese(
     }
 
 
-    let output =
-        "";
-
-
-    let cursor =
-        0;
+    let output = "";
+    let cursor = 0;
 
 
     for (
@@ -482,7 +621,7 @@ async function transliterateChinese(
             );
 
 
-        const converted =
+        output +=
             pinyin(
                 match[0],
                 {
@@ -498,10 +637,6 @@ async function transliterateChinese(
             );
 
 
-        output +=
-            converted;
-
-
         cursor =
             match.index +
             match[0].length;
@@ -510,9 +645,7 @@ async function transliterateChinese(
 
 
     output +=
-        text.slice(
-            cursor
-        );
+        text.slice(cursor);
 
 
     return output;
@@ -545,21 +678,56 @@ async function transliterateJapanese(
 }
 
 
+function transliterateJapaneseKanaFallback(
+    text
+) {
+
+    const Kuroshiro =
+        getKuroshiroConstructor();
+
+
+    if (
+        !Kuroshiro.Util ||
+        typeof Kuroshiro.Util
+            .kanaToRomaji !==
+            "function"
+    ) {
+
+        throw new Error(
+            "Kuroshiro kanaToRomaji() unavailable"
+        );
+
+    }
+
+
+    return String(text)
+        .replace(
+            JAPANESE_KANA_SEQUENCE_REGEX,
+            value =>
+                Kuroshiro.Util
+                    .kanaToRomaji(
+                        value,
+                        "hepburn"
+                    )
+        );
+
+}
+
+
 async function transliterateKorean(
     text
 ) {
 
     const romanize =
-        await getKoreanRomanizer();
+        getKoreanRomanizer();
 
 
     const matches =
         Array.from(
-            String(
-                text
-            ).matchAll(
-                HANGUL_SEQUENCE_REGEX
-            )
+            String(text)
+                .matchAll(
+                    HANGUL_SEQUENCE_REGEX
+                )
         );
 
 
@@ -573,12 +741,8 @@ async function transliterateKorean(
     }
 
 
-    let output =
-        "";
-
-
-    let cursor =
-        0;
+    let output = "";
+    let cursor = 0;
 
 
     for (
@@ -607,9 +771,7 @@ async function transliterateKorean(
 
 
     output +=
-        text.slice(
-            cursor
-        );
+        text.slice(cursor);
 
 
     return output;
@@ -621,8 +783,7 @@ function unicodeFallback(
     text
 ) {
 
-    let output =
-        "";
+    let output = "";
 
 
     for (
@@ -639,7 +800,6 @@ function unicodeFallback(
             output +=
                 character;
 
-
             continue;
 
         }
@@ -651,9 +811,7 @@ function unicodeFallback(
             )
         ) {
 
-            output +=
-                "-";
-
+            output += "-";
 
             continue;
 
@@ -666,9 +824,7 @@ function unicodeFallback(
             )
         ) {
 
-            output +=
-                "-";
-
+            output += "-";
 
             continue;
 
@@ -714,29 +870,23 @@ function finalizeSlug(
             .normalize(
                 "NFKD"
             )
-
             .replace(
                 /[\u0300-\u036f]/g,
                 ""
             )
-
             .replace(
                 /&/g,
                 " and "
             )
-
             .toLowerCase()
-
             .replace(
                 /[^a-z0-9-]+/g,
                 "-"
             )
-
             .replace(
                 /-+/g,
                 "-"
             )
-
             .replace(
                 /^-+|-+$/g,
                 ""
@@ -798,31 +948,40 @@ async function normalizeName(
 
 
     const hasKana =
-        JAPANESE_KANA_REGEX.test(
-            text
-        );
+        JAPANESE_KANA_REGEX
+            .test(text);
 
 
     const hasHangul =
-        HANGUL_REGEX.test(
-            text
-        );
+        HANGUL_REGEX
+            .test(text);
 
 
     const hasHan =
-        HAN_REGEX.test(
-            text
-        );
+        HAN_REGEX
+            .test(text);
 
 
-    if (
+    const shouldUseJapanese =
         hint.language ===
             "ja" ||
         (
             !hint.language &&
             hasKana
-        )
-    ) {
+        );
+
+
+    const shouldUseChinese =
+        hint.language ===
+            "zh" ||
+        (
+            !hint.language &&
+            hasHan &&
+            !hasKana
+        );
+
+
+    if (shouldUseJapanese) {
 
         try {
 
@@ -831,14 +990,15 @@ async function normalizeName(
                     text
                 );
 
-        } catch (error) {
 
-            console.warn(
-                `Japanese transliteration fallback: ${error.message}`
-            );
-
-
-            if (hasHan) {
+            /*
+             * Proper names or unknown words may occasionally remain
+             * as unresolved Han characters. Convert only those remaining
+             * Han characters as a final ASCII-safe fallback.
+             */
+            if (
+                HAN_REGEX.test(text)
+            ) {
 
                 text =
                     await transliterateChinese(
@@ -847,25 +1007,70 @@ async function normalizeName(
 
             }
 
+
+            if (
+                JAPANESE_KANA_REGEX
+                    .test(text)
+            ) {
+
+                text =
+                    transliterateJapaneseKanaFallback(
+                        text
+                    );
+
+            }
+
+        } catch (error) {
+
+            console.warn(
+                `Japanese transliteration fallback: ${error.message}`
+            );
+
+
+            if (
+                HAN_REGEX.test(text)
+            ) {
+
+                text =
+                    await transliterateChinese(
+                        text
+                    );
+
+            }
+
+
+            if (
+                JAPANESE_KANA_REGEX
+                    .test(text)
+            ) {
+
+                try {
+
+                    text =
+                        transliterateJapaneseKanaFallback(
+                            text
+                        );
+
+                } catch (
+                    fallbackError
+                ) {
+
+                    console.warn(
+                        `Japanese kana fallback failed: ${fallbackError.message}`
+                    );
+
+                }
+
+            }
+
         }
 
-    } else {
+    } else if (shouldUseChinese) {
 
-        if (
-            hint.language ===
-                "zh" ||
-            (
-                !hint.language &&
-                hasHan
-            )
-        ) {
-
-            text =
-                await transliterateChinese(
-                    text
-                );
-
-        }
+        text =
+            await transliterateChinese(
+                text
+            );
 
     }
 
@@ -972,12 +1177,11 @@ async function renameFile(
 
 
     const number =
-        String(
-            sequence
-        ).padStart(
-            digits,
-            "0"
-        );
+        String(sequence)
+            .padStart(
+                digits,
+                "0"
+            );
 
 
     const format =
