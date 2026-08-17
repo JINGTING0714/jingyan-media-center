@@ -384,22 +384,16 @@ function buildPendingRecord(
         path.extname(
             item.filename
         )
-        .replace(
-            ".",
-            ""
-        )
+        .replace(".", "")
         .toLowerCase();
 
 
     const originalTitle =
         path.basename(
-
             item.originalName,
-
             path.extname(
                 item.originalName
             )
-
         );
 
 
@@ -446,9 +440,7 @@ function buildPendingRecord(
             Number(
                 Number(
                     item.sizeMB
-                ).toFixed(
-                    3
-                )
+                ).toFixed(3)
             ),
 
         repository: {
@@ -490,23 +482,6 @@ function buildPendingRecord(
         url:
             null,
 
-        source:
-            {
-
-                repositoryId:
-                    repository.id,
-
-                repo:
-                    repository.repo,
-
-                branch:
-                    repository.branch,
-
-                path:
-                    item.path
-
-            },
-
         createdAt:
             new Date()
                 .toISOString(),
@@ -526,7 +501,6 @@ function buildPendingRecord(
     };
 
 }
-
 
 async function upsertPendingRecord(
     repository,
