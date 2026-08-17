@@ -1,8 +1,8 @@
 {
-  "version": 1,
-  "status": "fail",
-  "startedAt": "2026-08-17T06:48:55.538Z",
-  "completedAt": "2026-08-17T06:48:55.634Z",
+  "version": 2,
+  "status": "pass",
+  "startedAt": "2026-08-17T07:13:40.037Z",
+  "completedAt": "2026-08-17T07:13:40.580Z",
   "environment": {
     "node": "v22.23.2",
     "platform": "linux",
@@ -10,8 +10,8 @@
   },
   "summary": {
     "total": 11,
-    "passed": 9,
-    "failed": 2
+    "passed": 11,
+    "failed": 0
   },
   "results": [
     {
@@ -71,9 +71,9 @@
     {
       "id": "japanese-explicit",
       "description": "Japanese pure Kanji with explicit language hint",
-      "input": "[ja]宇多田光 - First Love.jpg",
+      "input": "[ja]東京音楽.jpg",
       "sequence": 999,
-      "output": "999-yu-duo-tian-guang-first-love.jpg",
+      "output": "999-tokyo-ongaku.jpg",
       "status": "pass",
       "checks": [
         {
@@ -112,10 +112,24 @@
           "details": null
         },
         {
-          "name": "contains:first-love",
+          "name": "contains:ongaku",
           "passed": true,
           "details": {
-            "fragment": "first-love"
+            "fragment": "ongaku"
+          }
+        },
+        {
+          "name": "not-contains:dong-jing",
+          "passed": true,
+          "details": {
+            "fragment": "dong-jing"
+          }
+        },
+        {
+          "name": "not-contains:yin-yue",
+          "passed": true,
+          "details": {
+            "fragment": "yin-yue"
           }
         }
       ],
@@ -123,11 +137,11 @@
     },
     {
       "id": "japanese-auto",
-      "description": "Japanese auto detection with Katakana",
-      "input": "宇多田ヒカル - First Love.jpg",
+      "description": "Japanese auto detection with Kana",
+      "input": "日本語のテスト.jpg",
       "sequence": 999,
-      "output": "999-yu-duo-tian-u30d2-u30ab-u30eb-first-love.jpg",
-      "status": "fail",
+      "output": "999-nihongo-no-tesuto.jpg",
+      "status": "pass",
       "checks": [
         {
           "name": "ascii-only",
@@ -161,14 +175,28 @@
         },
         {
           "name": "no-unicode-fallback",
-          "passed": false,
+          "passed": true,
           "details": null
         },
         {
-          "name": "contains:first-love",
+          "name": "contains:nihongo",
           "passed": true,
           "details": {
-            "fragment": "first-love"
+            "fragment": "nihongo"
+          }
+        },
+        {
+          "name": "contains:tesuto",
+          "passed": true,
+          "details": {
+            "fragment": "tesuto"
+          }
+        },
+        {
+          "name": "not-contains:ri-ben-yu",
+          "passed": true,
+          "details": {
+            "fragment": "ri-ben-yu"
           }
         }
       ],
@@ -179,10 +207,53 @@
       "description": "Korean Revised Romanization",
       "input": "[ko]방탄소년단 - Dynamite.jpg",
       "sequence": 999,
-      "output": null,
-      "status": "error",
-      "checks": [],
-      "error": "Error: @romanize/korean does not export romanize()\n    at getKoreanRomanizer (/home/runner/work/jingyan-media-center/jingyan-media-center/api/rename.js:181:15)\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at async transliterateKorean (/home/runner/work/jingyan-media-center/jingyan-media-center/api/rename.js:553:9)\n    at async normalizeName (/home/runner/work/jingyan-media-center/jingyan-media-center/api/rename.js:880:13)\n    at async renameFile (/home/runner/work/jingyan-media-center/jingyan-media-center/api/rename.js:961:9)\n    at async runCase (/home/runner/work/jingyan-media-center/jingyan-media-center/api/rename-test.js:407:13)\n    at async run (/home/runner/work/jingyan-media-center/jingyan-media-center/api/rename-test.js:655:13)"
+      "output": "999-bangtansonyeondan-dynamite.jpg",
+      "status": "pass",
+      "checks": [
+        {
+          "name": "ascii-only",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "safe-filename",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "correct-sequence",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "correct-extension",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "no-repeated-extension",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "language-hint-removed",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "no-unicode-fallback",
+          "passed": true,
+          "details": null
+        },
+        {
+          "name": "contains:dynamite",
+          "passed": true,
+          "details": {
+            "fragment": "dynamite"
+          }
+        }
+      ],
+      "error": null
     },
     {
       "id": "russian",
