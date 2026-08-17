@@ -30,7 +30,9 @@ function getManifestFile() {
     const config =
         loadConfig();
 
-    return config.cdn.manifestFile;
+
+    return config.cdn
+        .manifestFile;
 
 }
 
@@ -43,7 +45,8 @@ function createEmptyManifest() {
 
     return {
 
-        version: 1,
+        version:
+            1,
 
         worker:
             config.cdn.workerName,
@@ -77,7 +80,9 @@ function ensureManifestFile() {
 
 
     const directory =
-        path.dirname(file);
+        path.dirname(
+            file
+        );
 
 
     if (
@@ -87,10 +92,14 @@ function ensureManifestFile() {
     ) {
 
         fs.mkdirSync(
+
             directory,
+
             {
-                recursive: true
+                recursive:
+                    true
             }
+
         );
 
     }
@@ -136,7 +145,7 @@ function readManifest() {
     if (
         !parsed.assets ||
         typeof parsed.assets !==
-        "object" ||
+            "object" ||
         Array.isArray(
             parsed.assets
         )
@@ -223,10 +232,12 @@ function computeCloudflareAssetHash(
             "sha256"
         )
         .update(
+
             buffer.toString(
                 "base64"
             ) +
             extension
+
         )
         .digest(
             "hex"
@@ -262,13 +273,9 @@ function validateAssetSize(
     label
 ) {
 
-    const maxBytes =
-        getMaxAssetBytes();
-
-
     if (
         Number(size) >
-        maxBytes
+        getMaxAssetBytes()
     ) {
 
         throw new Error(
@@ -335,6 +342,7 @@ async function downloadSourceBuffer(
 
 
     const url =
+
         "https://api.github.com/repos/" +
         source.repo +
         "/contents/" +
@@ -349,8 +357,11 @@ async function downloadSourceBuffer(
 
     const response =
         await fetch(
+
             url,
+
             {
+
                 headers: {
 
                     "Authorization":
@@ -366,7 +377,9 @@ async function downloadSourceBuffer(
                         "jingyan-media-center"
 
                 }
+
             }
+
         );
 
 
@@ -525,7 +538,7 @@ function registerCDNAsset({
     if (
         existing &&
         existing.hash !==
-        asset.hash
+            asset.hash
     ) {
 
         throw new Error(
@@ -556,7 +569,8 @@ function registerCDNAsset({
 
 
     const changed =
-        before !== after;
+        before !==
+        after;
 
 
     if (changed) {
@@ -605,6 +619,8 @@ function getRepositoryFullName(
     if (
         record &&
         record.source &&
+        typeof record.source ===
+            "object" &&
         record.source.repo
     ) {
 
@@ -617,12 +633,11 @@ function getRepositoryFullName(
         record &&
         record.repository &&
         typeof record.repository ===
-        "object" &&
+            "object" &&
         record.repository.fullName
     ) {
 
-        return record
-            .repository
+        return record.repository
             .fullName;
 
     }
@@ -631,7 +646,7 @@ function getRepositoryFullName(
     if (
         record &&
         typeof record.repository ===
-        "string"
+            "string"
     ) {
 
         return record.repository;
@@ -644,13 +659,74 @@ function getRepositoryFullName(
 }
 
 
+function getRecordFilename(
+    record,
+    sourcePath =
+        null
+) {
+
+    if (
+        record &&
+        typeof record.filename ===
+        "string"
+    ) {
+
+        return record.filename;
+
+    }
+
+
+    if (
+        record &&
+        typeof record.file ===
+        "string"
+    ) {
+
+        return path.posix.basename(
+            record.file
+        );
+
+    }
+
+
+    if (
+        record &&
+        record.file &&
+        typeof record.file ===
+            "object" &&
+        typeof record.file.name ===
+            "string"
+    ) {
+
+        return record.file.name;
+
+    }
+
+
+    if (sourcePath) {
+
+        return path.posix.basename(
+            sourcePath
+        );
+
+    }
+
+
+    return null;
+
+}
+
+
 function getRecordSourcePath(
-    record
+    record,
+    repository
 ) {
 
     if (
         record &&
         record.source &&
+        typeof record.source ===
+            "object" &&
         record.source.path
     ) {
 
@@ -669,46 +745,78 @@ function getRecordSourcePath(
     }
 
 
-    return null;
-
-}
-
-
-function getRecordFilename(
-    record,
-    sourcePath
-) {
-
-    if (
-        record &&
-        record.filename
-    ) {
-
-        return record.filename;
-
-    }
+    const filename =
+        getRecordFilename(
+            record
+        );
 
 
     if (
-        record &&
-        record.file
+        filename &&
+        repository.folder
     ) {
 
-        return record.file;
-
-    }
-
-
-    if (sourcePath) {
-
-        return path.posix.basename(
-            sourcePath
+        return (
+            repository.folder +
+            "/" +
+            filename
         );
 
     }
 
 
     return null;
+
+}
+
+
+function shouldPublishRecord(
+    record
+) {
+
+    if (!record) {
+
+        return false;
+
+    }
+
+
+    if (
+        record.status ===
+            "deleted" ||
+        record.deleted ===
+            true
+    ) {
+
+        return false;
+
+    }
+
+
+    if (
+        typeof record.sourceStatus ===
+        "string" &&
+        record.sourceStatus !==
+            "complete"
+    ) {
+
+        return false;
+
+    }
+
+
+    if (
+        !record.sourceStatus &&
+        record.status ===
+            "pending"
+    ) {
+
+        return false;
+
+    }
+
+
+    return true;
 
 }
 
@@ -808,12 +916,8 @@ async function reconcileManifestFromDatabases() {
             ) {
 
                 if (
-                    record &&
-                    (
-                        record.status ===
-                        "deleted" ||
-                        record.deleted ===
-                        true
+                    !shouldPublishRecord(
+                        record
                     )
                 ) {
 
@@ -824,14 +928,21 @@ async function reconcileManifestFromDatabases() {
 
                 const sourcePath =
                     getRecordSourcePath(
-                        record
+
+                        record,
+
+                        repository
+
                     );
 
 
                 const filename =
                     getRecordFilename(
+
                         record,
+
                         sourcePath
+
                     );
 
 
@@ -875,6 +986,8 @@ async function reconcileManifestFromDatabases() {
                     branch:
                         (
                             record.source &&
+                            typeof record.source ===
+                                "object" &&
                             record.source.branch
                         ) ||
                         repository.branch ||
@@ -917,7 +1030,7 @@ async function reconcileManifestFromDatabases() {
 
 
                 console.log(
-                    `CDN manifest added legacy record: ${cdnPath}`
+                    `CDN manifest added database record: ${cdnPath}`
                 );
 
 
@@ -1079,7 +1192,8 @@ async function getBufferForHash(
                     asset
                 ]
             ) =>
-                asset.hash === hash
+                asset.hash ===
+                hash
         );
 
 
@@ -1095,7 +1209,8 @@ async function getBufferForHash(
     const [
         assetPath,
         asset
-    ] = entry;
+    ] =
+        entry;
 
 
     const buffer =
@@ -1120,8 +1235,11 @@ async function getBufferForHash(
 
     const calculatedHash =
         computeCloudflareAssetHash(
+
             buffer,
+
             assetPath
+
         );
 
 
@@ -1180,8 +1298,11 @@ async function uploadMissingAssets({
 
             const buffer =
                 await getBufferForHash(
+
                     manifest,
+
                     hash
+
                 );
 
 
@@ -1320,6 +1441,7 @@ async function publishCDN() {
 
 
     const manifest =
+
         config.cdn
             .reconcileDatabasesOnPublish
 
@@ -1335,7 +1457,8 @@ async function publishCDN() {
 
 
     if (
-        assetCount === 0
+        assetCount ===
+        0
     ) {
 
         throw new Error(
@@ -1350,8 +1473,7 @@ async function publishCDN() {
 
 
     const workerName =
-        config.cdn
-            .workerName;
+        config.cdn.workerName;
 
 
     const worker =
@@ -1364,8 +1486,10 @@ async function publishCDN() {
                 workerName,
 
                 {
+
                     account_id:
                         accountId
+
                 }
 
             );
@@ -1436,7 +1560,8 @@ async function publishCDN() {
 
 
     if (
-        buckets.length === 0
+        buckets.length ===
+        0
     ) {
 
         console.log(
@@ -1496,11 +1621,13 @@ async function publishCDN() {
 
                     bindings: [
                         {
+
                             type:
                                 "assets",
 
                             name:
                                 "ASSETS"
+
                         }
                     ],
 
@@ -1526,6 +1653,7 @@ async function publishCDN() {
 
                     modules: [
                         {
+
                             name:
                                 "jingyan-media-cdn.mjs",
 
@@ -1541,6 +1669,7 @@ async function publishCDN() {
                                     .toString(
                                         "base64"
                                     )
+
                         }
                     ],
 
@@ -1590,11 +1719,13 @@ async function publishCDN() {
 
                     versions: [
                         {
+
                             percentage:
                                 100,
 
                             version_id:
                                 version.id
+
                         }
                     ],
 
