@@ -3,11 +3,8 @@ const path = require("path");
 
 
 const {
-
     getFile,
-
     upsertTextFile
-
 } = require("./github");
 
 
@@ -18,15 +15,10 @@ const CONFIG_FILE =
 function loadConfig() {
 
     return JSON.parse(
-
         fs.readFileSync(
-
             CONFIG_FILE,
-
             "utf8"
-
         )
-
     );
 
 }
@@ -41,13 +33,9 @@ function saveConfig(
         CONFIG_FILE,
 
         JSON.stringify(
-
             config,
-
             null,
-
             2
-
         ) + "\n"
 
     );
@@ -80,10 +68,8 @@ async function readRepositoryDatabase(
 
     const data =
         JSON.parse(
-
             result.content ||
             "[]"
-
         );
 
 
@@ -94,9 +80,7 @@ async function readRepositoryDatabase(
     ) {
 
         throw new Error(
-
             `Database must be an array: ${repository.repo}/${repository.database}`
-
         );
 
     }
@@ -111,69 +95,67 @@ function getRecordSequence(
     record
 ) {
 
-    if (
-
-        Number.isInteger(
-            Number(
-                record.sequence
-            )
-        ) &&
-
+    const direct =
         Number(
             record.sequence
-        ) > 0
+        );
 
+
+    if (
+        Number.isInteger(
+            direct
+        ) &&
+        direct > 0
+    ) {
+
+        return direct;
+
+    }
+
+
+    const filename =
+        record.filename ||
+        record.file ||
+        "";
+
+
+    const fileMatch =
+        String(
+            filename
+        )
+        .match(
+            /^(\d+)-/
+        );
+
+
+    if (
+        fileMatch
     ) {
 
         return Number(
-            record.sequence
+            fileMatch[1]
         );
 
     }
 
 
-    if (
-        record.filename
-    ) {
-
-        const match =
-            String(
-                record.filename
-            ).match(
-                /^(\d+)-/
-            );
-
-
-        if (match) {
-
-            return Number(
-                match[1]
-            );
-
-        }
-
-    }
+    const idMatch =
+        String(
+            record.id ||
+            ""
+        )
+        .match(
+            /-(\d+)$/
+        );
 
 
     if (
-        record.id
+        idMatch
     ) {
 
-        const match =
-            String(
-                record.id
-            ).match(
-                /-(\d+)$/
-            );
-
-
-        if (match) {
-
-            return Number(
-                match[1]
-            );
-
-        }
+        return Number(
+            idMatch[1]
+        );
 
     }
 
@@ -184,11 +166,8 @@ function getRecordSequence(
 
 
 function generateMediaID(
-
     type,
-
     sequence
-
 ) {
 
     const config =
@@ -196,7 +175,9 @@ function generateMediaID(
 
 
     const settings =
-        config.mediaTypes[type];
+        config.mediaTypes[
+            type
+        ];
 
 
     if (!settings) {
@@ -209,29 +190,22 @@ function generateMediaID(
 
 
     return (
-
         settings.idPrefix +
-
         "-" +
-
         String(
             sequence
         ).padStart(
             6,
             "0"
         )
-
     );
 
 }
 
 
 async function findRecordByHash(
-
     type,
-
     sha256
-
 ) {
 
     const config =
@@ -239,14 +213,12 @@ async function findRecordByHash(
 
 
     const repositories =
-
         config.storage
             .repositories[type] ||
-
         [];
 
 
-    let pending =
+    let fallback =
         null;
 
 
@@ -267,10 +239,8 @@ async function findRecordByHash(
         ) {
 
             if (
-
                 record.sha256 !==
                 sha256
-
             ) {
 
                 continue;
@@ -279,19 +249,16 @@ async function findRecordByHash(
 
 
             const result = {
-
                 repository,
-
                 record
-
             };
 
 
             if (
-
                 record.status ===
-                "complete"
-
+                "complete" &&
+                record.cdnStatus ===
+                "published"
             ) {
 
                 return result;
@@ -299,9 +266,9 @@ async function findRecordByHash(
             }
 
 
-            if (!pending) {
+            if (!fallback) {
 
-                pending =
+                fallback =
                     result;
 
             }
@@ -311,7 +278,7 @@ async function findRecordByHash(
     }
 
 
-    return pending;
+    return fallback;
 
 }
 
@@ -325,19 +292,15 @@ async function getRemoteMaxSequence(
 
 
     const repositories =
-
         config.storage
             .repositories[type] ||
-
         [];
 
 
     let maxSequence =
         Number(
-
             config.counters[type] ||
             0
-
         );
 
 
@@ -411,15 +374,10 @@ async function reserveSequence(
 
 
 function buildPendingRecord(
-
     repository,
-
     type,
-
     sequence,
-
     item
-
 ) {
 
     const extension =
@@ -449,11 +407,8 @@ function buildPendingRecord(
 
         id:
             generateMediaID(
-
                 type,
-
                 sequence
-
             ),
 
         operationId:
@@ -465,6 +420,12 @@ function buildPendingRecord(
         sequence,
 
         status:
+            "pending",
+
+        sourceStatus:
+            "pending",
+
+        cdnStatus:
             "pending",
 
         title:
@@ -483,13 +444,11 @@ function buildPendingRecord(
 
         sizeMB:
             Number(
-
                 Number(
                     item.sizeMB
                 ).toFixed(
                     3
                 )
-
             ),
 
         repository: {
@@ -506,20 +465,62 @@ function buildPendingRecord(
 
         },
 
+        source: {
+
+            repositoryId:
+                repository.id,
+
+            repo:
+                repository.repo,
+
+            branch:
+                repository.branch,
+
+            path:
+                item.path
+
+        },
+
         path:
             item.path,
 
+        cdnPath:
+            item.cdnPath,
+
         url:
-            item.cdn,
+            null,
 
         source:
-            "upload",
+            {
+
+                repositoryId:
+                    repository.id,
+
+                repo:
+                    repository.repo,
+
+                branch:
+                    repository.branch,
+
+                path:
+                    item.path
+
+            },
 
         createdAt:
             new Date()
                 .toISOString(),
 
+        sourceCompletedAt:
+            null,
+
+        cdnPublishedAt:
+            null,
+
         uploadedAt:
+            null,
+
+        uploader:
             null
 
     };
@@ -528,15 +529,10 @@ function buildPendingRecord(
 
 
 async function upsertPendingRecord(
-
     repository,
-
     type,
-
     sequence,
-
     item
-
 ) {
 
     const list =
@@ -545,21 +541,11 @@ async function upsertPendingRecord(
         );
 
 
-    const operationId =
-        `${type}:${item.sha256}`;
-
-
     const existing =
         list.find(
-
             record =>
-
-                record.operationId ===
-                operationId ||
-
                 record.sha256 ===
                 item.sha256
-
         );
 
 
@@ -572,29 +558,25 @@ async function upsertPendingRecord(
 
     const id =
         generateMediaID(
-
             type,
-
             sequence
-
         );
 
 
     const conflictingId =
         list.find(
-
             record =>
-                record.id === id
-
+                record.id ===
+                id
         );
 
 
-    if (conflictingId) {
+    if (
+        conflictingId
+    ) {
 
         throw new Error(
-
             `Database ID already exists: ${id}`
-
         );
 
     }
@@ -626,13 +608,9 @@ async function upsertPendingRecord(
         repository.database,
 
         JSON.stringify(
-
             list,
-
             null,
-
             2
-
         ) + "\n",
 
         repository.branch,
@@ -647,14 +625,11 @@ async function upsertPendingRecord(
 }
 
 
-async function markRecordComplete(
-
+async function patchRecord(
     repository,
-
-    operationId,
-
-    patch = {}
-
+    identity,
+    patch,
+    message
 ) {
 
     const list =
@@ -665,12 +640,13 @@ async function markRecordComplete(
 
     const index =
         list.findIndex(
-
             record =>
-
                 record.operationId ===
-                operationId
-
+                    identity ||
+                record.sha256 ===
+                    identity ||
+                record.id ===
+                    identity
         );
 
 
@@ -679,39 +655,23 @@ async function markRecordComplete(
     ) {
 
         throw new Error(
-
-            `Pending database record not found: ${operationId}`
-
+            `Database record not found: ${identity}`
         );
 
     }
 
 
-    const current =
-        list[index];
+    const updated = {
 
+        ...list[index],
 
-    const completed = {
-
-        ...current,
-
-        ...patch,
-
-        status:
-            "complete",
-
-        uploadedAt:
-
-            current.uploadedAt ||
-
-            new Date()
-                .toISOString()
+        ...patch
 
     };
 
 
     list[index] =
-        completed;
+        updated;
 
 
     await upsertTextFile(
@@ -721,33 +681,144 @@ async function markRecordComplete(
         repository.database,
 
         JSON.stringify(
-
             list,
-
             null,
-
             2
-
         ) + "\n",
 
         repository.branch,
 
-        `Complete ${completed.id}`
+        message
 
     );
 
 
-    return completed;
+    return updated;
+
+}
+
+
+async function markRecordSourceComplete(
+    repository,
+    identity,
+    patch = {}
+) {
+
+    return patchRecord(
+
+        repository,
+
+        identity,
+
+        {
+
+            ...patch,
+
+            status:
+                "source-complete",
+
+            sourceStatus:
+                "complete",
+
+            cdnStatus:
+                patch.cdnStatus ||
+                "pending",
+
+            sourceCompletedAt:
+                new Date()
+                    .toISOString()
+
+        },
+
+        `Source complete ${identity}`
+
+    );
+
+}
+
+
+async function markRecordCDNPending(
+    repository,
+    identity,
+    patch = {}
+) {
+
+    return patchRecord(
+
+        repository,
+
+        identity,
+
+        {
+
+            ...patch,
+
+            status:
+                "cdn-pending",
+
+            sourceStatus:
+                "complete",
+
+            cdnStatus:
+                "pending"
+
+        },
+
+        `CDN pending ${identity}`
+
+    );
+
+}
+
+
+async function markRecordComplete(
+    repository,
+    identity,
+    patch = {}
+) {
+
+    const now =
+        new Date()
+            .toISOString();
+
+
+    return patchRecord(
+
+        repository,
+
+        identity,
+
+        {
+
+            ...patch,
+
+            status:
+                "complete",
+
+            sourceStatus:
+                "complete",
+
+            cdnStatus:
+                "published",
+
+            cdnPublishedAt:
+                now,
+
+            uploadedAt:
+                now
+
+        },
+
+        `Complete ${identity}`
+
+    );
 
 }
 
 
 async function removeMedia(
-
     repository,
-
     id
-
 ) {
 
     const list =
@@ -758,10 +829,9 @@ async function removeMedia(
 
     const newList =
         list.filter(
-
             item =>
-                item.id !== id
-
+                item.id !==
+                id
         );
 
 
@@ -772,13 +842,9 @@ async function removeMedia(
         repository.database,
 
         JSON.stringify(
-
             newList,
-
             null,
-
             2
-
         ) + "\n",
 
         repository.branch,
@@ -802,6 +868,10 @@ module.exports = {
     reserveSequence,
 
     upsertPendingRecord,
+
+    markRecordSourceComplete,
+
+    markRecordCDNPending,
 
     markRecordComplete,
 
