@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "status": "not-run",
+  "mode": null,
+  "destructive": false,
+  "generatedAt": null,
+  "completedAt": null,
+  "publication": {
+    "attempted": false,
+    "publishedAt": null,
+    "versionId": null,
+    "deploymentId": null
+  },
+  "summary": {},
+  "migrations": {
+    "normalizedSourceRecords": [],
+    "migratedLegacyRecords": [],
+    "alreadyRepresentedLegacyRecords": [],
+    "duplicateLegacyRecords": []
+  },
+  "duplicateGroups": [],
+  "deletionCandidates": [],
+  "orphanFiles": [],
+  "conflicts": [],
+  "missingSourceRecords": [],
+  "warnings": [],
+  "retainedLegacyIndexes": [],
+  "notes": [
+    "History migration has not been run yet.",
+    "No media file is deleted automatically."
+  ]
+}
