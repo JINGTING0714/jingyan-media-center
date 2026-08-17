@@ -18,9 +18,7 @@ function cloneWithCookie(
 ) {
 
   if (!cookie) {
-
     return response;
-
   }
 
 
@@ -37,9 +35,7 @@ function cloneWithCookie(
 
 
   return new Response(
-
     response.body,
-
     {
       status:
         response.status,
@@ -49,7 +45,52 @@ function cloneWithCookie(
 
       headers
     }
+  );
 
+}
+
+
+function redirectWithCookie(
+  request,
+  pathname,
+  cookie = null
+) {
+
+  const url =
+    new URL(
+      pathname,
+      request.url
+    );
+
+
+  const headers =
+    new Headers({
+      Location:
+        url.toString(),
+
+      "Cache-Control":
+        "no-store"
+    });
+
+
+  if (cookie) {
+
+    headers.append(
+      "Set-Cookie",
+      cookie
+    );
+
+  }
+
+
+  return new Response(
+    null,
+    {
+      status:
+        302,
+
+      headers
+    }
   );
 
 }
@@ -70,16 +111,13 @@ async function authenticateThroughExistingWorker(
   url.pathname =
     "/api/auth/me";
 
-
   url.search =
     "";
 
 
   const authRequest =
     new Request(
-
       url.toString(),
-
       {
         method:
           "GET",
@@ -89,25 +127,18 @@ async function authenticateThroughExistingWorker(
             request.headers
           )
       }
-
     );
 
 
   const response =
     await authWorker.fetch(
-
       authRequest,
-
       env,
-
       ctx
-
     );
 
 
-  if (
-    !response.ok
-  ) {
+  if (!response.ok) {
 
     return {
       ok:
@@ -165,6 +196,182 @@ async function authenticateThroughExistingWorker(
 
     cookie
   };
+
+}
+
+
+function isProtectedAdminPath(
+  pathname
+) {
+
+  return [
+    "/admin",
+    "/admin/",
+    "/admin/index.html"
+  ].includes(
+    pathname
+  );
+
+}
+
+
+function hasOwnerAdminAccess(
+  user
+) {
+
+  return Boolean(
+    user &&
+    user.role ===
+      "owner" &&
+    user.status ===
+      "active" &&
+    user.permissions
+      ?.manageUsers ===
+      true &&
+    user.permissions
+      ?.manageInvites ===
+      true &&
+    user.permissions
+      ?.manageSystem ===
+      true
+  );
+
+}
+
+
+async function serveProtectedAdmin(
+  request,
+  env,
+  ctx
+) {
+
+  const method =
+    request.method
+      .toUpperCase();
+
+
+  if (
+    ![
+      "GET",
+      "HEAD"
+    ].includes(
+      method
+    )
+  ) {
+
+    return new Response(
+      null,
+      {
+        status:
+          405,
+
+        headers: {
+          Allow:
+            "GET, HEAD"
+        }
+      }
+    );
+
+  }
+
+
+  const authentication =
+    await authenticateThroughExistingWorker(
+      request,
+      env,
+      ctx
+    );
+
+
+  if (!authentication.ok) {
+
+    const clearCookie =
+      authentication
+        .response
+        .headers
+        .get(
+          "Set-Cookie"
+        );
+
+
+    if (
+      authentication
+        .response
+        .status ===
+      401
+    ) {
+
+      return redirectWithCookie(
+        request,
+        "/activate",
+        clearCookie
+      );
+
+    }
+
+
+    return authentication
+      .response;
+
+  }
+
+
+  if (
+    !hasOwnerAdminAccess(
+      authentication.auth.user
+    )
+  ) {
+
+    return redirectWithCookie(
+      request,
+      "/",
+      authentication.cookie
+    );
+
+  }
+
+
+  const assetUrl =
+    new URL(
+      request.url
+    );
+
+
+  /*
+   * /admin/ is the canonical Static Assets path for
+   * public/admin/index.html when html_handling uses
+   * auto-trailing-slash.
+   */
+  assetUrl.pathname =
+    "/admin/";
+
+  assetUrl.search =
+    "";
+
+
+  const assetRequest =
+    new Request(
+      assetUrl.toString(),
+      {
+        method,
+        headers:
+          new Headers(
+            request.headers
+          )
+      }
+    );
+
+
+  const response =
+    await env.ASSETS.fetch(
+      assetRequest
+    );
+
+
+  return cloneWithCookie(
+    response,
+    authentication.cookie
+  );
 
 }
 
@@ -247,19 +454,13 @@ export default {
 
         const authentication =
           await authenticateThroughExistingWorker(
-
             request,
-
             env,
-
             ctx
-
           );
 
 
-        if (
-          !authentication.ok
-        ) {
+        if (!authentication.ok) {
 
           return authentication
             .response;
@@ -269,35 +470,39 @@ export default {
 
         const response =
           await handleUserUploadRequest(
-
             request,
-
             env,
-
             authentication.auth
-
           );
 
 
         return cloneWithCookie(
-
           response,
-
           authentication.cookie
+        );
 
+      }
+
+
+      if (
+        isProtectedAdminPath(
+          url.pathname
+        )
+      ) {
+
+        return await serveProtectedAdmin(
+          request,
+          env,
+          ctx
         );
 
       }
 
 
       return await authWorker.fetch(
-
         request,
-
         env,
-
         ctx
-
       );
 
     } catch (error) {
