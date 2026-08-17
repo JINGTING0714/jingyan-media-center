@@ -1,5 +1,6 @@
 const https = require("https");
 const fs = require("fs");
+const crypto = require("crypto");
 
 
 function getToken() {
@@ -22,7 +23,7 @@ function getToken() {
 
 function encodeContentPath(filePath) {
 
-    return filePath
+    return String(filePath)
         .split("/")
         .map(
             part =>
@@ -96,7 +97,8 @@ function githubRequest(
 
                     res => {
 
-                        let responseBody = "";
+                        let responseBody =
+                            "";
 
 
                         res.on(
@@ -118,9 +120,7 @@ function githubRequest(
                                     null;
 
 
-                                if (
-                                    responseBody
-                                ) {
+                                if (responseBody) {
 
                                     try {
 
@@ -189,9 +189,7 @@ function githubRequest(
             );
 
 
-            if (
-                body !== null
-            ) {
+            if (body !== null) {
 
                 req.write(body);
 
@@ -230,16 +228,12 @@ async function assertAuthenticatedOwner(
 
 
     if (
-
         !user ||
-
         !user.login ||
-
         user.login.toLowerCase() !==
         String(
             expectedOwner
         ).toLowerCase()
-
     ) {
 
         throw new Error(
@@ -277,6 +271,43 @@ async function getRepositoryInfo(
 }
 
 
+async function assertRepositoryOwner(
+    repo,
+    expectedOwner
+) {
+
+    const info =
+        await getRepositoryInfo(
+            repo
+        );
+
+
+    const actualOwner =
+        info &&
+        info.owner &&
+        info.owner.login;
+
+
+    if (
+        !actualOwner ||
+        actualOwner.toLowerCase() !==
+        String(
+            expectedOwner
+        ).toLowerCase()
+    ) {
+
+        throw new Error(
+            `Repository owner mismatch: ${repo}`
+        );
+
+    }
+
+
+    return info;
+
+}
+
+
 async function repositoryExists(
     repo
 ) {
@@ -292,7 +323,8 @@ async function repositoryExists(
     } catch (error) {
 
         if (
-            error.statusCode === 404
+            error.statusCode ===
+            404
         ) {
 
             return false;
@@ -403,7 +435,8 @@ async function getFile(
     } catch (error) {
 
         if (
-            error.statusCode === 404
+            error.statusCode ===
+            404
         ) {
 
             return null;
@@ -440,18 +473,439 @@ async function fileExists(
 }
 
 
-async function upsertTextFile(
-
+async function getBranchTreeSha(
     repo,
+    branch = "main"
+) {
 
+    const branchData =
+        await githubRequest(
+
+            "GET",
+
+            `/repos/${repo}/branches/${encodeURIComponent(
+                branch
+            )}`,
+
+            getToken()
+
+        );
+
+
+    if (
+        !branchData ||
+        !branchData.commit ||
+        !branchData.commit.sha
+    ) {
+
+        throw new Error(
+            `Unable to resolve branch: ${repo}@${branch}`
+        );
+
+    }
+
+
+    const commit =
+        await githubRequest(
+
+            "GET",
+
+            `/repos/${repo}/git/commits/${branchData.commit.sha}`,
+
+            getToken()
+
+        );
+
+
+    if (
+        !commit ||
+        !commit.tree ||
+        !commit.tree.sha
+    ) {
+
+        throw new Error(
+            `Unable to resolve Git tree: ${repo}@${branch}`
+        );
+
+    }
+
+
+    return commit.tree.sha;
+
+}
+
+
+async function getGitTree(
+    repo,
+    treeSha
+) {
+
+    const tree =
+        await githubRequest(
+
+            "GET",
+
+            `/repos/${repo}/git/trees/${treeSha}`,
+
+            getToken()
+
+        );
+
+
+    if (
+        !tree ||
+        !Array.isArray(
+            tree.tree
+        )
+    ) {
+
+        throw new Error(
+            `Invalid Git tree response: ${repo}`
+        );
+
+    }
+
+
+    if (
+        tree.truncated ===
+        true
+    ) {
+
+        throw new Error(
+            `Git tree truncated: ${repo}`
+        );
+
+    }
+
+
+    return tree;
+
+}
+
+
+async function getDirectoryEntries(
+    repo,
+    folder,
+    branch = "main"
+) {
+
+    let treeSha =
+        await getBranchTreeSha(
+            repo,
+            branch
+        );
+
+
+    const parts =
+        String(
+            folder || ""
+        )
+        .split("/")
+        .filter(Boolean);
+
+
+    for (
+        const part
+        of parts
+    ) {
+
+        const tree =
+            await getGitTree(
+                repo,
+                treeSha
+            );
+
+
+        const directory =
+            tree.tree.find(
+                entry =>
+                    entry.type ===
+                        "tree" &&
+                    entry.path ===
+                        part
+            );
+
+
+        if (!directory) {
+
+            return [];
+
+        }
+
+
+        treeSha =
+            directory.sha;
+
+    }
+
+
+    const tree =
+        await getGitTree(
+            repo,
+            treeSha
+        );
+
+
+    return tree.tree;
+
+}
+
+
+async function getMaxFileSequence(
+    repo,
+    folder,
+    branch = "main"
+) {
+
+    const entries =
+        await getDirectoryEntries(
+            repo,
+            folder,
+            branch
+        );
+
+
+    let maximum =
+        0;
+
+
+    for (
+        const entry
+        of entries
+    ) {
+
+        if (
+            !entry ||
+            entry.type !==
+            "blob"
+        ) {
+
+            continue;
+
+        }
+
+
+        const match =
+            String(
+                entry.path || ""
+            ).match(
+                /^(\d+)-/
+            );
+
+
+        if (!match) {
+
+            continue;
+
+        }
+
+
+        maximum =
+            Math.max(
+                maximum,
+                Number(
+                    match[1]
+                )
+            );
+
+    }
+
+
+    return maximum;
+
+}
+
+
+async function getDirectorySizeMB(
+    repo,
+    folder,
+    branch = "main"
+) {
+
+    const entries =
+        await getDirectoryEntries(
+            repo,
+            folder,
+            branch
+        );
+
+
+    let totalBytes =
+        0;
+
+
+    for (
+        const entry
+        of entries
+    ) {
+
+        if (
+            entry &&
+            entry.type ===
+                "blob"
+        ) {
+
+            totalBytes +=
+                Number(
+                    entry.size || 0
+                );
+
+        }
+
+    }
+
+
+    return (
+        totalBytes /
+        1024 /
+        1024
+    );
+
+}
+
+
+function calculateGitBlobSHA(
+    buffer
+) {
+
+    const header =
+        Buffer.from(
+            `blob ${buffer.length}\0`,
+            "utf8"
+        );
+
+
+    return crypto
+        .createHash(
+            "sha1"
+        )
+        .update(
+            header
+        )
+        .update(
+            buffer
+        )
+        .digest(
+            "hex"
+        );
+
+}
+
+
+function calculateFileGitBlobSHA(
+    localFilePath
+) {
+
+    const buffer =
+        fs.readFileSync(
+            localFilePath
+        );
+
+
+    return calculateGitBlobSHA(
+        buffer
+    );
+
+}
+
+
+async function verifyRemoteFileMatchesLocal(
+    repo,
+    targetPath,
+    localFilePath,
+    branch = "main"
+) {
+
+    const remote =
+        await getFile(
+
+            repo,
+
+            targetPath,
+
+            branch
+
+        );
+
+
+    const localSize =
+        fs.statSync(
+            localFilePath
+        ).size;
+
+
+    const localGitSha =
+        calculateFileGitBlobSHA(
+            localFilePath
+        );
+
+
+    if (!remote) {
+
+        return {
+
+            exists:
+                false,
+
+            matches:
+                false,
+
+            localGitSha,
+
+            remoteGitSha:
+                null,
+
+            localSize,
+
+            remoteSize:
+                null
+
+        };
+
+    }
+
+
+    const matches =
+
+        remote.sha ===
+            localGitSha &&
+
+        Number(
+            remote.size
+        ) ===
+            Number(
+                localSize
+            );
+
+
+    return {
+
+        exists:
+            true,
+
+        matches,
+
+        localGitSha,
+
+        remoteGitSha:
+            remote.sha,
+
+        localSize,
+
+        remoteSize:
+            remote.size
+
+    };
+
+}
+
+
+async function upsertTextFile(
+    repo,
     filePath,
-
     content,
-
     branch = "main",
-
     message = "Update file"
-
 ) {
 
     const existing =
@@ -556,22 +1010,15 @@ async function createRepository({
 
 
     if (
-
         !result ||
-
         !result.full_name ||
-
         !result.owner ||
-
         !result.owner.login ||
-
         result.owner.login
             .toLowerCase() !==
-
         String(
             expectedOwner
         ).toLowerCase()
-
     ) {
 
         throw new Error(
@@ -606,19 +1053,13 @@ async function createRepository({
 
 
 async function uploadFile(
-
     repo,
-
     localFilePath,
-
     targetPath,
-
     branch = "main"
-
 ) {
 
     if (
-
         await fileExists(
 
             repo,
@@ -628,24 +1069,24 @@ async function uploadFile(
             branch
 
         )
-
     ) {
 
         throw new Error(
-
             `Target already exists: ${repo}/${targetPath}`
-
         );
 
     }
 
 
-    const content =
+    const buffer =
         fs.readFileSync(
             localFilePath
-        )
-        .toString(
-            "base64"
+        );
+
+
+    const expectedGitSha =
+        calculateGitBlobSHA(
+            buffer
         );
 
 
@@ -669,7 +1110,10 @@ async function uploadFile(
                 message:
                     `Upload ${targetPath}`,
 
-                content,
+                content:
+                    buffer.toString(
+                        "base64"
+                    ),
 
                 branch
 
@@ -678,10 +1122,29 @@ async function uploadFile(
         );
 
 
+    const actualGitSha =
+        result &&
+        result.content &&
+        result.content.sha;
+
+
+    if (
+        !actualGitSha ||
+        actualGitSha !==
+            expectedGitSha
+    ) {
+
+        throw new Error(
+            `GitHub upload verification failed: ${repo}/${targetPath}`
+        );
+
+    }
+
+
     return {
 
         sha:
-            result.content.sha,
+            actualGitSha,
 
         path:
             targetPath
@@ -699,6 +1162,8 @@ module.exports = {
 
     assertAuthenticatedOwner,
 
+    assertRepositoryOwner,
+
     getRepositoryInfo,
 
     getRepositorySizeMB,
@@ -708,6 +1173,18 @@ module.exports = {
     getFile,
 
     fileExists,
+
+    getDirectoryEntries,
+
+    getMaxFileSequence,
+
+    getDirectorySizeMB,
+
+    calculateGitBlobSHA,
+
+    calculateFileGitBlobSHA,
+
+    verifyRemoteFileMatchesLocal,
 
     upsertTextFile,
 
