@@ -795,7 +795,7 @@ function shouldPublishRecord(
 
     if (
         typeof record.sourceStatus ===
-        "string" &&
+            "string" &&
         record.sourceStatus !==
             "complete"
     ) {
@@ -1245,7 +1245,7 @@ async function getBufferForHash(
 
     if (
         calculatedHash !==
-        hash
+            hash
     ) {
 
         throw new Error(
@@ -1458,7 +1458,7 @@ async function publishCDN() {
 
     if (
         assetCount ===
-        0
+            0
     ) {
 
         throw new Error(
@@ -1486,10 +1486,8 @@ async function publishCDN() {
                 workerName,
 
                 {
-
                     account_id:
                         accountId
-
                 }
 
             );
@@ -1561,7 +1559,7 @@ async function publishCDN() {
 
     if (
         buckets.length ===
-        0
+            0
     ) {
 
         console.log(
@@ -1671,17 +1669,7 @@ async function publishCDN() {
                                     )
 
                         }
-                    ],
-
-                    annotations: {
-
-                        "workers/message":
-                            `Jingyan CDN ${assetCount} assets`,
-
-                        "workers/triggered_by":
-                            "jingyan-media-center"
-
-                    }
+                    ]
 
                 }
 
@@ -1727,17 +1715,7 @@ async function publishCDN() {
                                 version.id
 
                         }
-                    ],
-
-                    annotations: {
-
-                        "workers/message":
-                            `Jingyan CDN ${assetCount} assets`,
-
-                        "workers/triggered_by":
-                            "jingyan-media-center"
-
-                    }
+                    ]
 
                 }
 
@@ -1811,7 +1789,7 @@ if (
 
     if (
         command ===
-        "publish"
+            "publish"
     ) {
 
         task =
@@ -1819,7 +1797,7 @@ if (
 
     } else if (
         command ===
-        "reconcile"
+            "reconcile"
     ) {
 
         task =
