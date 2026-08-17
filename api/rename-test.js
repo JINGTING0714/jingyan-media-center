@@ -43,7 +43,7 @@ const TEST_CASES = [
             "Japanese pure Kanji with explicit language hint",
 
         input:
-            "[ja]宇多田光 - First Love.jpg",
+            "[ja]東京音楽.jpg",
 
         sequence:
             999,
@@ -52,7 +52,12 @@ const TEST_CASES = [
             ".jpg",
 
         mustContain: [
-            "first-love"
+            "ongaku"
+        ],
+
+        mustNotContain: [
+            "dong-jing",
+            "yin-yue"
         ],
 
         forbidUnicodeFallback:
@@ -64,10 +69,10 @@ const TEST_CASES = [
             "japanese-auto",
 
         description:
-            "Japanese auto detection with Katakana",
+            "Japanese auto detection with Kana",
 
         input:
-            "宇多田ヒカル - First Love.jpg",
+            "日本語のテスト.jpg",
 
         sequence:
             999,
@@ -76,7 +81,12 @@ const TEST_CASES = [
             ".jpg",
 
         mustContain: [
-            "first-love"
+            "nihongo",
+            "tesuto"
+        ],
+
+        mustNotContain: [
+            "ri-ben-yu"
         ],
 
         forbidUnicodeFallback:
@@ -259,16 +269,13 @@ const TEST_CASES = [
 function ensureReportDirectory() {
 
     fs.mkdirSync(
-
         path.dirname(
             REPORT_FILE
         ),
-
         {
             recursive:
                 true
         }
-
     );
 
 }
@@ -282,15 +289,12 @@ function writeReport(
 
 
     fs.writeFileSync(
-
         REPORT_FILE,
-
         JSON.stringify(
             report,
             null,
             2
         ) + "\n"
-
     );
 
 }
@@ -311,9 +315,8 @@ function hasUnicodeFallback(
     text
 ) {
 
-    return /(?:^|-)u[0-9a-f]{4,6}(?:-|\.|$)/i.test(
-        text
-    );
+    return /(?:^|-)u[0-9a-f]{4,6}(?:-|\.|$)/i
+        .test(text);
 
 }
 
@@ -322,9 +325,8 @@ function isSafeFilename(
     filename
 ) {
 
-    return /^[0-9]+-[a-z0-9]+(?:-[a-z0-9]+)*\.[a-z0-9]+$/i.test(
-        filename
-    );
+    return /^[0-9]+-[a-z0-9]+(?:-[a-z0-9]+)*\.[a-z0-9]+$/i
+        .test(filename);
 
 }
 
@@ -343,9 +345,7 @@ function hasRepeatedExtension(
 
 
     if (
-        !lower.endsWith(
-            ext
-        )
+        !lower.endsWith(ext)
     ) {
 
         return false;
@@ -361,9 +361,7 @@ function hasRepeatedExtension(
 
 
     return withoutFinalExtension
-        .endsWith(
-            ext
-        );
+        .endsWith(ext);
 
 }
 
@@ -405,11 +403,8 @@ async function runCase(
 
         const output =
             await renameFile(
-
                 test.input,
-
                 test.sequence
-
             );
 
 
@@ -428,9 +423,7 @@ async function runCase(
                 name,
 
                 passed:
-                    Boolean(
-                        passed
-                    ),
+                    Boolean(passed),
 
                 details
 
@@ -440,31 +433,19 @@ async function runCase(
 
 
         check(
-
             "ascii-only",
-
-            !hasUnicode(
-                output
-            )
-
+            !hasUnicode(output)
         );
 
 
         check(
-
             "safe-filename",
-
-            isSafeFilename(
-                output
-            )
-
+            isSafeFilename(output)
         );
 
 
         check(
-
             "correct-sequence",
-
             output.startsWith(
                 String(
                     test.sequence
@@ -473,51 +454,33 @@ async function runCase(
                     "0"
                 ) + "-"
             )
-
         );
 
 
         check(
-
             "correct-extension",
-
             output
                 .toLowerCase()
                 .endsWith(
-                    test
-                        .expectedExtension
+                    test.expectedExtension
                         .toLowerCase()
                 )
-
         );
 
 
         check(
-
             "no-repeated-extension",
-
             !hasRepeatedExtension(
-
                 output,
-
                 test.expectedExtension
-
             )
-
         );
 
 
         check(
-
             "language-hint-removed",
-
-            !output.includes(
-                "["
-            ) &&
-            !output.includes(
-                "]"
-            )
-
+            !output.includes("[") &&
+            !output.includes("]")
         );
 
 
@@ -526,13 +489,10 @@ async function runCase(
         ) {
 
             check(
-
                 "no-unicode-fallback",
-
                 !hasUnicodeFallback(
                     output
                 )
-
             );
 
         }
@@ -543,12 +503,9 @@ async function runCase(
         ) {
 
             check(
-
                 "exact-output",
-
                 output ===
                     test.exact,
-
                 {
                     expected:
                         test.exact,
@@ -556,7 +513,6 @@ async function runCase(
                     actual:
                         output
                 }
-
             );
 
         }
@@ -571,17 +527,34 @@ async function runCase(
         ) {
 
             check(
-
                 `contains:${fragment}`,
-
                 output.includes(
                     fragment
                 ),
-
                 {
                     fragment
                 }
+            );
 
+        }
+
+
+        for (
+            const fragment
+            of (
+                test.mustNotContain ||
+                []
+            )
+        ) {
+
+            check(
+                `not-contains:${fragment}`,
+                !output.includes(
+                    fragment
+                ),
+                {
+                    fragment
+                }
             );
 
         }
@@ -598,9 +571,7 @@ async function runCase(
         result.status =
             failedChecks.length ===
                 0
-
                 ? "pass"
-
                 : "fail";
 
 
@@ -615,12 +586,8 @@ async function runCase(
         result.error =
             error &&
             error.stack
-
                 ? error.stack
-
-                : String(
-                    error
-                );
+                : String(error);
 
 
         return result;
@@ -688,14 +655,12 @@ async function run() {
     const report = {
 
         version:
-            1,
+            2,
 
         status:
             failed ===
                 0
-
                 ? "pass"
-
                 : "fail",
 
         startedAt,
@@ -754,8 +719,7 @@ async function run() {
 
 
     if (
-        failed >
-        0
+        failed > 0
     ) {
 
         throw new Error(
