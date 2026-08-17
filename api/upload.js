@@ -562,7 +562,7 @@ async function allocateUniqueTarget(
 
 
         const filename =
-            renameFile(
+            await renameFile(
                 originalName,
                 sequence
             );
