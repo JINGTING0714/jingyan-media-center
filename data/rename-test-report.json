@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "status": "not-run",
+  "startedAt": null,
+  "completedAt": null,
+  "environment": {},
+  "summary": {
+    "total": 0,
+    "passed": 0,
+    "failed": 0
+  },
+  "results": []
+}
