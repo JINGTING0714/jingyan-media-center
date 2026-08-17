@@ -2,10 +2,10 @@
   "version": 1,
   "worker": "jingyan-media-cdn",
   "baseURL": "https://jingyan-media-cdn.jingyancdn.workers.dev",
-  "updatedAt": "2026-08-17T06:22:41.114Z",
-  "lastPublishedAt": "2026-08-17T06:22:41.114Z",
-  "lastVersionId": "d8327b54-7cf6-4b5c-8792-ec3355acdafb",
-  "lastDeploymentId": "60b80122-3719-4b11-8de3-7cc194b4f072",
+  "updatedAt": "2026-08-17T06:38:11.818Z",
+  "lastPublishedAt": "2026-08-17T06:38:11.817Z",
+  "lastVersionId": "313aa0d5-6930-40b6-a860-3880c4ee682a",
+  "lastDeploymentId": "213a4886-9b80-406d-bf24-5c74bf4342d2",
   "assets": {
     "/audio/001-christmas.mp3": {
       "hash": "6c23ab88513bb99a558582c6f14cef89",
@@ -84,6 +84,19 @@
         "path": "image/002-image_1777572329655.png"
       },
       "addedAt": "2026-08-17T06:22:36.150Z"
+    },
+    "/image/004-fang-da-tong-ce-shi-live-feat-wang-li-hong.jpg": {
+      "hash": "01a280b1e252af8ab9b5f4c298b192ef",
+      "size": 10953,
+      "sha256": "afbfbb6c47ebb7b7777d835a530539f94d828be6982a89a8e0cca969aed68251",
+      "type": "image",
+      "mediaId": "image-000004",
+      "source": {
+        "repo": "JINGTING0714/jingyan-image-01",
+        "branch": "main",
+        "path": "image/004-fang-da-tong-ce-shi-live-feat-wang-li-hong.jpg"
+      },
+      "addedAt": "2026-08-17T06:38:06.810Z"
     }
   }
 }

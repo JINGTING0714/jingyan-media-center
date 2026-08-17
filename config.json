@@ -39,7 +39,7 @@
           "database": "data/image.json",
           "status": "data/status.json",
           "marker": "data/repository.json",
-          "sizeMB": 1.142,
+          "sizeMB": 1.153,
           "state": "active"
         }
       ],
@@ -121,7 +121,7 @@
     }
   },
   "counters": {
-    "image": 3,
+    "image": 4,
     "audio": 4,
     "video": 1
   },
