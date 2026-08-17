@@ -21,7 +21,13 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
+
+
+      - name: Verify Node
+        run: |
+          node --version
+          npm --version
 
 
       - name: Prepare CDN Assets
@@ -71,6 +77,8 @@ jobs:
         run: |
 
           set -e
+
+          echo "Deploying unified CDN..."
 
           npx --yes wrangler@latest deploy --config wrangler.jsonc
 
