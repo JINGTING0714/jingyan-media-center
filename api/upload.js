@@ -20,8 +20,13 @@ const {
 
 
 const {
+
     uploadFile,
-    fileExists
+
+    fileExists,
+
+    verifyRemoteFileMatchesLocal
+
 } = require("./github");
 
 
@@ -155,12 +160,15 @@ function checkSize(
 
 
     const limit =
-        config.mediaTypes[type]
-            .maxSizeMB;
+        Number(
+            config.mediaTypes[type]
+                .maxSizeMB
+        );
 
 
     if (
-        sizeMB > limit
+        sizeMB >
+        limit
     ) {
 
         throw new Error(
@@ -234,6 +242,311 @@ function removeTemporaryFile(
 }
 
 
+function getRecordFilename(
+    record
+) {
+
+    if (
+        record &&
+        typeof record.filename ===
+        "string"
+    ) {
+
+        return record.filename;
+
+    }
+
+
+    if (
+        record &&
+        typeof record.file ===
+        "string"
+    ) {
+
+        return path.posix.basename(
+            record.file
+        );
+
+    }
+
+
+    if (
+        record &&
+        record.file &&
+        typeof record.file ===
+        "object" &&
+        typeof record.file.name ===
+        "string"
+    ) {
+
+        return record.file.name;
+
+    }
+
+
+    if (
+        record &&
+        record.source &&
+        typeof record.source ===
+        "object" &&
+        record.source.path
+    ) {
+
+        return path.posix.basename(
+            record.source.path
+        );
+
+    }
+
+
+    if (
+        record &&
+        record.path
+    ) {
+
+        return path.posix.basename(
+            record.path
+        );
+
+    }
+
+
+    return null;
+
+}
+
+
+function getRecordSourcePath(
+    record,
+    repository
+) {
+
+    if (
+        record &&
+        record.source &&
+        typeof record.source ===
+        "object" &&
+        record.source.path
+    ) {
+
+        return record.source.path;
+
+    }
+
+
+    if (
+        record &&
+        record.path
+    ) {
+
+        return record.path;
+
+    }
+
+
+    const filename =
+        getRecordFilename(
+            record
+        );
+
+
+    if (
+        filename &&
+        repository.folder
+    ) {
+
+        return (
+            repository.folder +
+            "/" +
+            filename
+        );
+
+    }
+
+
+    return null;
+
+}
+
+
+function getRecordIdentity(
+    record,
+    sha256
+) {
+
+    return (
+        record.operationId ||
+        record.id ||
+        sha256
+    );
+
+}
+
+
+function buildSourceMetadata(
+    repository,
+    sourcePath
+) {
+
+    return {
+
+        repositoryId:
+            repository.id,
+
+        repo:
+            repository.repo,
+
+        branch:
+            repository.branch,
+
+        path:
+            sourcePath
+
+    };
+
+}
+
+
+function buildRepositoryMetadata(
+    repository
+) {
+
+    return {
+
+        id:
+            repository.id,
+
+        name:
+            repository.repo
+                .split("/")[1],
+
+        fullName:
+            repository.repo
+
+    };
+
+}
+
+
+function manifestMatchesSource(
+    manifestAsset,
+    sha256,
+    repository,
+    sourcePath
+) {
+
+    if (
+        !manifestAsset ||
+        manifestAsset.sha256 !==
+            sha256
+    ) {
+
+        return false;
+
+    }
+
+
+    if (
+        !manifestAsset.source ||
+        manifestAsset.source.repo !==
+            repository.repo ||
+        manifestAsset.source.path !==
+            sourcePath
+    ) {
+
+        return false;
+
+    }
+
+
+    return true;
+
+}
+
+
+async function ensureSourceReady({
+
+    file,
+
+    repository,
+
+    sourcePath
+
+}) {
+
+    const verification =
+        await verifyRemoteFileMatchesLocal(
+
+            repository.repo,
+
+            sourcePath,
+
+            file,
+
+            repository.branch
+
+        );
+
+
+    if (
+        !verification.exists
+    ) {
+
+        console.log(
+            `Uploading GitHub source: ${repository.repo}/${sourcePath}`
+        );
+
+
+        await uploadFile(
+
+            repository.repo,
+
+            file,
+
+            sourcePath,
+
+            repository.branch
+
+        );
+
+
+        return {
+
+            repaired:
+                true,
+
+            uploaded:
+                true
+
+        };
+
+    }
+
+
+    if (
+        !verification.matches
+    ) {
+
+        throw new Error(
+            `Remote source content mismatch: ${repository.repo}/${sourcePath}`
+        );
+
+    }
+
+
+    return {
+
+        repaired:
+            false,
+
+        uploaded:
+            false
+
+    };
+
+}
+
+
 async function allocateUniqueTarget(
     repository,
     originalName,
@@ -259,8 +572,8 @@ async function allocateUniqueTarget(
             `${repository.folder}/${filename}`;
 
 
-        const exists =
-            await fileExists(
+        if (
+            !await fileExists(
 
                 repository.repo,
 
@@ -268,10 +581,8 @@ async function allocateUniqueTarget(
 
                 repository.branch
 
-            );
-
-
-        if (!exists) {
+            )
+        ) {
 
             return {
 
@@ -287,7 +598,7 @@ async function allocateUniqueTarget(
 
 
         console.log(
-            `Target exists, advancing sequence: ${filename}`
+            `Target exists, recalculating sequence: ${filename}`
         );
 
     }
@@ -295,153 +606,47 @@ async function allocateUniqueTarget(
 }
 
 
-function getRecordIdentity(
-    record,
-    sha256
-) {
-
-    return (
-        record.operationId ||
-        record.id ||
-        sha256
-    );
-
-}
-
-
-async function ensureSourceComplete({
-
-    file,
+function buildResult({
 
     type,
 
-    sha256,
-
     repository,
 
-    record
+    filename,
+
+    cdnURL,
+
+    id,
+
+    sha256,
+
+    recovered,
+
+    duplicate
 
 }) {
 
-    if (
-        !record.path
-    ) {
-
-        throw new Error(
-            `Database record source path missing: ${record.id}`
-        );
-
-    }
-
-
-    const targetExists =
-        await fileExists(
-
-            repository.repo,
-
-            record.path,
-
-            repository.branch
-
-        );
-
-
-    if (!targetExists) {
-
-        console.log(
-            `Uploading GitHub source: ${repository.repo}/${record.path}`
-        );
-
-
-        await uploadFile(
-
-            repository.repo,
-
-            file,
-
-            record.path,
-
-            repository.branch
-
-        );
-
-    }
-
-
-    const identity =
-        getRecordIdentity(
-            record,
-            sha256
-        );
-
-
-    const cdnPath =
-        record.cdnPath ||
-        generateCDNPath(
-            type,
-            record.filename
-        );
-
-
-    const source = {
-
-        repositoryId:
-            repository.id,
-
-        repo:
-            repository.repo,
-
-        branch:
-            repository.branch,
-
-        path:
-            record.path
-
-    };
-
-
-    const updated =
-        await markRecordSourceComplete(
-
-            repository,
-
-            identity,
-
-            {
-
-                cdnPath,
-
-                source,
-
-                repository: {
-
-                    id:
-                        repository.id,
-
-                    name:
-                        repository.repo
-                            .split("/")[1],
-
-                    fullName:
-                        repository.repo
-
-                }
-
-            }
-
-        );
-
-
-    await syncRepositoryStatus(
+    return {
 
         type,
 
-        repository.id
+        repository:
+            repository.repo,
 
-    );
+        filename,
 
+        cdn:
+            cdnURL,
 
-    return updated;
+        id,
+
+        sha256,
+
+        recovered,
+
+        duplicate
+
+    };
 
 }
 
@@ -451,8 +656,6 @@ async function prepareExistingRecord({
     file,
 
     type,
-
-    sizeMB,
 
     sha256,
 
@@ -468,66 +671,64 @@ async function prepareExistingRecord({
         found.record;
 
 
-    record =
-        await ensureSourceComplete({
-
-            file,
-
-            type,
-
-            sha256,
-
-            repository,
-
+    const filename =
+        getRecordFilename(
             record
+        );
 
-        });
+
+    const sourcePath =
+        getRecordSourcePath(
+            record,
+            repository
+        );
+
+
+    if (
+        !filename ||
+        !sourcePath
+    ) {
+
+        throw new Error(
+            `Existing database record is missing source information: ${
+                record.id || sha256
+            }`
+        );
+
+    }
 
 
     const cdnPath =
         record.cdnPath ||
         generateCDNPath(
             type,
-            record.filename
+            filename
         );
 
 
     const cdnURL =
         generateCDNURL(
             type,
-            record.filename
+            filename
         );
 
 
-    const registration =
-        registerCDNAsset({
+    const sourceState =
+        await ensureSourceReady({
 
-            cdnPath,
+            file,
 
-            localFilePath:
-                file,
+            repository,
 
-            source: {
-
-                repo:
-                    repository.repo,
-
-                branch:
-                    repository.branch,
-
-                path:
-                    record.path
-
-            },
-
-            type,
-
-            mediaId:
-                record.id,
-
-            sha256
+            sourcePath
 
         });
+
+
+    const manifestAsset =
+        getManifestAsset(
+            cdnPath
+        );
 
 
     const alreadyPublished =
@@ -535,18 +736,89 @@ async function prepareExistingRecord({
         record.status ===
             "complete" &&
 
+        record.sourceStatus ===
+            "complete" &&
+
         record.cdnStatus ===
             "published" &&
 
         isUnifiedCDNURL(
             record.url
+        ) &&
+
+        manifestMatchesSource(
+
+            manifestAsset,
+
+            sha256,
+
+            repository,
+
+            sourcePath
+
         );
 
 
-    if (
-        alreadyPublished &&
-        !registration.changed
-    ) {
+    if (alreadyPublished) {
+
+        if (
+            sourceState.repaired ||
+            !record.source ||
+            typeof record.source !==
+                "object"
+        ) {
+
+            record =
+                await markRecordSourceComplete(
+
+                    repository,
+
+                    getRecordIdentity(
+                        record,
+                        sha256
+                    ),
+
+                    {
+
+                        filename,
+
+                        path:
+                            sourcePath,
+
+                        cdnPath,
+
+                        source:
+                            buildSourceMetadata(
+                                repository,
+                                sourcePath
+                            ),
+
+                        repository:
+                            buildRepositoryMetadata(
+                                repository
+                            )
+
+                    }
+
+                );
+
+        }
+
+
+        if (
+            sourceState.repaired
+        ) {
+
+            await syncRepositoryStatus(
+
+                type,
+
+                repository.id
+
+            );
+
+        }
+
 
         removeTemporaryFile(
             file
@@ -558,35 +830,107 @@ async function prepareExistingRecord({
             completed:
                 true,
 
-            result: {
+            result:
+                buildResult({
 
-                type,
+                    type,
 
-                repository:
-                    repository.repo,
+                    repository,
 
-                filename:
-                    record.filename,
+                    filename,
 
-                cdn:
                     cdnURL,
 
-                id:
-                    record.id,
+                    id:
+                        record.id,
 
-                sha256,
+                    sha256,
 
-                recovered:
-                    true,
+                    recovered:
+                        sourceState.repaired,
 
-                duplicate:
-                    true
+                    duplicate:
+                        true
 
-            }
+                })
 
         };
 
     }
+
+
+    record =
+        await markRecordSourceComplete(
+
+            repository,
+
+            getRecordIdentity(
+                record,
+                sha256
+            ),
+
+            {
+
+                filename,
+
+                path:
+                    sourcePath,
+
+                cdnPath,
+
+                source:
+                    buildSourceMetadata(
+                        repository,
+                        sourcePath
+                    ),
+
+                repository:
+                    buildRepositoryMetadata(
+                        repository
+                    )
+
+            }
+
+        );
+
+
+    await syncRepositoryStatus(
+
+        type,
+
+        repository.id
+
+    );
+
+
+    registerCDNAsset({
+
+        cdnPath,
+
+        localFilePath:
+            file,
+
+        source: {
+
+            repo:
+                repository.repo,
+
+            branch:
+                repository.branch,
+
+            path:
+                sourcePath
+
+        },
+
+        type,
+
+        mediaId:
+            record.id,
+
+        sha256
+
+    });
 
 
     record =
@@ -622,13 +966,13 @@ async function prepareExistingRecord({
 
             type,
 
-            sizeMB,
-
             sha256,
 
             repository,
 
             record,
+
+            filename,
 
             cdnPath,
 
@@ -738,20 +1082,60 @@ async function prepareNewRecord({
         );
 
 
+    await ensureSourceReady({
+
+        file,
+
+        repository,
+
+        sourcePath:
+            targetPath
+
+    });
+
+
     record =
-        await ensureSourceComplete({
-
-            file,
-
-            type,
-
-            sha256,
+        await markRecordSourceComplete(
 
             repository,
 
-            record
+            getRecordIdentity(
+                record,
+                sha256
+            ),
 
-        });
+            {
+
+                filename,
+
+                path:
+                    targetPath,
+
+                cdnPath,
+
+                source:
+                    buildSourceMetadata(
+                        repository,
+                        targetPath
+                    ),
+
+                repository:
+                    buildRepositoryMetadata(
+                        repository
+                    )
+
+            }
+
+        );
+
+
+    await syncRepositoryStatus(
+
+        type,
+
+        repository.id
+
+    );
 
 
     registerCDNAsset({
@@ -817,13 +1201,13 @@ async function prepareNewRecord({
 
             type,
 
-            sizeMB,
-
             sha256,
 
             repository,
 
             record,
+
+            filename,
 
             cdnPath,
 
@@ -940,8 +1324,6 @@ async function prepareUpload(
 
                 type,
 
-                sizeMB,
-
                 sha256,
 
                 found
@@ -1005,18 +1387,18 @@ async function finalizePublication(
     );
 
 
-    return {
+    return buildResult({
 
         type:
             publication.type,
 
         repository:
-            publication.repository.repo,
+            publication.repository,
 
         filename:
-            completed.filename,
+            publication.filename,
 
-        cdn:
+        cdnURL:
             publication.cdnURL,
 
         id:
@@ -1031,7 +1413,7 @@ async function finalizePublication(
         duplicate:
             publication.duplicate
 
-    };
+    });
 
 }
 
@@ -1057,7 +1439,6 @@ async function run() {
             "Upload folder missing"
         );
 
-
         return [];
 
     }
@@ -1066,7 +1447,8 @@ async function run() {
     const files =
         fs.readdirSync(
             uploadDir
-        );
+        )
+        .sort();
 
 
     const publications =
@@ -1098,11 +1480,8 @@ async function run() {
 
         const fullPath =
             path.join(
-
                 uploadDir,
-
                 filename
-
             );
 
 
@@ -1224,6 +1603,7 @@ async function run() {
     ) {
 
         throw new Error(
+
             failures
                 .map(
                     item =>
@@ -1232,6 +1612,7 @@ async function run() {
                 .join(
                     " | "
                 )
+
         );
 
     }
