@@ -20,7 +20,7 @@
     {
       "binding": "AUTH_DB",
       "database_name": "jingyan-media-auth",
-      "database_id": "REPLACE_WITH_D1_DATABASE_ID",
+      "database_id": "b622c541-ebdb-4740-be12-ac356fbb62c7",
       "migrations_dir": "migrations"
     }
   ],
