@@ -4,9 +4,7 @@ const crypto = require("crypto");
 
 
 const {
-
     renameFile
-
 } = require("./rename");
 
 
@@ -16,27 +14,37 @@ const {
 
     selectRepository,
 
-    updateRepositoryAfterUpload,
-
     syncRepositoryStatus
 
 } = require("./repository");
 
 
 const {
-
     uploadFile,
-
     fileExists
-
 } = require("./github");
 
 
 const {
 
-    generateRepositoryCDN
+    generateCDNPath,
+
+    generateCDNURL,
+
+    isUnifiedCDNURL
 
 } = require("./cdn");
+
+
+const {
+
+    registerCDNAsset,
+
+    getManifestAsset,
+
+    publishCDN
+
+} = require("./cloudflare");
 
 
 const {
@@ -47,6 +55,10 @@ const {
 
     upsertPendingRecord,
 
+    markRecordSourceComplete,
+
+    markRecordCDNPending,
+
     markRecordComplete
 
 } = require("./database");
@@ -55,15 +67,10 @@ const {
 function loadConfig() {
 
     return JSON.parse(
-
         fs.readFileSync(
-
             "config.json",
-
             "utf8"
-
         )
-
     );
 
 }
@@ -89,28 +96,20 @@ function detectType(
 
 
     for (
-
         const [
-
             type,
-
             settings
-
         ]
-
         of Object.entries(
             config.mediaTypes
         )
-
     ) {
 
         if (
-
             settings.extensions
                 .includes(
                     extension
                 )
-
         ) {
 
             return type;
@@ -130,26 +129,19 @@ function getFileSizeMB(
 ) {
 
     return (
-
         fs.statSync(
             file
         ).size /
-
         1024 /
-
         1024
-
     );
 
 }
 
 
 function checkSize(
-
     file,
-
     type
-
 ) {
 
     const config =
@@ -172,13 +164,7 @@ function checkSize(
     ) {
 
         throw new Error(
-
-            `${type} file too large: ` +
-
-            `${sizeMB.toFixed(2)}MB / ` +
-
-            `${limit}MB`
-
+            `${type} file too large: ${sizeMB.toFixed(2)}MiB / ${limit}MiB`
         );
 
     }
@@ -200,11 +186,9 @@ function getFileSha256(
 
 
     hash.update(
-
         fs.readFileSync(
             file
         )
-
     );
 
 
@@ -224,13 +208,10 @@ function removeTemporaryFile(
 
 
     if (
-
         config.upload &&
-
         config.upload
             .deleteTemporaryFile ===
         false
-
     ) {
 
         return;
@@ -253,226 +234,10 @@ function removeTemporaryFile(
 }
 
 
-async function recoverExistingRecord(
-
-    file,
-
-    type,
-
-    sizeMB,
-
-    sha256,
-
-    found
-
-) {
-
-    const {
-
-        repository,
-
-        record
-
-    } = found;
-
-
-    if (
-
-        record.status ===
-        "complete"
-
-    ) {
-
-        await syncRepositoryStatus(
-
-            type,
-
-            repository.id
-
-        );
-
-
-        removeTemporaryFile(
-            file
-        );
-
-
-        console.log(
-
-            `Already uploaded: ${record.url}`
-
-        );
-
-
-        return {
-
-            type,
-
-            repository:
-                repository.repo,
-
-            filename:
-                record.filename,
-
-            cdn:
-                record.url,
-
-            id:
-                record.id,
-
-            recovered:
-                true,
-
-            duplicate:
-                true
-
-        };
-
-    }
-
-
-    const targetExists =
-        await fileExists(
-
-            repository.repo,
-
-            record.path,
-
-            repository.branch
-
-        );
-
-
-    if (!targetExists) {
-
-        console.log(
-
-            `Resuming pending upload: ${record.path}`
-
-        );
-
-
-        await uploadFile(
-
-            repository.repo,
-
-            file,
-
-            record.path,
-
-            repository.branch
-
-        );
-
-    } else {
-
-        console.log(
-
-            `Pending media already exists remotely: ${record.path}`
-
-        );
-
-    }
-
-
-    const completed =
-        await markRecordComplete(
-
-            repository,
-
-            record.operationId ||
-
-            `${type}:${sha256}`,
-
-            {
-
-                url:
-                    record.url,
-
-                sizeMB:
-                    Number(
-
-                        Number(
-
-                            record.sizeMB ||
-
-                            sizeMB
-
-                        ).toFixed(
-                            3
-                        )
-
-                    )
-
-            }
-
-        );
-
-
-    await updateRepositoryAfterUpload(
-
-        type,
-
-        repository.id,
-
-        Number(
-
-            record.sizeMB ||
-
-            sizeMB
-
-        )
-
-    );
-
-
-    removeTemporaryFile(
-        file
-    );
-
-
-    console.log(
-
-        `Recovered: ${completed.url}`
-
-    );
-
-
-    return {
-
-        type,
-
-        repository:
-            repository.repo,
-
-        filename:
-            completed.filename,
-
-        cdn:
-            completed.url,
-
-        id:
-            completed.id,
-
-        recovered:
-            true,
-
-        duplicate:
-            false
-
-    };
-
-}
-
-
 async function allocateUniqueTarget(
-
     repository,
-
     originalName,
-
     type
-
 ) {
 
     while (true) {
@@ -485,11 +250,8 @@ async function allocateUniqueTarget(
 
         const filename =
             renameFile(
-
                 originalName,
-
                 sequence
-
             );
 
 
@@ -525,9 +287,7 @@ async function allocateUniqueTarget(
 
 
         console.log(
-
-            `Target already exists, advancing sequence: ${filename}`
-
+            `Target exists, advancing sequence: ${filename}`
         );
 
     }
@@ -535,133 +295,374 @@ async function allocateUniqueTarget(
 }
 
 
-async function processUpload(
-    file
+function getRecordIdentity(
+    record,
+    sha256
 ) {
+
+    return (
+        record.operationId ||
+        record.id ||
+        sha256
+    );
+
+}
+
+
+async function ensureSourceComplete({
+
+    file,
+
+    type,
+
+    sha256,
+
+    repository,
+
+    record
+
+}) {
+
+    if (
+        !record.path
+    ) {
+
+        throw new Error(
+            `Database record source path missing: ${record.id}`
+        );
+
+    }
+
+
+    const targetExists =
+        await fileExists(
+
+            repository.repo,
+
+            record.path,
+
+            repository.branch
+
+        );
+
+
+    if (!targetExists) {
+
+        console.log(
+            `Uploading GitHub source: ${repository.repo}/${record.path}`
+        );
+
+
+        await uploadFile(
+
+            repository.repo,
+
+            file,
+
+            record.path,
+
+            repository.branch
+
+        );
+
+    }
+
+
+    const identity =
+        getRecordIdentity(
+            record,
+            sha256
+        );
+
+
+    const cdnPath =
+        record.cdnPath ||
+        generateCDNPath(
+            type,
+            record.filename
+        );
+
+
+    const source = {
+
+        repositoryId:
+            repository.id,
+
+        repo:
+            repository.repo,
+
+        branch:
+            repository.branch,
+
+        path:
+            record.path
+
+    };
+
+
+    const updated =
+        await markRecordSourceComplete(
+
+            repository,
+
+            identity,
+
+            {
+
+                cdnPath,
+
+                source,
+
+                repository: {
+
+                    id:
+                        repository.id,
+
+                    name:
+                        repository.repo
+                            .split("/")[1],
+
+                    fullName:
+                        repository.repo
+
+                }
+
+            }
+
+        );
+
+
+    await syncRepositoryStatus(
+
+        type,
+
+        repository.id
+
+    );
+
+
+    return updated;
+
+}
+
+
+async function prepareExistingRecord({
+
+    file,
+
+    type,
+
+    sizeMB,
+
+    sha256,
+
+    found
+
+}) {
+
+    const repository =
+        found.repository;
+
+
+    let record =
+        found.record;
+
+
+    record =
+        await ensureSourceComplete({
+
+            file,
+
+            type,
+
+            sha256,
+
+            repository,
+
+            record
+
+        });
+
+
+    const cdnPath =
+        record.cdnPath ||
+        generateCDNPath(
+            type,
+            record.filename
+        );
+
+
+    const cdnURL =
+        generateCDNURL(
+            type,
+            record.filename
+        );
+
+
+    const registration =
+        registerCDNAsset({
+
+            cdnPath,
+
+            localFilePath:
+                file,
+
+            source: {
+
+                repo:
+                    repository.repo,
+
+                branch:
+                    repository.branch,
+
+                path:
+                    record.path
+
+            },
+
+            type,
+
+            mediaId:
+                record.id,
+
+            sha256
+
+        });
+
+
+    const alreadyPublished =
+
+        record.status ===
+            "complete" &&
+
+        record.cdnStatus ===
+            "published" &&
+
+        isUnifiedCDNURL(
+            record.url
+        );
+
+
+    if (
+        alreadyPublished &&
+        !registration.changed
+    ) {
+
+        removeTemporaryFile(
+            file
+        );
+
+
+        return {
+
+            completed:
+                true,
+
+            result: {
+
+                type,
+
+                repository:
+                    repository.repo,
+
+                filename:
+                    record.filename,
+
+                cdn:
+                    cdnURL,
+
+                id:
+                    record.id,
+
+                sha256,
+
+                recovered:
+                    true,
+
+                duplicate:
+                    true
+
+            }
+
+        };
+
+    }
+
+
+    record =
+        await markRecordCDNPending(
+
+            repository,
+
+            getRecordIdentity(
+                record,
+                sha256
+            ),
+
+            {
+
+                cdnPath,
+
+                url:
+                    null
+
+            }
+
+        );
+
+
+    return {
+
+        completed:
+            false,
+
+        publication: {
+
+            file,
+
+            type,
+
+            sizeMB,
+
+            sha256,
+
+            repository,
+
+            record,
+
+            cdnPath,
+
+            cdnURL,
+
+            duplicate:
+                true,
+
+            recovered:
+                true
+
+        }
+
+    };
+
+}
+
+
+async function prepareNewRecord({
+
+    file,
+
+    type,
+
+    sizeMB,
+
+    sha256
+
+}) {
 
     const originalName =
         path.basename(
             file
         );
-
-
-    if (
-        originalName ===
-        ".gitkeep"
-    ) {
-
-        return null;
-
-    }
-
-
-    const type =
-        detectType(
-            file
-        );
-
-
-    if (!type) {
-
-        const config =
-            loadConfig();
-
-
-        if (
-
-            !config.upload ||
-
-            config.upload
-                .failOnUnsupported !==
-            false
-
-        ) {
-
-            throw new Error(
-
-                `Unsupported file type: ${originalName}`
-
-            );
-
-        }
-
-
-        console.log(
-
-            `Unsupported file ignored: ${originalName}`
-
-        );
-
-
-        return null;
-
-    }
-
-
-    const sizeMB =
-        checkSize(
-
-            file,
-
-            type
-
-        );
-
-
-    const sha256 =
-        getFileSha256(
-            file
-        );
-
-
-    await reconcileRepositories(
-        type
-    );
-
-
-    const config =
-        loadConfig();
-
-
-    if (
-
-        !config.upload ||
-
-        config.upload
-            .deduplicateByHash !==
-        false
-
-    ) {
-
-        const found =
-            await findRecordByHash(
-
-                type,
-
-                sha256
-
-            );
-
-
-        if (found) {
-
-            return recoverExistingRecord(
-
-                file,
-
-                type,
-
-                sizeMB,
-
-                sha256,
-
-                found
-
-            );
-
-        }
-
-    }
 
 
     const repository =
@@ -694,17 +695,21 @@ async function processUpload(
         );
 
 
-    const cdn =
-        generateRepositoryCDN(
-
-            repository,
-
-            targetPath
-
+    const cdnPath =
+        generateCDNPath(
+            type,
+            filename
         );
 
 
-    const pending =
+    const cdnURL =
+        generateCDNURL(
+            type,
+            filename
+        );
+
+
+    let record =
         await upsertPendingRecord(
 
             repository,
@@ -722,7 +727,7 @@ async function processUpload(
                 path:
                     targetPath,
 
-                cdn,
+                cdnPath,
 
                 sizeMB,
 
@@ -733,154 +738,298 @@ async function processUpload(
         );
 
 
-    console.log(
-
-        `Uploading: ${originalName}`
-
-    );
-
-
-    console.log(
-
-        `Type: ${type}`
-
-    );
-
-
-    console.log(
-
-        `Repository: ${repository.repo}`
-
-    );
-
-
-    console.log(
-
-        `Target: ${targetPath}`
-
-    );
-
-
-    console.log(
-
-        `Size: ${sizeMB.toFixed(2)}MB`
-
-    );
-
-
-    const targetExists =
-        await fileExists(
-
-            repository.repo,
-
-            targetPath,
-
-            repository.branch
-
-        );
-
-
-    if (!targetExists) {
-
-        await uploadFile(
-
-            repository.repo,
+    record =
+        await ensureSourceComplete({
 
             file,
 
-            targetPath,
+            type,
 
-            repository.branch
-
-        );
-
-    }
-
-
-    const completed =
-        await markRecordComplete(
+            sha256,
 
             repository,
 
-            pending.operationId,
+            record
+
+        });
+
+
+    registerCDNAsset({
+
+        cdnPath,
+
+        localFilePath:
+            file,
+
+        source: {
+
+            repo:
+                repository.repo,
+
+            branch:
+                repository.branch,
+
+            path:
+                targetPath
+
+        },
+
+        type,
+
+        mediaId:
+            record.id,
+
+        sha256
+
+    });
+
+
+    record =
+        await markRecordCDNPending(
+
+            repository,
+
+            getRecordIdentity(
+                record,
+                sha256
+            ),
 
             {
 
+                cdnPath,
+
                 url:
-                    cdn,
-
-                sizeMB:
-                    Number(
-
-                        sizeMB.toFixed(
-                            3
-                        )
-
-                    )
+                    null
 
             }
 
         );
 
 
-    await updateRepositoryAfterUpload(
+    return {
+
+        completed:
+            false,
+
+        publication: {
+
+            file,
+
+            type,
+
+            sizeMB,
+
+            sha256,
+
+            repository,
+
+            record,
+
+            cdnPath,
+
+            cdnURL,
+
+            duplicate:
+                false,
+
+            recovered:
+                false
+
+        }
+
+    };
+
+}
+
+
+async function prepareUpload(
+    file
+) {
+
+    const originalName =
+        path.basename(
+            file
+        );
+
+
+    if (
+        originalName ===
+        ".gitkeep"
+    ) {
+
+        return null;
+
+    }
+
+
+    const type =
+        detectType(
+            file
+        );
+
+
+    if (!type) {
+
+        const config =
+            loadConfig();
+
+
+        if (
+            !config.upload ||
+            config.upload
+                .failOnUnsupported !==
+            false
+        ) {
+
+            throw new Error(
+                `Unsupported file type: ${originalName}`
+            );
+
+        }
+
+
+        return null;
+
+    }
+
+
+    const sizeMB =
+        checkSize(
+            file,
+            type
+        );
+
+
+    const sha256 =
+        getFileSha256(
+            file
+        );
+
+
+    await reconcileRepositories(
+        type
+    );
+
+
+    const config =
+        loadConfig();
+
+
+    if (
+        !config.upload ||
+        config.upload
+            .deduplicateByHash !==
+        false
+    ) {
+
+        const found =
+            await findRecordByHash(
+
+                type,
+
+                sha256
+
+            );
+
+
+        if (found) {
+
+            return prepareExistingRecord({
+
+                file,
+
+                type,
+
+                sizeMB,
+
+                sha256,
+
+                found
+
+            });
+
+        }
+
+    }
+
+
+    return prepareNewRecord({
+
+        file,
 
         type,
 
-        repository.id,
+        sizeMB,
 
-        sizeMB
+        sha256
 
-    );
+    });
+
+}
+
+
+async function finalizePublication(
+    publication
+) {
+
+    const completed =
+        await markRecordComplete(
+
+            publication.repository,
+
+            getRecordIdentity(
+                publication.record,
+                publication.sha256
+            ),
+
+            {
+
+                cdnPath:
+                    publication.cdnPath,
+
+                url:
+                    publication.cdnURL
+
+            }
+
+        );
 
 
     removeTemporaryFile(
-        file
+        publication.file
     );
 
 
     console.log(
-
-        `Uploaded: ${cdn}`
-
-    );
-
-
-    console.log(
-
-        `Database ID: ${completed.id}`
-
-    );
-
-
-    console.log(
-
-        `Temporary file removed: ${originalName}`
-
+        `Published: ${publication.cdnURL}`
     );
 
 
     return {
 
-        type,
+        type:
+            publication.type,
 
         repository:
-            repository.repo,
+            publication.repository.repo,
 
-        filename,
+        filename:
+            completed.filename,
 
-        cdn,
+        cdn:
+            publication.cdnURL,
 
         id:
             completed.id,
 
-        sha256,
+        sha256:
+            publication.sha256,
 
         recovered:
-            false,
+            publication.recovered,
 
         duplicate:
-            false
+            publication.duplicate
 
     };
 
@@ -890,9 +1039,7 @@ async function processUpload(
 async function run() {
 
     console.log(
-
-        "Jingyan Media Upload Start"
-
+        "Jingyan Media Upload V10 Start"
     );
 
 
@@ -901,17 +1048,13 @@ async function run() {
 
 
     if (
-
         !fs.existsSync(
             uploadDir
         )
-
     ) {
 
         console.log(
-
             "Upload folder missing"
-
         );
 
 
@@ -926,7 +1069,15 @@ async function run() {
         );
 
 
+    const publications =
+        [];
+
+
     const results =
+        [];
+
+
+    const failures =
         [];
 
 
@@ -936,10 +1087,8 @@ async function run() {
     ) {
 
         if (
-
             filename ===
             ".gitkeep"
-
         ) {
 
             continue;
@@ -958,11 +1107,9 @@ async function run() {
 
 
         if (
-
             !fs.statSync(
                 fullPath
             ).isFile()
-
         ) {
 
             continue;
@@ -970,13 +1117,80 @@ async function run() {
         }
 
 
-        const result =
-            await processUpload(
-                fullPath
+        try {
+
+            const prepared =
+                await prepareUpload(
+                    fullPath
+                );
+
+
+            if (!prepared) {
+
+                continue;
+
+            }
+
+
+            if (
+                prepared.completed
+            ) {
+
+                results.push(
+                    prepared.result
+                );
+
+            } else {
+
+                publications.push(
+                    prepared.publication
+                );
+
+            }
+
+        } catch (error) {
+
+            console.error(
+                `Failed to prepare ${filename}: ${error.message}`
             );
 
 
-        if (result) {
+            failures.push({
+
+                filename,
+
+                error
+
+            });
+
+        }
+
+    }
+
+
+    if (
+        publications.length >
+        0
+    ) {
+
+        console.log(
+            `Publishing ${publications.length} prepared upload(s) to unified CDN`
+        );
+
+
+        await publishCDN();
+
+
+        for (
+            const publication
+            of publications
+        ) {
+
+            const result =
+                await finalizePublication(
+                    publication
+                );
+
 
             results.push(
                 result
@@ -988,9 +1202,7 @@ async function run() {
 
 
     console.log(
-
-        `Finished: ${results.length} file(s)`
-
+        `Finished: ${results.length} successful file(s)`
     );
 
 
@@ -1000,9 +1212,26 @@ async function run() {
     ) {
 
         console.log(
-
             `RESULT ${result.id}: ${result.cdn}`
+        );
 
+    }
+
+
+    if (
+        failures.length >
+        0
+    ) {
+
+        throw new Error(
+            failures
+                .map(
+                    item =>
+                        `${item.filename}: ${item.error.message}`
+                )
+                .join(
+                    " | "
+                )
         );
 
     }
@@ -1014,33 +1243,24 @@ async function run() {
 
 
 if (
-    require.main ===
-    module
+    require.main === module
 ) {
 
     run()
         .catch(
-
             error => {
 
                 console.error(
-
                     "Upload failed:"
-
                 );
-
 
                 console.error(
                     error
                 );
 
-
-                process.exit(
-                    1
-                );
+                process.exit(1);
 
             }
-
         );
 
 }
@@ -1056,7 +1276,7 @@ module.exports = {
 
     checkSize,
 
-    processUpload,
+    prepareUpload,
 
     run
 
