@@ -1,4 +1,5 @@
 const fs = require("fs");
+const path = require("path");
 
 
 function loadConfig() {
@@ -13,11 +14,18 @@ function loadConfig() {
 }
 
 
-function generateCDN(
-    repo,
-    branch,
-    filePath
-) {
+function normalizeType(type) {
+
+    if (type === "music") {
+        return "audio";
+    }
+
+    return type;
+
+}
+
+
+function getCDNBaseURL() {
 
     const config =
         loadConfig();
@@ -34,8 +42,8 @@ function generateCDN(
 
 
     if (
-        config.cdn.provider
-        !== "jsdelivr"
+        config.cdn.provider !==
+        "cloudflare-static-assets"
     ) {
 
         throw new Error(
@@ -45,54 +53,116 @@ function generateCDN(
     }
 
 
-    if (
-        config.cdn.includeBranch
-    ) {
-
-        return (
-            "https://cdn.jsdelivr.net/gh/" +
-            repo +
-            "@" +
-            branch +
-            "/" +
-            filePath
-        );
-
-    }
-
-
-    return (
-        "https://cdn.jsdelivr.net/gh/" +
-        repo +
-        "/" +
-        filePath
+    return String(
+        config.cdn.baseURL
+    ).replace(
+        /\/+$/,
+        ""
     );
 
 }
 
 
-function generateRepositoryCDN(
-    repository,
-    filePath
+function generateCDNPath(
+    type,
+    filename
 ) {
 
-    return generateCDN(
+    const config =
+        loadConfig();
 
-        repository.repo,
 
-        repository.branch || "main",
+    const normalizedType =
+        normalizeType(type);
 
-        filePath
 
+    const settings =
+        config.mediaTypes[
+            normalizedType
+        ];
+
+
+    if (!settings) {
+
+        throw new Error(
+            `Invalid CDN media type: ${type}`
+        );
+
+    }
+
+
+    const cleanFilename =
+        path.posix.basename(
+            String(filename)
+        );
+
+
+    return (
+        "/" +
+        settings.cdnFolder +
+        "/" +
+        cleanFilename
     );
+
+}
+
+
+function generateCDNURL(
+    type,
+    filename
+) {
+
+    const baseURL =
+        getCDNBaseURL();
+
+
+    if (!baseURL) {
+
+        return null;
+
+    }
+
+
+    return (
+        baseURL +
+        generateCDNPath(
+            type,
+            filename
+        )
+    );
+
+}
+
+
+function isUnifiedCDNURL(
+    url
+) {
+
+    if (!url) {
+        return false;
+    }
+
+
+    const baseURL =
+        getCDNBaseURL();
+
+
+    return String(url)
+        .startsWith(
+            baseURL + "/"
+        );
 
 }
 
 
 module.exports = {
 
-    generateCDN,
+    getCDNBaseURL,
 
-    generateRepositoryCDN
+    generateCDNPath,
+
+    generateCDNURL,
+
+    isUnifiedCDNURL
 
 };
