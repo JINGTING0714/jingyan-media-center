@@ -11,6 +11,46 @@ import {
   handleInternalUploadRequest
 } from "./upload-api.mjs";
 
+import {
+  handleAdminMediaRequest
+} from "./media-api.mjs";
+
+
+const PROTECTED_OWNER_ASSETS =
+  new Map([
+
+    [
+      "/admin",
+      "/admin/"
+    ],
+
+    [
+      "/admin/",
+      "/admin/"
+    ],
+
+    [
+      "/admin/index.html",
+      "/admin/"
+    ],
+
+    [
+      "/library",
+      "/library/"
+    ],
+
+    [
+      "/library/",
+      "/library/"
+    ],
+
+    [
+      "/library/index.html",
+      "/library/"
+    ]
+
+  ]);
+
 
 function cloneWithCookie(
   response,
@@ -18,7 +58,9 @@ function cloneWithCookie(
 ) {
 
   if (!cookie) {
+
     return response;
+
   }
 
 
@@ -65,11 +107,13 @@ function redirectWithCookie(
 
   const headers =
     new Headers({
+
       Location:
         url.toString(),
 
       "Cache-Control":
         "no-store"
+
     });
 
 
@@ -138,13 +182,17 @@ async function authenticateThroughExistingWorker(
     );
 
 
-  if (!response.ok) {
+  if (
+    !response.ok
+  ) {
 
     return {
+
       ok:
         false,
 
       response
+
     };
 
   }
@@ -166,6 +214,7 @@ async function authenticateThroughExistingWorker(
   ) {
 
     return {
+
       ok:
         false,
 
@@ -177,72 +226,70 @@ async function authenticateThroughExistingWorker(
           },
           401
         )
+
     };
 
   }
 
 
   return {
+
     ok:
       true,
 
     auth: {
+
       user:
         data.user,
 
       session:
         data.session
+
     },
 
     cookie
+
   };
 
 }
 
 
-function isProtectedAdminPath(
-  pathname
-) {
-
-  return [
-    "/admin",
-    "/admin/",
-    "/admin/index.html"
-  ].includes(
-    pathname
-  );
-
-}
-
-
-function hasOwnerAdminAccess(
+function hasOwnerControlAccess(
   user
 ) {
 
   return Boolean(
+
     user &&
+
     user.role ===
       "owner" &&
+
     user.status ===
       "active" &&
+
     user.permissions
       ?.manageUsers ===
       true &&
+
     user.permissions
       ?.manageInvites ===
       true &&
+
     user.permissions
       ?.manageSystem ===
       true
+
   );
 
 }
 
 
-async function serveProtectedAdmin(
+async function serveProtectedOwnerAsset(
   request,
   env,
-  ctx
+  ctx,
+  canonicalPath
 ) {
 
   const method =
@@ -283,7 +330,9 @@ async function serveProtectedAdmin(
     );
 
 
-  if (!authentication.ok) {
+  if (
+    !authentication.ok
+  ) {
 
     const clearCookie =
       authentication
@@ -317,8 +366,10 @@ async function serveProtectedAdmin(
 
 
   if (
-    !hasOwnerAdminAccess(
-      authentication.auth.user
+    !hasOwnerControlAccess(
+      authentication
+        .auth
+        .user
     )
   ) {
 
@@ -337,13 +388,8 @@ async function serveProtectedAdmin(
     );
 
 
-  /*
-   * /admin/ is the canonical Static Assets path for
-   * public/admin/index.html when html_handling uses
-   * auto-trailing-slash.
-   */
   assetUrl.pathname =
-    "/admin/";
+    canonicalPath;
 
   assetUrl.search =
     "";
@@ -354,6 +400,7 @@ async function serveProtectedAdmin(
       assetUrl.toString(),
       {
         method,
+
         headers:
           new Headers(
             request.headers
@@ -365,6 +412,65 @@ async function serveProtectedAdmin(
   const response =
     await env.ASSETS.fetch(
       assetRequest
+    );
+
+
+  return cloneWithCookie(
+    response,
+    authentication.cookie
+  );
+
+}
+
+
+async function handleProtectedAdminMediaApi(
+  request,
+  env,
+  ctx
+) {
+
+  const authentication =
+    await authenticateThroughExistingWorker(
+      request,
+      env,
+      ctx
+    );
+
+
+  if (
+    !authentication.ok
+  ) {
+
+    return authentication
+      .response;
+
+  }
+
+
+  if (
+    !hasOwnerControlAccess(
+      authentication
+        .auth
+        .user
+    )
+  ) {
+
+    return jsonResponse(
+      {
+        error:
+          "permission_denied"
+      },
+      403
+    );
+
+  }
+
+
+  const response =
+    await handleAdminMediaRequest(
+      request,
+      env,
+      authentication.auth
     );
 
 
@@ -460,7 +566,9 @@ export default {
           );
 
 
-        if (!authentication.ok) {
+        if (
+          !authentication.ok
+        ) {
 
           return authentication
             .response;
@@ -485,15 +593,35 @@ export default {
 
 
       if (
-        isProtectedAdminPath(
-          url.pathname
-        )
+        url.pathname ===
+        "/api/admin/media"
       ) {
 
-        return await serveProtectedAdmin(
+        return await handleProtectedAdminMediaApi(
           request,
           env,
           ctx
+        );
+
+      }
+
+
+      const protectedAsset =
+        PROTECTED_OWNER_ASSETS
+          .get(
+            url.pathname
+          );
+
+
+      if (
+        protectedAsset
+      ) {
+
+        return await serveProtectedOwnerAsset(
+          request,
+          env,
+          ctx,
+          protectedAsset
         );
 
       }
