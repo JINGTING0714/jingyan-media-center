@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "worker": "jingyan-media-cdn",
+  "baseURL": "https://jingyan-media-cdn.jingyancdn.workers.dev",
+  "updatedAt": null,
+  "lastPublishedAt": null,
+  "lastVersionId": null,
+  "lastDeploymentId": null,
+  "assets": {}
+}
