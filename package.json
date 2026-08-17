@@ -1,0 +1,12 @@
+{
+  "name": "jingyan-media-center",
+  "version": "10.0.0",
+  "private": true,
+  "type": "commonjs",
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "cloudflare": "6.0.0"
+  }
+}
