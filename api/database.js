@@ -3,8 +3,13 @@ const path = require("path");
 
 
 const {
+
     getFile,
-    upsertTextFile
+
+    upsertTextFile,
+
+    getMaxFileSequence
+
 } = require("./github");
 
 
@@ -91,6 +96,51 @@ async function readRepositoryDatabase(
 }
 
 
+function getLegacyFilename(
+    record
+) {
+
+    if (
+        record &&
+        typeof record.filename ===
+        "string"
+    ) {
+
+        return record.filename;
+
+    }
+
+
+    if (
+        record &&
+        typeof record.file ===
+        "string"
+    ) {
+
+        return record.file;
+
+    }
+
+
+    if (
+        record &&
+        record.file &&
+        typeof record.file ===
+        "object" &&
+        typeof record.file.name ===
+        "string"
+    ) {
+
+        return record.file.name;
+
+    }
+
+
+    return "";
+
+}
+
+
 function getRecordSequence(
     record
 ) {
@@ -114,23 +164,20 @@ function getRecordSequence(
 
 
     const filename =
-        record.filename ||
-        record.file ||
-        "";
+        getLegacyFilename(
+            record
+        );
 
 
     const fileMatch =
         String(
             filename
-        )
-        .match(
+        ).match(
             /^(\d+)-/
         );
 
 
-    if (
-        fileMatch
-    ) {
+    if (fileMatch) {
 
         return Number(
             fileMatch[1]
@@ -143,15 +190,12 @@ function getRecordSequence(
         String(
             record.id ||
             ""
-        )
-        .match(
+        ).match(
             /-(\d+)$/
         );
 
 
-    if (
-        idMatch
-    ) {
+    if (idMatch) {
 
         return Number(
             idMatch[1]
@@ -239,6 +283,19 @@ async function findRecordByHash(
         ) {
 
             if (
+                !record ||
+                record.status ===
+                    "deleted" ||
+                record.deleted ===
+                    true
+            ) {
+
+                continue;
+
+            }
+
+
+            if (
                 record.sha256 !==
                 sha256
             ) {
@@ -249,16 +306,19 @@ async function findRecordByHash(
 
 
             const result = {
+
                 repository,
+
                 record
+
             };
 
 
             if (
                 record.status ===
-                "complete" &&
+                    "complete" &&
                 record.cdnStatus ===
-                "published"
+                    "published"
             ) {
 
                 return result;
@@ -297,7 +357,7 @@ async function getRemoteMaxSequence(
         [];
 
 
-    let maxSequence =
+    let maximum =
         Number(
             config.counters[type] ||
             0
@@ -320,10 +380,10 @@ async function getRemoteMaxSequence(
             of list
         ) {
 
-            maxSequence =
+            maximum =
                 Math.max(
 
-                    maxSequence,
+                    maximum,
 
                     getRecordSequence(
                         record
@@ -333,10 +393,29 @@ async function getRemoteMaxSequence(
 
         }
 
+
+        const fileMaximum =
+            await getMaxFileSequence(
+
+                repository.repo,
+
+                repository.folder,
+
+                repository.branch
+
+            );
+
+
+        maximum =
+            Math.max(
+                maximum,
+                fileMaximum
+            );
+
     }
 
 
-    return maxSequence;
+    return maximum;
 
 }
 
@@ -345,30 +424,55 @@ async function reserveSequence(
     type
 ) {
 
-    const maxSequence =
+    const maximum =
         await getRemoteMaxSequence(
             type
         );
 
 
-    const next =
-        maxSequence + 1;
+    return maximum + 1;
 
+}
+
+
+function commitCounter(
+    type,
+    sequence
+) {
 
     const config =
         loadConfig();
 
 
+    if (
+        !config.counters ||
+        typeof config.counters !==
+        "object"
+    ) {
+
+        config.counters = {};
+
+    }
+
+
     config.counters[type] =
-        next;
+        Math.max(
+
+            Number(
+                config.counters[type] ||
+                0
+            ),
+
+            Number(
+                sequence
+            )
+
+        );
 
 
     saveConfig(
         config
     );
-
-
-    return next;
 
 }
 
@@ -384,16 +488,22 @@ function buildPendingRecord(
         path.extname(
             item.filename
         )
-        .replace(".", "")
+        .replace(
+            ".",
+            ""
+        )
         .toLowerCase();
 
 
     const originalTitle =
         path.basename(
+
             item.originalName,
+
             path.extname(
                 item.originalName
             )
+
         );
 
 
@@ -440,7 +550,9 @@ function buildPendingRecord(
             Number(
                 Number(
                     item.sizeMB
-                ).toFixed(3)
+                ).toFixed(
+                    3
+                )
             ),
 
         repository: {
@@ -502,6 +614,7 @@ function buildPendingRecord(
 
 }
 
+
 async function upsertPendingRecord(
     repository,
     type,
@@ -518,8 +631,13 @@ async function upsertPendingRecord(
     const existing =
         list.find(
             record =>
+                record &&
                 record.sha256 ===
-                item.sha256
+                    item.sha256 &&
+                record.status !==
+                    "deleted" &&
+                record.deleted !==
+                    true
         );
 
 
@@ -540,14 +658,13 @@ async function upsertPendingRecord(
     const conflictingId =
         list.find(
             record =>
+                record &&
                 record.id ===
-                id
+                    id
         );
 
 
-    if (
-        conflictingId
-    ) {
+    if (conflictingId) {
 
         throw new Error(
             `Database ID already exists: ${id}`
@@ -594,6 +711,12 @@ async function upsertPendingRecord(
     );
 
 
+    commitCounter(
+        type,
+        sequence
+    );
+
+
     return record;
 
 }
@@ -615,12 +738,15 @@ async function patchRecord(
     const index =
         list.findIndex(
             record =>
-                record.operationId ===
-                    identity ||
-                record.sha256 ===
-                    identity ||
-                record.id ===
-                    identity
+                record &&
+                (
+                    record.operationId ===
+                        identity ||
+                    record.sha256 ===
+                        identity ||
+                    record.id ===
+                        identity
+                )
         );
 
 
@@ -635,11 +761,26 @@ async function patchRecord(
     }
 
 
+    const current =
+        list[index];
+
+
+    const changes =
+        typeof patch ===
+        "function"
+
+            ? patch(
+                current
+            )
+
+            : patch;
+
+
     const updated = {
 
-        ...list[index],
+        ...current,
 
-        ...patch
+        ...changes
 
     };
 
@@ -678,29 +819,56 @@ async function markRecordSourceComplete(
     patch = {}
 ) {
 
+    const now =
+        new Date()
+            .toISOString();
+
+
     return patchRecord(
 
         repository,
 
         identity,
 
-        {
+        current => {
 
-            ...patch,
+            const alreadyPublished =
 
-            status:
-                "source-complete",
+                current.status ===
+                    "complete" &&
 
-            sourceStatus:
-                "complete",
+                current.cdnStatus ===
+                    "published";
 
-            cdnStatus:
-                patch.cdnStatus ||
-                "pending",
 
-            sourceCompletedAt:
-                new Date()
-                    .toISOString()
+            return {
+
+                ...patch,
+
+                status:
+                    alreadyPublished
+                        ? "complete"
+                        : "source-complete",
+
+                sourceStatus:
+                    "complete",
+
+                cdnStatus:
+                    alreadyPublished
+
+                        ? "published"
+
+                        : (
+                            patch.cdnStatus ||
+                            current.cdnStatus ||
+                            "pending"
+                        ),
+
+                sourceCompletedAt:
+                    current.sourceCompletedAt ||
+                    now
+
+            };
 
         },
 
@@ -762,7 +930,7 @@ async function markRecordComplete(
 
         identity,
 
-        {
+        current => ({
 
             ...patch,
 
@@ -775,13 +943,19 @@ async function markRecordComplete(
             cdnStatus:
                 "published",
 
+            sourceCompletedAt:
+                current.sourceCompletedAt ||
+                now,
+
             cdnPublishedAt:
+                current.cdnPublishedAt ||
                 now,
 
             uploadedAt:
+                current.uploadedAt ||
                 now
 
-        },
+        }),
 
         `Complete ${identity}`
 
@@ -838,6 +1012,8 @@ module.exports = {
     readRepositoryDatabase,
 
     findRecordByHash,
+
+    getRemoteMaxSequence,
 
     reserveSequence,
 
