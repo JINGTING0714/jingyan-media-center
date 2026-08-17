@@ -1,88 +1,56 @@
 {
   "system": "jingyan-media-auth",
-
-  "version": "7.0",
-
-
-  "owner": {
-
-    "username": "JINGTING0714",
-
-    "role": "owner"
-
+  "version": "10.2",
+  "mode": "invite-activation",
+  "storage": {
+    "provider": "cloudflare-d1",
+    "database": "jingyan-media-auth"
   },
-
-
-  "users": [
-
-    {
-
-      "id": "001",
-
-      "username": "JINGTING0714",
-
-      "token": "OWNER_TOKEN_PLACEHOLDER",
-
-      "role": "owner",
-
-      "status": "active"
-
-    },
-
-    {
-
-      "id": "002",
-
-      "username": "friend01",
-
-      "token": "USER_TOKEN_PLACEHOLDER",
-
-      "role": "upload",
-
-      "status": "active"
-
-    }
-
-  ],
-
-
-
-  "roles": {
-
-
+  "session": {
+    "cookieName": "jy_session",
+    "rollingDays": 180,
+    "refreshHours": 24,
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "Lax",
+    "path": "/"
+  },
+  "invite": {
+    "oneInviteOnePerson": true,
+    "singleUse": true,
+    "storePlaintextCode": false,
+    "defaultExpiryDays": 30
+  },
+  "permissions": {
     "owner": {
-
-
-      "upload": true,
-
-      "delete": true,
-
-      "modify": true,
-
+      "uploadImage": true,
+      "uploadAudio": true,
+      "uploadVideo": true,
+      "deleteMedia": true,
+      "editMedia": true,
       "manageUsers": true,
-
-      "createRepository": true
-
+      "manageInvites": true,
+      "manageRepositories": true,
+      "manageSystem": true,
+      "runMaintenance": true
     },
-
-
-    "upload": {
-
-
-      "upload": true,
-
-      "delete": false,
-
-      "modify": false,
-
+    "uploader": {
+      "uploadImage": true,
+      "uploadAudio": true,
+      "uploadVideo": true,
+      "deleteMedia": false,
+      "editMedia": false,
       "manageUsers": false,
-
-      "createRepository": false
-
+      "manageInvites": false,
+      "manageRepositories": false,
+      "manageSystem": false,
+      "runMaintenance": false
     }
-
-
+  },
+  "security": {
+    "turnstile": true,
+    "publicCodeRateLimit": "10/minute",
+    "secretsStoredInRepository": false,
+    "clientStoresPermissionsAsAuthority": false
   }
-
-
 }
