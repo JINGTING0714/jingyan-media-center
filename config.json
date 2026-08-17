@@ -65,7 +65,7 @@
           "database": "data/video.json",
           "status": "data/status.json",
           "marker": "data/repository.json",
-          "sizeMB": 0,
+          "sizeMB": 1.536,
           "state": "active"
         }
       ]
@@ -123,7 +123,7 @@
   "counters": {
     "image": 3,
     "audio": 4,
-    "video": 0
+    "video": 1
   },
   "rename": {
     "format": "number-name-extension",
