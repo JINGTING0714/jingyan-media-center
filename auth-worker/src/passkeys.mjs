@@ -37,6 +37,23 @@ const DEFAULT_CHALLENGE_TTL_SECONDS =
   300;
 
 
+/*
+ * WebAuthn / COSE algorithms used for registration.
+ *
+ * -8   EdDSA
+ * -7   ES256
+ * -257 RS256
+ *
+ * Keep all three for broad desktop/mobile authenticator
+ * compatibility.
+ */
+const REGISTRATION_ALGORITHM_IDS = [
+  -8,
+  -7,
+  -257
+];
+
+
 function changes(
   result
 ) {
@@ -245,7 +262,8 @@ function bytesToBase64Url(
   value
 ) {
   const bytes =
-    value instanceof Uint8Array
+    value instanceof
+    Uint8Array
       ? value
       : new Uint8Array(
           value
@@ -344,21 +362,15 @@ async function enforcePublicPasskeyRateLimit(
       env
     );
 
-  /*
-   * V2:
-   * 不再让同一个 NAT/Wi-Fi 下的所有设备
-   * 只共享一个纯 IP bucket。
-   *
-   * 同时只在“获取登录 challenge”阶段计数，
-   * 验证阶段本身已有一次性 challenge 防重放。
-   */
   const key =
     [
       "passkey-auth",
+
       String(
         fingerprint.ipHash ||
         "unknown-ip"
       ),
+
       String(
         fingerprint.userAgentHash ||
         "unknown-agent"
@@ -682,7 +694,8 @@ async function claimChallenge(
       null ||
     Number(
       row.expires_at
-    ) <= now
+    ) <=
+      now
   ) {
     throw new HttpError(
       400,
@@ -691,7 +704,8 @@ async function claimChallenge(
   }
 
   if (
-    userId !== null &&
+    userId !==
+      null &&
     row.user_id !==
       userId
   ) {
@@ -702,7 +716,8 @@ async function claimChallenge(
   }
 
   if (
-    sessionId !== null &&
+    sessionId !==
+      null &&
     row.session_id !==
       sessionId
   ) {
@@ -736,7 +751,8 @@ async function claimChallenge(
   if (
     changes(
       claimed
-    ) !== 1
+    ) !==
+    1
   ) {
     throw new HttpError(
       409,
@@ -794,11 +810,6 @@ async function createRegistrationOptions(
         env
       ),
 
-    /*
-     * 系统没有传统 username，
-     * 因此使用稳定 user id 作为 WebAuthn userName，
-     * 人类可读名称继续放在 userDisplayName。
-     */
     userName:
       auth.user.id,
 
@@ -832,10 +843,8 @@ async function createRegistrationOptions(
         "required"
     },
 
-    supportedAlgorithmIDs: [
-      -7,
-      -257
-    ]
+    supportedAlgorithmIDs:
+      REGISTRATION_ALGORITHM_IDS
   };
 
   if (
@@ -949,10 +958,15 @@ async function verifyRegistration(
           ),
 
         requireUserVerification:
-          true
+          true,
+
+        supportedAlgorithmIDs:
+          REGISTRATION_ALGORITHM_IDS
       });
 
-  } catch (error) {
+  } catch (
+    error
+  ) {
     console.error(
       "Passkey registration verification failed:",
       error
@@ -1004,12 +1018,14 @@ async function verifyRegistration(
       )
       .first();
 
-  if (existing) {
+  if (
+    existing
+  ) {
     if (
       existing.user_id ===
-      auth.user.id &&
+        auth.user.id &&
       existing.revoked_at ===
-      null
+        null
     ) {
       throw new HttpError(
         409,
@@ -1306,7 +1322,8 @@ async function verifyCredentialAssertion(
   }
 
   if (
-    expectedUserId !== null &&
+    expectedUserId !==
+      null &&
     row.id !==
       expectedUserId
   ) {
@@ -1362,7 +1379,9 @@ async function verifyCredentialAssertion(
           true
       });
 
-  } catch (error) {
+  } catch (
+    error
+  ) {
     console.error(
       "Passkey authentication verification failed:",
       error
@@ -1399,10 +1418,6 @@ async function createPublicAuthenticationOptions(
     request
   );
 
-  /*
-   * 只在 challenge 发放阶段限流。
-   * 手机 + PC 共用网络时，也按 UA fingerprint 分桶。
-   */
   await enforcePublicPasskeyRateLimit(
     request,
     env
@@ -1929,7 +1944,8 @@ async function listPasskeys(
   ) {
     securityStatus =
       hasBackedUpPasskey ||
-      passkeys.length >= 2
+      passkeys.length >=
+        2
         ? "good"
         : "attention";
   }
@@ -2003,7 +2019,8 @@ async function renamePasskey(
   if (
     changes(
       result
-    ) !== 1
+    ) !==
+    1
   ) {
     throw new HttpError(
       404,
@@ -2131,7 +2148,8 @@ async function revokePasskey(
       Number(
         countRow?.count ||
         0
-      ) <= 1
+      ) <=
+      1
     ) {
       throw new HttpError(
         409,
@@ -2168,7 +2186,8 @@ async function revokePasskey(
   if (
     changes(
       result
-    ) !== 1
+    ) !==
+    1
   ) {
     throw new HttpError(
       409,
@@ -2249,6 +2268,7 @@ export async function handlePasskeyApiRequest(
     request.method
       .toUpperCase();
 
+
   if (
     pathname ===
     "/api/passkeys/authentication/options"
@@ -2268,6 +2288,7 @@ export async function handlePasskeyApiRequest(
     );
   }
 
+
   if (
     pathname ===
     "/api/passkeys/authentication/verify"
@@ -2286,6 +2307,7 @@ export async function handlePasskeyApiRequest(
       env
     );
   }
+
 
   if (
     pathname ===
@@ -2307,6 +2329,7 @@ export async function handlePasskeyApiRequest(
     );
   }
 
+
   if (
     pathname ===
     "/api/passkeys/test/verify"
@@ -2326,6 +2349,7 @@ export async function handlePasskeyApiRequest(
       auth
     );
   }
+
 
   if (
     pathname ===
@@ -2347,6 +2371,7 @@ export async function handlePasskeyApiRequest(
     );
   }
 
+
   if (
     pathname ===
     "/api/passkeys/registration/verify"
@@ -2367,6 +2392,7 @@ export async function handlePasskeyApiRequest(
     );
   }
 
+
   if (
     pathname ===
     "/api/passkeys"
@@ -2386,16 +2412,21 @@ export async function handlePasskeyApiRequest(
     );
   }
 
+
   const match =
     pathname.match(
       /^\/api\/passkeys\/([^/]+)$/
     );
 
-  if (match) {
+
+  if (
+    match
+  ) {
     const passkeyId =
       decodeURIComponent(
         match[1]
       );
+
 
     if (
       method ===
@@ -2409,6 +2440,7 @@ export async function handlePasskeyApiRequest(
       );
     }
 
+
     if (
       method ===
       "DELETE"
@@ -2421,11 +2453,13 @@ export async function handlePasskeyApiRequest(
       );
     }
 
+
     return methodNotAllowed([
       "PATCH",
       "DELETE"
     ]);
   }
+
 
   return notFound();
 }
