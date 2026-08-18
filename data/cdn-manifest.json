@@ -2,10 +2,10 @@
   "version": 1,
   "worker": "jingyan-media-cdn",
   "baseURL": "https://jingyan-media-cdn.jingyancdn.workers.dev",
-  "updatedAt": "2026-08-17T11:34:23.515Z",
-  "lastPublishedAt": "2026-08-17T11:34:23.515Z",
-  "lastVersionId": "70f3667c-af84-42f5-80e2-5f676ec90548",
-  "lastDeploymentId": "e9fce606-c1fe-41da-975d-64c27217b988",
+  "updatedAt": "2026-08-18T05:07:54.284Z",
+  "lastPublishedAt": "2026-08-18T05:07:54.284Z",
+  "lastVersionId": "b09220ae-d894-4404-8399-f309ef1ed146",
+  "lastDeploymentId": "31d79521-b014-48ce-95c5-5cb76e580564",
   "assets": {
     "/audio/001-christmas.mp3": {
       "hash": "6c23ab88513bb99a558582c6f14cef89",
@@ -123,6 +123,19 @@
         "path": "music/005-hito-rie-sleepwalk.mp3"
       },
       "addedAt": "2026-08-17T11:34:15.435Z"
+    },
+    "/image/006-967682455ffe1f7496a670fbb235157e.jpg": {
+      "hash": "1d2b96c2f3742f751c5d1eb7ee994250",
+      "size": 1400125,
+      "sha256": "22e2ab70cecb3b849e8540c130f8f66a04ef0b82052e49aa2a37c38135b39459",
+      "type": "image",
+      "mediaId": "image-000006",
+      "source": {
+        "repo": "JINGTING0714/jingyan-image-01",
+        "branch": "main",
+        "path": "image/006-967682455ffe1f7496a670fbb235157e.jpg"
+      },
+      "addedAt": "2026-08-18T05:07:47.279Z"
     }
   }
 }
