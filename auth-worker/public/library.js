@@ -83,6 +83,15 @@ const toast =
         "toast"
     );
 
+const toolbarActions =
+    document.querySelector(
+        ".toolbar-actions"
+    );
+
+const libraryToolbar =
+    document.querySelector(
+        ".library-toolbar"
+    );
 
 const typeButtons =
     Array.from(
@@ -103,6 +112,13 @@ let currentPage =
 
 let currentTotalPages =
     1;
+
+let currentPageSize =
+    window.matchMedia(
+        "(max-width: 760px)"
+    ).matches
+        ? 12
+        : 24;
 
 let searchTimer =
     null;
@@ -141,16 +157,13 @@ function showToast(
     toast.textContent =
         message;
 
-
     toast.classList.add(
         "show"
     );
 
-
     clearTimeout(
         toastTimer
     );
-
 
     toastTimer =
         setTimeout(
@@ -168,22 +181,27 @@ function showToast(
 
 
 async function api(
-    url
+    url,
+    options = {}
 ) {
 
     const response =
         await fetch(
             url,
             {
+                ...options,
+
                 credentials:
-                    "same-origin"
+                    "same-origin",
+
+                headers: {
+                    ...(options.headers || {})
+                }
             }
         );
 
-
     let data =
         {};
-
 
     try {
 
@@ -197,7 +215,6 @@ async function api(
 
     }
 
-
     if (
         !response.ok
     ) {
@@ -208,10 +225,9 @@ async function api(
         ) {
 
             location.href =
-                "/activate";
+                "/login";
 
         }
-
 
         throw new ApiError(
             response.status,
@@ -220,7 +236,6 @@ async function api(
         );
 
     }
-
 
     return data;
 
@@ -238,7 +253,6 @@ function createElement(
             tag
         );
 
-
     if (
         className
     ) {
@@ -247,7 +261,6 @@ function createElement(
             className;
 
     }
-
 
     if (
         text !==
@@ -258,7 +271,6 @@ function createElement(
             text;
 
     }
-
 
     return element;
 
@@ -274,19 +286,17 @@ function formatBytes(
             bytes
         );
 
-
     if (
         !Number.isFinite(
             value
         ) ||
-        value <=
+        value <
         0
     ) {
 
         return "—";
 
     }
-
 
     if (
         value <
@@ -296,7 +306,6 @@ function formatBytes(
         return `${value} B`;
 
     }
-
 
     if (
         value <
@@ -315,7 +324,6 @@ function formatBytes(
 
     }
 
-
     return (
         value /
         1024 /
@@ -333,18 +341,18 @@ function formatDate(
     value
 ) {
 
-    if (!value) {
+    if (
+        !value
+    ) {
 
         return "—";
 
     }
 
-
     const date =
         new Date(
             value
         );
-
 
     if (
         Number.isNaN(
@@ -356,9 +364,26 @@ function formatDate(
 
     }
 
-
     return date
-        .toLocaleString();
+        .toLocaleString(
+            "zh-CN",
+            {
+                year:
+                    "numeric",
+
+                month:
+                    "2-digit",
+
+                day:
+                    "2-digit",
+
+                hour:
+                    "2-digit",
+
+                minute:
+                    "2-digit"
+            }
+        );
 
 }
 
@@ -373,17 +398,22 @@ function shortHash(
             ""
         );
 
+    if (
+        !text
+    ) {
+
+        return "—";
+
+    }
 
     if (
         text.length <=
         18
     ) {
 
-        return text ||
-        "—";
+        return text;
 
     }
-
 
     return (
         text.slice(
@@ -412,7 +442,6 @@ async function copyText(
                 value
             );
 
-
         showToast(
             successMessage
         );
@@ -433,24 +462,25 @@ function renderIdentity() {
     libraryIdentity.textContent =
         "";
 
-
     const link =
         createElement(
             "a",
             "user-chip"
         );
 
-
     link.href =
         "/account";
 
+    const displayName =
+        currentUser
+            ?.displayName ||
+        "Owner";
 
     link.append(
         createElement(
             "span",
             "user-avatar",
-            currentUser
-                .displayName
+            displayName
                 .slice(
                     0,
                     1
@@ -459,18 +489,16 @@ function renderIdentity() {
         )
     );
 
-
     const text =
         createElement(
             "span"
         );
 
-
     text.append(
         createElement(
             "strong",
             "",
-            currentUser.displayName
+            displayName
         ),
 
         createElement(
@@ -480,11 +508,9 @@ function renderIdentity() {
         )
     );
 
-
     link.append(
         text
     );
-
 
     libraryIdentity.append(
         link
@@ -505,7 +531,6 @@ function metaRow(
             "media-meta-row"
         );
 
-
     row.append(
         createElement(
             "span",
@@ -514,7 +539,6 @@ function metaRow(
         )
     );
 
-
     const strong =
         createElement(
             "strong",
@@ -522,7 +546,6 @@ function metaRow(
             value ||
             "—"
         );
-
 
     if (
         title
@@ -533,107 +556,133 @@ function metaRow(
 
     }
 
-
     row.append(
         strong
     );
-
 
     return row;
 
 }
 
 
-function createPreview(
+function createBadge(
+    text,
+    extraClass = ""
+) {
+
+    return createElement(
+        "span",
+        `media-badge ${extraClass}`.trim(),
+        text
+    );
+
+}
+
+
+function createOpenButton(
     item
 ) {
 
-    const preview =
+    const button =
         createElement(
-            "div",
-            "media-preview"
+            "button",
+            "button primary",
+            item.type ===
+            "audio"
+                ? "播放 / 打开"
+                : "打开"
         );
 
+    button.type =
+        "button";
 
-    preview.append(
-        createElement(
-            "span",
-            "media-type-label",
-            item.type
-        )
-    );
+    button.addEventListener(
+        "click",
+        () => {
 
-
-    if (
-        item.type ===
-        "image"
-    ) {
-
-        const image =
-            document.createElement(
-                "img"
+            window.open(
+                item.url,
+                "_blank",
+                "noopener,noreferrer"
             );
 
+        }
+    );
 
-        image.src =
-            item.url;
+    return button;
 
-        image.alt =
-            item.filename;
-
-        image.loading =
-            "lazy";
-
-        image.decoding =
-            "async";
+}
 
 
-        image.addEventListener(
-            "error",
-            () => {
+function createCopyCdnButton(
+    item
+) {
 
-                image.remove();
-
-
-                preview.append(
-                    createElement(
-                        "div",
-                        "media-symbol",
-                        "IMAGE"
-                    )
-                );
-
-            },
-            {
-                once:
-                    true
-            }
+    const button =
+        createElement(
+            "button",
+            "button secondary",
+            "复制 CDN"
         );
 
+    button.type =
+        "button";
 
-        preview.append(
-            image
-        );
+    button.addEventListener(
+        "click",
+        () => {
+
+            copyText(
+                item.url,
+                "CDN 链接已复制"
+            );
+
+        }
+    );
+
+    return button;
+
+}
 
 
-        return preview;
+function createCopySourceButton(
+    item
+) {
+
+    if (
+        !item.source
+            ?.repository ||
+        !item.source
+            ?.path
+    ) {
+
+        return null;
 
     }
 
-
-    preview.append(
+    const button =
         createElement(
-            "div",
-            "media-symbol",
-            item.type ===
-                "audio"
-                ? "AUDIO"
-                : "VIDEO"
-        )
+            "button",
+            "button secondary",
+            "复制源路径"
+        );
+
+    button.type =
+        "button";
+
+    button.addEventListener(
+        "click",
+        () => {
+
+            copyText(
+                `${item.source.repository}:${item.source.path}`,
+                "源路径已复制"
+            );
+
+        }
     );
 
-
-    return preview;
+    return button;
 
 }
 
@@ -649,17 +698,17 @@ function createMediaCard(
         );
 
 
-    card.append(
-        createPreview(
-            item
-        )
-    );
-
-
-    const body =
+    const header =
         createElement(
             "div",
-            "media-body"
+            "media-card-header"
+        );
+
+
+    const titleBlock =
+        createElement(
+            "div",
+            "media-title-block"
         );
 
 
@@ -667,34 +716,76 @@ function createMediaCard(
         createElement(
             "h3",
             "media-title",
-            item.filename
+            item.displayTitle ||
+            item.filename ||
+            "未命名媒体"
         );
 
-
     title.title =
-        item.filename;
+        item.filename ||
+        "";
 
 
-    body.append(
-        title,
-
+    const mediaId =
         createElement(
             "div",
             "media-id",
             item.mediaId ||
             "未记录 Media ID"
+        );
+
+
+    titleBlock.append(
+        title,
+        mediaId
+    );
+
+
+    const badges =
+        createElement(
+            "div",
+            "media-badges"
+        );
+
+
+    badges.append(
+        createBadge(
+            String(
+                item.type ||
+                "unknown"
+            ).toUpperCase()
         )
     );
 
 
-    const metadata =
+    if (
+        item.protected
+    ) {
+
+        badges.append(
+            createBadge(
+                "已保护",
+                "protected"
+            )
+        );
+
+    }
+
+
+    header.append(
+        titleBlock,
+        badges
+    );
+
+
+    const essentials =
         createElement(
             "div",
-            "media-metadata"
+            "media-essentials"
         );
 
 
-    metadata.append(
+    essentials.append(
         metaRow(
             "类型",
             item.type
@@ -712,6 +803,89 @@ function createMediaCard(
             formatDate(
                 item.addedAt
             )
+        ),
+
+        metaRow(
+            "上传者",
+            item.uploader
+                ?.displayName ||
+            "—"
+        )
+    );
+
+
+    const actions =
+        createElement(
+            "div",
+            "media-actions"
+        );
+
+
+    actions.append(
+        createOpenButton(
+            item
+        ),
+
+        createCopyCdnButton(
+            item
+        )
+    );
+
+
+    const sourceButton =
+        createCopySourceButton(
+            item
+        );
+
+
+    if (
+        sourceButton
+    ) {
+
+        actions.append(
+            sourceButton
+        );
+
+    }
+
+
+    const details =
+        createElement(
+            "details",
+            "media-details"
+        );
+
+
+    const summary =
+        createElement(
+            "summary",
+            "",
+            "高级信息"
+        );
+
+
+    const advanced =
+        createElement(
+            "div",
+            "media-advanced"
+        );
+
+
+    advanced.append(
+        metaRow(
+            "文件名",
+            item.filename ||
+            "—",
+            item.filename ||
+            ""
+        ),
+
+        metaRow(
+            "原始名称",
+            item.originalName ||
+            "—",
+            item.originalName ||
+            ""
         ),
 
         metaRow(
@@ -734,6 +908,13 @@ function createMediaCard(
         ),
 
         metaRow(
+            "源分支",
+            item.source
+                ?.branch ||
+            "—"
+        ),
+
+        metaRow(
             "源路径",
             item.source
                 ?.path ||
@@ -741,126 +922,34 @@ function createMediaCard(
             item.source
                 ?.path ||
             ""
+        ),
+
+        metaRow(
+            "CDN Shard",
+            item.cdnShard ||
+            "—"
+        ),
+
+        metaRow(
+            "发布时间",
+            formatDate(
+                item.publishedAt
+            )
         )
     );
 
 
-    body.append(
-        metadata
-    );
-
-
-    const actions =
-        createElement(
-            "div",
-            "media-actions"
-        );
-
-
-    const open =
-        createElement(
-            "button",
-            "button primary",
-            item.type ===
-                "image"
-                ? "查看"
-                : "播放 / 打开"
-        );
-
-
-    open.type =
-        "button";
-
-
-    open.addEventListener(
-        "click",
-        () => {
-
-            window.open(
-                item.url,
-                "_blank",
-                "noopener,noreferrer"
-            );
-
-        }
-    );
-
-
-    const copyCdn =
-        createElement(
-            "button",
-            "button secondary",
-            "复制 CDN"
-        );
-
-
-    copyCdn.type =
-        "button";
-
-
-    copyCdn.addEventListener(
-        "click",
-        () => {
-
-            copyText(
-                item.url,
-                "CDN 链接已复制"
-            );
-
-        }
-    );
-
-
-    actions.append(
-        open,
-        copyCdn
-    );
-
-
-    if (
-        item.source
-            ?.path
-    ) {
-
-        const copySource =
-            createElement(
-                "button",
-                "button secondary",
-                "复制源路径"
-            );
-
-
-        copySource.type =
-            "button";
-
-
-        copySource.addEventListener(
-            "click",
-            () => {
-
-                copyText(
-                    `${item.source.repository}:${item.source.path}`,
-                    "源路径已复制"
-                );
-
-            }
-        );
-
-
-        actions.append(
-            copySource
-        );
-
-    }
-
-
-    body.append(
-        actions
+    details.append(
+        summary,
+        advanced
     );
 
 
     card.append(
-        body
+        header,
+        essentials,
+        actions,
+        details
     );
 
 
@@ -888,6 +977,121 @@ function updateTypeButtons() {
 }
 
 
+function createPageSizeControl() {
+
+    if (
+        !toolbarActions ||
+        document.getElementById(
+            "pageSizeSelect"
+        )
+    ) {
+
+        return;
+
+    }
+
+
+    const wrapper =
+        createElement(
+            "label",
+            "page-size-control"
+        );
+
+
+    wrapper.append(
+        createElement(
+            "span",
+            "",
+            "每页"
+        )
+    );
+
+
+    const select =
+        createElement(
+            "select"
+        );
+
+
+    select.id =
+        "pageSizeSelect";
+
+
+    for (
+        const value
+        of [
+            12,
+            24,
+            48
+        ]
+    ) {
+
+        const option =
+            createElement(
+                "option",
+                "",
+                String(
+                    value
+                )
+            );
+
+
+        option.value =
+            String(
+                value
+            );
+
+
+        if (
+            value ===
+            currentPageSize
+        ) {
+
+            option.selected =
+                true;
+
+        }
+
+
+        select.append(
+            option
+        );
+
+    }
+
+
+    select.addEventListener(
+        "change",
+        () => {
+
+            currentPageSize =
+                Number(
+                    select.value
+                ) ||
+                12;
+
+            currentPage =
+                1;
+
+            loadLibrary();
+
+        }
+    );
+
+
+    wrapper.append(
+        select
+    );
+
+
+    toolbarActions.insertBefore(
+        wrapper,
+        resultCount
+    );
+
+}
+
+
 function setLoading(
     loading
 ) {
@@ -897,7 +1101,6 @@ function setLoading(
             "hidden",
             !loading
         );
-
 
     refreshLibrary.disabled =
         loading;
@@ -920,20 +1123,17 @@ function renderData(
             0
         );
 
-
     countImage.textContent =
         String(
             summary.image ||
             0
         );
 
-
     countAudio.textContent =
         String(
             summary.audio ||
             0
         );
-
 
     countVideo.textContent =
         String(
@@ -952,7 +1152,7 @@ function renderData(
                     data.manifest
                         .lastPublishedAt
                 )
-              )
+            )
 
             : "尚无发布时间";
 
@@ -976,8 +1176,15 @@ function renderData(
         1;
 
 
+    const filteredTotal =
+        Number(
+            query.filteredTotal
+        ) ||
+        0;
+
+
     resultCount.textContent =
-        `${query.filteredTotal || 0} 个结果`;
+        `${filteredTotal} 个结果`;
 
 
     mediaGrid.textContent =
@@ -985,8 +1192,11 @@ function renderData(
 
 
     const items =
-        data.items ||
-        [];
+        Array.isArray(
+            data.items
+        )
+            ? data.items
+            : [];
 
 
     libraryEmpty.classList
@@ -1022,8 +1232,8 @@ function renderData(
     pagination.classList
         .toggle(
             "hidden",
-            currentTotalPages <=
-            1
+            filteredTotal ===
+            0
         );
 
 
@@ -1072,7 +1282,9 @@ async function loadLibrary() {
 
         params.set(
             "pageSize",
-            "48"
+            String(
+                currentPageSize
+            )
         );
 
 
@@ -1103,7 +1315,9 @@ async function loadLibrary() {
             data
         );
 
-    } catch (error) {
+    } catch (
+        error
+    ) {
 
         console.error(
             error
@@ -1125,6 +1339,29 @@ async function loadLibrary() {
 }
 
 
+function scrollToLibrary() {
+
+    if (
+        !libraryToolbar
+    ) {
+
+        return;
+
+    }
+
+
+    libraryToolbar
+        .scrollIntoView({
+            behavior:
+                "smooth",
+
+            block:
+                "start"
+        });
+
+}
+
+
 for (
     const button
     of typeButtons
@@ -1140,9 +1377,7 @@ for (
             currentPage =
                 1;
 
-
             updateTypeButtons();
-
 
             loadLibrary();
 
@@ -1167,7 +1402,6 @@ searchInput.addEventListener(
 
                     currentPage =
                         1;
-
 
                     loadLibrary();
 
@@ -1207,16 +1441,10 @@ previousPage.addEventListener(
             1;
 
 
-        loadLibrary();
-
-
-        window.scrollTo({
-            top:
-                0,
-
-            behavior:
-                "smooth"
-        });
+        loadLibrary()
+            .then(
+                scrollToLibrary
+            );
 
     }
 );
@@ -1240,16 +1468,10 @@ nextPage.addEventListener(
             1;
 
 
-        loadLibrary();
-
-
-        window.scrollTo({
-            top:
-                0,
-
-            behavior:
-                "smooth"
-        });
+        loadLibrary()
+            .then(
+                scrollToLibrary
+            );
 
     }
 );
@@ -1291,6 +1513,8 @@ async function bootstrap() {
     renderIdentity();
 
     updateTypeButtons();
+
+    createPageSizeControl();
 
 
     await loadLibrary();
