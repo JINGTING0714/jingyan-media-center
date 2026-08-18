@@ -61,6 +61,28 @@
           "sealedAt": null,
           "updatedAt": "2026-08-18T05:07:57.275Z",
           "health": "healthy"
+        },
+        {
+          "id": "image-02",
+          "type": "image",
+          "repo": "jingyan-media-storage/jingyan-image-02",
+          "owner": "jingyan-media-storage",
+          "branch": "main",
+          "folder": "image",
+          "database": "data/image.json",
+          "status": "data/status.json",
+          "marker": "data/repository.json",
+          "sizeMB": 0,
+          "fileCount": 0,
+          "firstMediaId": null,
+          "lastMediaId": null,
+          "state": "standby",
+          "layout": "bucket-v1",
+          "bucketSize": 1000,
+          "createdAt": "2026-08-18T05:38:40.219Z",
+          "sealedAt": null,
+          "updatedAt": "2026-08-18T05:38:43.088Z",
+          "health": "healthy"
         }
       ],
       "audio": [
