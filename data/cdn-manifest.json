@@ -2,10 +2,10 @@
   "version": 1,
   "worker": "jingyan-media-cdn",
   "baseURL": "https://jingyan-media-cdn.jingyancdn.workers.dev",
-  "updatedAt": "2026-08-18T13:11:55.516Z",
-  "lastPublishedAt": "2026-08-18T13:11:55.516Z",
-  "lastVersionId": "abc9d175-477f-4d3b-8ddd-ea00b9abf2e0",
-  "lastDeploymentId": "49df23cd-c191-4d47-b67e-309f748b6e78",
+  "updatedAt": "2026-08-18T13:28:00.916Z",
+  "lastPublishedAt": "2026-08-18T13:28:00.916Z",
+  "lastVersionId": "2ab2c9b6-0a5c-4cf4-81df-686a0f7fa863",
+  "lastDeploymentId": "939a1861-1d52-48ae-9ac8-11ea601546c4",
   "assets": {
     "/audio/001-christmas.mp3": {
       "hash": "6c23ab88513bb99a558582c6f14cef89",
@@ -214,6 +214,45 @@
         "path": "image/012-a-bo-luo-shui-yin.jpg"
       },
       "addedAt": "2026-08-18T13:11:49.382Z"
+    },
+    "/image/013-yue-hua-yuan-tu.png": {
+      "hash": "c78963b755dda06ebfcfc655e022570c",
+      "size": 2119028,
+      "sha256": "d0c08f9e38cf74237e2a20e5bb5d665f92c248df41f4682c622e2390042f2f65",
+      "type": "image",
+      "mediaId": "image-000013",
+      "source": {
+        "repo": "JINGTING0714/jingyan-image-01",
+        "branch": "main",
+        "path": "image/013-yue-hua-yuan-tu.png"
+      },
+      "addedAt": "2026-08-18T13:27:15.448Z"
+    },
+    "/image/014-yue-shen-shi-yong-shui-yin.jpg": {
+      "hash": "9ed9d3d849fc65090206a38bf48c1f7c",
+      "size": 2979715,
+      "sha256": "58067972c8dada5595e3b57acaea27f2c5db9788cea9c79f5cf277cda42c279e",
+      "type": "image",
+      "mediaId": "image-000014",
+      "source": {
+        "repo": "JINGTING0714/jingyan-image-01",
+        "branch": "main",
+        "path": "image/014-yue-shen-shi-yong-shui-yin.jpg"
+      },
+      "addedAt": "2026-08-18T13:27:35.919Z"
+    },
+    "/image/015-yue-shen-shi-yong-di-wen.jpg": {
+      "hash": "becf8fd6fb136066b59dc4335a154c09",
+      "size": 2958175,
+      "sha256": "aa02f1f1bfad05bcd7a3d85a74181c01e32ab320fa8011eb1ef643bed555524d",
+      "type": "image",
+      "mediaId": "image-000015",
+      "source": {
+        "repo": "JINGTING0714/jingyan-image-01",
+        "branch": "main",
+        "path": "image/015-yue-shen-shi-yong-di-wen.jpg"
+      },
+      "addedAt": "2026-08-18T13:27:54.952Z"
     }
   }
 }
