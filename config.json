@@ -1,9 +1,14 @@
 {
   "system": "jingyan-media-center",
-  "version": "10.0",
+  "version": "11.0",
   "mode": "automatic",
   "github": {
     "owner": "JINGTING0714",
+    "controlOwner": "JINGTING0714",
+    "storageOwner": "jingyan-media-storage",
+    "legacyStorageOwners": [
+      "JINGTING0714"
+    ],
     "private": false,
     "autoCreateRepository": true
   },
@@ -21,9 +26,13 @@
     "reconcileDatabasesOnPublish": true
   },
   "storage": {
+    "registryFile": "data/storage-registry.json",
     "targetRepositorySizeMB": 700,
     "overflowToleranceMB": 10,
     "autoSwitchRepository": true,
+    "newRepositoryLayout": "bucket-v1",
+    "bucketSize": 1000,
+    "compatibilityMirror": true,
     "activeRepository": {
       "image": "image-01",
       "audio": "audio-01",
@@ -33,40 +42,73 @@
       "image": [
         {
           "id": "image-01",
+          "type": "image",
           "repo": "JINGTING0714/jingyan-image-01",
+          "owner": "JINGTING0714",
           "branch": "main",
           "folder": "image",
           "database": "data/image.json",
           "status": "data/status.json",
           "marker": "data/repository.json",
           "sizeMB": 3.1,
-          "state": "active"
+          "fileCount": 4,
+          "firstMediaId": "image-000002",
+          "lastMediaId": "image-000005",
+          "state": "active",
+          "layout": "legacy-flat",
+          "bucketSize": null,
+          "createdAt": null,
+          "sealedAt": null,
+          "updatedAt": null,
+          "health": "healthy"
         }
       ],
       "audio": [
         {
           "id": "audio-01",
+          "type": "audio",
           "repo": "JINGTING0714/jingyan-media-01",
+          "owner": "JINGTING0714",
           "branch": "main",
           "folder": "music",
           "database": "data/music.json",
           "status": "data/status.json",
           "marker": "data/repository.json",
           "sizeMB": 30.566,
-          "state": "active"
+          "fileCount": 4,
+          "firstMediaId": "music-000001",
+          "lastMediaId": "music-000005",
+          "state": "active",
+          "layout": "legacy-flat",
+          "bucketSize": null,
+          "createdAt": null,
+          "sealedAt": null,
+          "updatedAt": null,
+          "health": "healthy"
         }
       ],
       "video": [
         {
           "id": "video-01",
+          "type": "video",
           "repo": "JINGTING0714/jingyan-video-01",
+          "owner": "JINGTING0714",
           "branch": "main",
           "folder": "video",
           "database": "data/video.json",
           "status": "data/status.json",
           "marker": "data/repository.json",
           "sizeMB": 1.536,
-          "state": "active"
+          "fileCount": 1,
+          "firstMediaId": "video-000001",
+          "lastMediaId": "video-000001",
+          "state": "active",
+          "layout": "legacy-flat",
+          "bucketSize": null,
+          "createdAt": null,
+          "sealedAt": null,
+          "updatedAt": null,
+          "health": "healthy"
         }
       ]
     }
