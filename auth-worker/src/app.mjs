@@ -30,6 +30,11 @@ import {
   renderPasskeyManagerPage
 } from "./passkey-pages.mjs";
 
+import {
+  handleAdminUserLifecycleRequest,
+  isAdminUserLifecyclePath
+} from "./user-lifecycle.mjs";
+
 
 const PROTECTED_OWNER_ASSETS =
   new Map([
@@ -428,6 +433,55 @@ async function handleProtectedAdminMediaApi(
 }
 
 
+async function handleProtectedAdminUserLifecycleApi(
+  request,
+  env,
+  ctx
+) {
+  const authentication =
+    await authenticateThroughExistingWorker(
+      request,
+      env,
+      ctx
+    );
+
+  if (
+    !authentication.ok
+  ) {
+    return authentication
+      .response;
+  }
+
+  if (
+    !hasOwnerControlAccess(
+      authentication
+        .auth
+        .user
+    )
+  ) {
+    return jsonResponse(
+      {
+        error:
+          "permission_denied"
+      },
+      403
+    );
+  }
+
+  const response =
+    await handleAdminUserLifecycleRequest(
+      request,
+      env,
+      authentication.auth
+    );
+
+  return cloneWithCookie(
+    response,
+    authentication.cookie
+  );
+}
+
+
 async function handlePasskeyApi(
   request,
   env,
@@ -653,6 +707,7 @@ export default {
         );
       }
 
+
       if (
         url.pathname ===
           "/passkeys" ||
@@ -670,6 +725,7 @@ export default {
         );
       }
 
+
       if (
         url.pathname ===
           "/api/passkeys" ||
@@ -684,6 +740,32 @@ export default {
         );
       }
 
+
+      if (
+        isAdminUserLifecyclePath(
+          url.pathname
+        ) &&
+        (
+          request.method
+            .toUpperCase() ===
+            "DELETE" ||
+
+          url.pathname ===
+            "/api/admin/deleted-users" ||
+
+          url.pathname.startsWith(
+            "/api/admin/deleted-users/"
+          )
+        )
+      ) {
+        return await handleProtectedAdminUserLifecycleApi(
+          request,
+          env,
+          ctx
+        );
+      }
+
+
       if (
         url.pathname.startsWith(
           "/api/internal/media-sync/"
@@ -695,6 +777,7 @@ export default {
         );
       }
 
+
       if (
         url.pathname.startsWith(
           "/api/internal/uploads/"
@@ -705,6 +788,7 @@ export default {
           env
         );
       }
+
 
       if (
         url.pathname ===
@@ -740,6 +824,7 @@ export default {
         );
       }
 
+
       if (
         url.pathname ===
         "/api/admin/media"
@@ -750,6 +835,7 @@ export default {
           ctx
         );
       }
+
 
       const protectedAsset =
         PROTECTED_OWNER_ASSETS
@@ -768,13 +854,16 @@ export default {
         );
       }
 
+
       return await authWorker.fetch(
         request,
         env,
         ctx
       );
 
-    } catch (error) {
+    } catch (
+      error
+    ) {
       return errorResponse(
         error
       );
