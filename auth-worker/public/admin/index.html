@@ -30,8 +30,12 @@ href="/style.css">
 rel="stylesheet"
 href="/admin.css">
 
+<link
+rel="stylesheet"
+href="/admin-v2.css">
+
 <script
-src="/admin.js"
+src="/admin-v2.js"
 defer>
 </script>
 
@@ -126,7 +130,7 @@ OWNER CONTROL
 </h1>
 
 <p>
-用户、邀请码、精确权限、登录设备与安全审计，都从这里控制。
+用户、邀请码、权限、登录设备和安全记录集中管理。移动端默认采用折叠和分页，避免页面无限向下延伸。
 </p>
 
 </div>
@@ -156,7 +160,7 @@ id="refreshAdmin">
 </strong>
 
 <small>
-Owner + Uploader
+不含已删除用户
 </small>
 
 </article>
@@ -199,7 +203,7 @@ Owner + Uploader
 <article class="summary-card">
 
 <span>
-最近审计记录
+最近审计
 </span>
 
 <strong id="summaryAudit">
@@ -266,7 +270,9 @@ id="closeSecret">
 <div class="admin-main-column">
 
 
-<section class="card admin-card">
+<section
+class="card admin-card"
+id="inviteSection">
 
 <div class="section-heading">
 
@@ -288,6 +294,8 @@ INVITE
 
 </div>
 
+
+<div class="section-collapsible-content">
 
 <form id="inviteForm">
 
@@ -375,7 +383,7 @@ placeholder="可选，仅 Owner 可见"></textarea>
 </strong>
 
 <p>
-真正授权由服务器端权限决定。
+服务器端权限始终是最终授权来源。
 </p>
 
 </div>
@@ -408,11 +416,15 @@ class="button primary">
 
 </form>
 
+</div>
+
 </section>
 
 
 
-<section class="card admin-card">
+<section
+class="card admin-card"
+id="usersSection">
 
 <div class="section-heading">
 
@@ -431,6 +443,10 @@ USERS
 </div>
 
 
+<div class="section-collapsible-content">
+
+<div id="usersTools"></div>
+
 <div
 class="admin-empty hidden"
 id="usersEmpty">
@@ -440,6 +456,53 @@ id="usersEmpty">
 <div
 class="entity-list"
 id="usersList">
+</div>
+
+<div id="usersPagination"></div>
+
+</div>
+
+</section>
+
+
+
+<section
+class="card admin-card deleted-users-card"
+id="deletedUsersSection">
+
+<div class="section-heading">
+
+<div>
+
+<span class="section-kicker">
+USER TRASH
+</span>
+
+<h2>
+已删除用户
+</h2>
+
+</div>
+
+</div>
+
+
+<div class="section-collapsible-content">
+
+<p class="invite-note">
+删除后立即禁止登录，并撤销 Session、恢复码和 Passkey。媒体与上传历史不会删除。7 天内可恢复。
+</p>
+
+<div
+class="admin-empty hidden"
+id="deletedUsersEmpty">
+暂无已删除用户
+</div>
+
+<div
+id="deletedUsersList">
+</div>
+
 </div>
 
 </section>
@@ -452,7 +515,9 @@ id="usersList">
 <aside class="admin-side-column">
 
 
-<section class="card admin-card">
+<section
+class="card admin-card"
+id="invitesSection">
 
 <div class="section-heading">
 
@@ -471,6 +536,10 @@ INVITES
 </div>
 
 
+<div class="section-collapsible-content">
+
+<div id="invitesTools"></div>
+
 <div
 class="admin-empty hidden"
 id="invitesEmpty">
@@ -482,11 +551,17 @@ class="entity-list compact"
 id="invitesList">
 </div>
 
+<div id="invitesPagination"></div>
+
+</div>
+
 </section>
 
 
 
-<section class="card admin-card">
+<section
+class="card admin-card"
+id="auditSection">
 
 <div class="section-heading">
 
@@ -505,6 +580,10 @@ AUDIT
 </div>
 
 
+<div class="section-collapsible-content">
+
+<div id="auditTools"></div>
+
 <div
 class="admin-empty hidden"
 id="auditEmpty">
@@ -514,6 +593,10 @@ id="auditEmpty">
 <div
 class="audit-list"
 id="auditList">
+</div>
+
+<div id="auditPagination"></div>
+
 </div>
 
 </section>
@@ -543,6 +626,7 @@ Owner-only administration
 
 
 </div>
+
 
 
 <div
