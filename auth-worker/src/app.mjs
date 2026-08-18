@@ -3,7 +3,8 @@ from "./index.mjs";
 
 import {
   HttpError,
-  jsonResponse
+  jsonResponse,
+  methodNotAllowed
 } from "./http.mjs";
 
 import {
@@ -18,6 +19,16 @@ import {
 import {
   handleInternalMediaSyncRequest
 } from "./media-sync-api.mjs";
+
+import {
+  handlePasskeyApiRequest,
+  isPublicPasskeyApiPath
+} from "./passkeys.mjs";
+
+import {
+  renderOwnerLoginPage,
+  renderPasskeyManagerPage
+} from "./passkey-pages.mjs";
 
 
 const PROTECTED_OWNER_ASSETS =
@@ -83,6 +94,7 @@ function cloneWithCookie(
   return new Response(
     response.body,
     {
+
       status:
         response.status,
 
@@ -90,6 +102,7 @@ function cloneWithCookie(
         response.statusText,
 
       headers
+
     }
   );
 
@@ -134,10 +147,12 @@ function redirectWithCookie(
   return new Response(
     null,
     {
+
       status:
         302,
 
       headers
+
     }
   );
 
@@ -159,6 +174,7 @@ async function authenticateThroughExistingWorker(
   url.pathname =
     "/api/auth/me";
 
+
   url.search =
     "";
 
@@ -167,6 +183,7 @@ async function authenticateThroughExistingWorker(
     new Request(
       url.toString(),
       {
+
         method:
           "GET",
 
@@ -174,6 +191,7 @@ async function authenticateThroughExistingWorker(
           new Headers(
             request.headers
           )
+
       }
     );
 
@@ -213,8 +231,11 @@ async function authenticateThroughExistingWorker(
 
 
   if (
+
     !data?.authenticated ||
+
     !data?.user
+
   ) {
 
     return {
@@ -225,8 +246,10 @@ async function authenticateThroughExistingWorker(
       response:
         jsonResponse(
           {
+
             error:
               "authentication_required"
+
           },
           401
         )
@@ -313,6 +336,7 @@ async function serveProtectedOwnerAsset(
     return new Response(
       null,
       {
+
         status:
           405,
 
@@ -320,6 +344,7 @@ async function serveProtectedOwnerAsset(
           Allow:
             "GET, HEAD"
         }
+
       }
     );
 
@@ -395,6 +420,7 @@ async function serveProtectedOwnerAsset(
   assetUrl.pathname =
     canonicalPath;
 
+
   assetUrl.search =
     "";
 
@@ -403,12 +429,14 @@ async function serveProtectedOwnerAsset(
     new Request(
       assetUrl.toString(),
       {
+
         method,
 
         headers:
           new Headers(
             request.headers
           )
+
       }
     );
 
@@ -461,8 +489,10 @@ async function handleProtectedAdminMediaApi(
 
     return jsonResponse(
       {
+
         error:
           "permission_denied"
+
       },
       403
     );
@@ -486,6 +516,192 @@ async function handleProtectedAdminMediaApi(
 }
 
 
+async function handlePasskeyApi(
+  request,
+  env,
+  ctx
+) {
+
+  const pathname =
+    new URL(
+      request.url
+    ).pathname;
+
+
+  if (
+    isPublicPasskeyApiPath(
+      pathname
+    )
+  ) {
+
+    return handlePasskeyApiRequest(
+      request,
+      env,
+      null
+    );
+
+  }
+
+
+  const authentication =
+    await authenticateThroughExistingWorker(
+      request,
+      env,
+      ctx
+    );
+
+
+  if (
+    !authentication.ok
+  ) {
+
+    return authentication
+      .response;
+
+  }
+
+
+  const response =
+    await handlePasskeyApiRequest(
+      request,
+      env,
+      authentication.auth
+    );
+
+
+  return cloneWithCookie(
+    response,
+    authentication.cookie
+  );
+
+}
+
+
+async function serveOwnerLoginPage(
+  request
+) {
+
+  const method =
+    request.method
+      .toUpperCase();
+
+
+  if (
+    method !==
+    "GET"
+  ) {
+
+    return methodNotAllowed([
+      "GET"
+    ]);
+
+  }
+
+
+  return renderOwnerLoginPage();
+
+}
+
+
+async function servePasskeyManagerPage(
+  request,
+  env,
+  ctx
+) {
+
+  const method =
+    request.method
+      .toUpperCase();
+
+
+  if (
+    method !==
+    "GET"
+  ) {
+
+    return methodNotAllowed([
+      "GET"
+    ]);
+
+  }
+
+
+  const authentication =
+    await authenticateThroughExistingWorker(
+      request,
+      env,
+      ctx
+    );
+
+
+  if (
+    !authentication.ok
+  ) {
+
+    const clearCookie =
+      authentication
+        .response
+        .headers
+        .get(
+          "Set-Cookie"
+        );
+
+
+    if (
+      authentication
+        .response
+        .status ===
+      401
+    ) {
+
+      return redirectWithCookie(
+        request,
+        "/owner-login",
+        clearCookie
+      );
+
+    }
+
+
+    return authentication
+      .response;
+
+  }
+
+
+  if (
+    !hasOwnerControlAccess(
+      authentication
+        .auth
+        .user
+    )
+  ) {
+
+    return redirectWithCookie(
+      request,
+      "/",
+      authentication.cookie
+    );
+
+  }
+
+
+  const response =
+    renderPasskeyManagerPage(
+      authentication
+        .auth
+        .user
+    );
+
+
+  return cloneWithCookie(
+    response,
+    authentication.cookie
+  );
+
+}
+
+
 function errorResponse(
   error
 ) {
@@ -497,8 +713,10 @@ function errorResponse(
 
     return jsonResponse(
       {
+
         error:
           error.code
+
       },
       error.status
     );
@@ -514,8 +732,10 @@ function errorResponse(
 
   return jsonResponse(
     {
+
       error:
         "internal_error"
+
     },
     500
   );
@@ -538,6 +758,62 @@ export default {
 
 
     try {
+
+      if (
+
+        url.pathname ===
+          "/owner-login" ||
+
+        url.pathname ===
+          "/owner-login/"
+
+      ) {
+
+        return await serveOwnerLoginPage(
+          request
+        );
+
+      }
+
+
+      if (
+
+        url.pathname ===
+          "/passkeys" ||
+
+        url.pathname ===
+          "/passkeys/"
+
+      ) {
+
+        return await servePasskeyManagerPage(
+          request,
+          env,
+          ctx
+        );
+
+      }
+
+
+      if (
+
+        url.pathname ===
+          "/api/passkeys" ||
+
+        url.pathname.startsWith(
+          "/api/passkeys/"
+        )
+
+      ) {
+
+        return await handlePasskeyApi(
+          request,
+          env,
+          ctx
+        );
+
+      }
+
 
       if (
         url.pathname.startsWith(
@@ -568,12 +844,14 @@ export default {
 
 
       if (
+
         url.pathname ===
           "/api/uploads" ||
 
         url.pathname.startsWith(
           "/api/uploads/"
         )
+
       ) {
 
         const authentication =
@@ -650,6 +928,7 @@ export default {
         env,
         ctx
       );
+
 
     } catch (error) {
 
