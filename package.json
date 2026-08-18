@@ -15,5 +15,13 @@
     "kuroshiro": "1.2.0",
     "kuroshiro-analyzer-kuromoji": "1.1.0",
     "pinyin-pro": "3.28.2"
+  },
+  "overrides": {
+    "@peculiar/asn1-android": "2.6.0",
+    "@peculiar/asn1-ecc": "2.6.1",
+    "@peculiar/asn1-rsa": "2.6.1",
+    "@peculiar/asn1-schema": "2.6.0",
+    "@peculiar/asn1-x509": "2.6.1",
+    "@peculiar/x509": "1.14.3"
   }
 }
