@@ -15,19 +15,27 @@ name="color-scheme"
 content="light">
 
 <title>
-Jingyan Media Center
+管理后台 · Jingyan Media Center
 </title>
 
 <meta
 name="description"
-content="Jingyan Media Center 媒体上传与统一 CDN 管理中心">
+content="Jingyan Media Center Owner 管理后台">
 
 <link
 rel="stylesheet"
 href="/style.css">
 
+<link
+rel="stylesheet"
+href="/admin.css">
+
+<link
+rel="stylesheet"
+href="/admin-v2.css">
+
 <script
-src="/app.js"
+src="/admin-v2.js"
 defer>
 </script>
 
@@ -55,7 +63,7 @@ Jingyan Media Center
 </div>
 
 <div class="brand-subtitle">
-智能媒体上传与统一 CDN
+Owner Control Center
 </div>
 
 </div>
@@ -67,22 +75,26 @@ Jingyan Media Center
 
 <a
 href="/"
-class="nav-link active">
+class="nav-link">
 上传中心
 </a>
 
 <a
-href="/account"
-class="nav-link"
-id="accountLink">
-账户
+href="/library"
+class="nav-link">
+媒体库
 </a>
 
 <a
 href="/admin"
-class="nav-link hidden"
-id="adminLink">
+class="nav-link active">
 管理后台
+</a>
+
+<a
+href="/account"
+class="nav-link">
+账户
 </a>
 
 </nav>
@@ -90,10 +102,10 @@ id="adminLink">
 
 <div
 class="identity"
-id="identity">
+id="adminIdentity">
 
 <span class="identity-status">
-正在检查登录状态…
+正在验证 Owner…
 </span>
 
 </div>
@@ -102,435 +114,490 @@ id="identity">
 
 
 
-<main>
+<main class="admin-page">
 
 
-<section class="hero">
+<section class="admin-hero">
 
 <div>
 
-<div class="eyebrow">
-JINGYAN MEDIA SYSTEM
-</div>
+<span class="eyebrow">
+OWNER CONTROL
+</span>
 
 <h1>
-一个入口，
-<br>
-完成媒体发布。
+管理你的媒体系统。
 </h1>
 
 <p>
-上传图片、音频与视频。
-系统自动完成命名、去重、GitHub 分仓、CDN 发布和统一链接生成。
+用户、邀请码、权限、登录设备和安全记录集中管理。移动端默认采用折叠和分页，避免页面无限向下延伸。
 </p>
 
 </div>
 
 
-<div class="hero-status">
+<button
+type="button"
+class="button secondary"
+id="refreshAdmin">
+刷新数据
+</button>
 
-<div class="status-dot"></div>
+</section>
 
-<div>
 
-<strong>
-GitHub + Cloudflare
+
+<section class="admin-summary">
+
+<article class="summary-card">
+
+<span>
+全部用户
+</span>
+
+<strong id="summaryUsers">
+—
 </strong>
 
+<small>
+不含已删除用户
+</small>
+
+</article>
+
+
+<article class="summary-card">
+
 <span>
-自动媒体流水线
+活跃上传者
 </span>
 
-</div>
+<strong id="summaryUploaders">
+—
+</strong>
 
-</div>
+<small>
+当前可登录
+</small>
+
+</article>
+
+
+<article class="summary-card">
+
+<span>
+有效邀请码
+</span>
+
+<strong id="summaryInvites">
+—
+</strong>
+
+<small>
+尚未使用
+</small>
+
+</article>
+
+
+<article class="summary-card">
+
+<span>
+最近审计
+</span>
+
+<strong id="summaryAudit">
+—
+</strong>
+
+<small>
+最近返回记录
+</small>
+
+</article>
 
 </section>
 
 
 
 <section
-class="auth-gate card hidden"
-id="authGate">
-
-<div class="section-heading">
+class="secret-panel hidden"
+id="secretPanel">
 
 <div>
 
 <span class="section-kicker">
-ACCESS
+ONE-TIME SECRET
 </span>
 
-<h2>
-需要身份验证
+<h2 id="secretTitle">
+一次性代码
 </h2>
 
-</div>
-
-</div>
-
-<p class="gate-copy">
-如果这是第一次使用，请使用 Owner 发给你的一次性邀请码激活。已经激活过但更换了设备，可以使用设备配对或恢复码。
+<p id="secretHint">
+此内容只显示这一次。
 </p>
 
-<div class="action-row">
-
-<a
-class="button primary"
-href="/activate">
-使用邀请码激活
-</a>
-
-<a
-class="button secondary"
-href="/device">
-新设备配对
-</a>
-
-<a
-class="button secondary"
-href="/recover">
-恢复登录
-</a>
-
 </div>
 
-</section>
+<div class="secret-value-row">
 
-
-
-<section
-class="upload-layout hidden"
-id="authenticatedArea">
-
-
-<div class="main-column">
-
-
-<section class="card upload-card">
-
-<div class="section-heading">
-
-<div>
-
-<span class="section-kicker">
-UPLOAD
-</span>
-
-<h2>
-上传媒体
-</h2>
-
-</div>
-
-<div class="permission-pill">
-已通过权限验证
-</div>
-
-</div>
-
-
-<div
-class="drop-zone"
-id="dropZone"
-tabindex="0"
-role="button"
-aria-label="选择媒体文件">
-
-<div class="drop-icon">
-＋
-</div>
-
-<h3>
-拖拽文件到这里
-</h3>
-
-<p>
-或点击选择文件
-</p>
-
-<div class="type-list">
-
-<span>
-图片 ≤ 15 MiB
-</span>
-
-<span>
-音频 ≤ 24 MiB
-</span>
-
-<span>
-视频 ≤ 24 MiB
-</span>
-
-</div>
+<code id="secretValue"></code>
 
 <button
 type="button"
 class="button primary"
-id="selectButton">
-选择文件
+id="copySecret">
+复制
 </button>
 
+<button
+type="button"
+class="button secondary"
+id="closeSecret">
+关闭
+</button>
+
+</div>
+
+</section>
+
+
+
+<div class="admin-grid">
+
+
+<div class="admin-main-column">
+
+
+<section
+class="card admin-card"
+id="inviteSection">
+
+<div class="section-heading">
+
+<div>
+
+<span class="section-kicker">
+INVITE
+</span>
+
+<h2>
+创建一人一码邀请
+</h2>
+
+</div>
+
+<span class="admin-safe-badge">
+一次使用
+</span>
+
+</div>
+
+
+<div class="section-collapsible-content">
+
+<form id="inviteForm">
+
+
+<div class="admin-form-grid">
+
+<label class="admin-field">
+
+<span>
+显示名称
+</span>
+
 <input
-id="fileInput"
-type="file"
-multiple
-hidden
-accept=".jpg,.jpeg,.png,.webp,.gif,.mp3,.wav,.flac,.aac,.mp4,.webm">
+id="inviteName"
+class="admin-input"
+maxlength="80"
+required
+autocomplete="off"
+placeholder="例如：Alex">
+
+</label>
+
+
+<label class="admin-field">
+
+<span>
+邀请码有效期
+</span>
+
+<select
+id="inviteExpiry"
+class="admin-select">
+
+<option value="7">
+7 天
+</option>
+
+<option
+value="30"
+selected>
+30 天
+</option>
+
+<option value="90">
+90 天
+</option>
+
+<option value="365">
+365 天
+</option>
+
+<option value="never">
+永不过期
+</option>
+
+</select>
+
+</label>
 
 </div>
 
-</section>
+
+<label class="admin-field">
+
+<span>
+备注
+</span>
+
+<textarea
+id="inviteNote"
+class="admin-textarea"
+maxlength="200"
+rows="3"
+placeholder="可选，仅 Owner 可见"></textarea>
+
+</label>
 
 
-
-<section class="card">
-
-<div class="section-heading">
+<div class="admin-subheading">
 
 <div>
 
-<span class="section-kicker">
-QUEUE
-</span>
+<strong>
+精确权限
+</strong>
 
-<h2>
-当前上传
-</h2>
-
-</div>
-
-</div>
-
-<div
-class="empty-state"
-id="queueEmpty">
-还没有正在处理的文件
-</div>
-
-<div
-class="job-list"
-id="queueList">
-</div>
-
-</section>
-
-
-
-<section class="card">
-
-<div class="section-heading">
-
-<div>
-
-<span class="section-kicker">
-HISTORY
-</span>
-
-<h2>
-最近记录
-</h2>
+<p>
+服务器端权限始终是最终授权来源。
+</p>
 
 </div>
 
 <button
 type="button"
 class="text-button"
-id="refreshHistory">
-刷新
+id="resetInvitePermissions">
+恢复上传者默认值
 </button>
 
 </div>
 
-<div
-class="empty-state"
-id="historyEmpty">
-暂无上传记录
-</div>
 
 <div
-class="job-list"
-id="historyList">
-</div>
-
-</section>
-
-
+class="permission-grid"
+id="invitePermissions">
 </div>
 
 
+<div class="admin-form-actions">
 
-<aside class="side-column">
+<button
+type="submit"
+class="button primary">
+生成邀请码
+</button>
 
-
-<section class="card compact-card">
-
-<span class="section-kicker">
-ACCOUNT
-</span>
-
-<h2 id="welcomeName">
-—
-</h2>
-
-<div
-class="role-badge"
-id="roleBadge">
-—
 </div>
 
-<div
-class="permission-list"
-id="permissionList">
+</form>
+
 </div>
 
 </section>
 
 
 
-<section class="card compact-card">
+<section
+class="card admin-card"
+id="usersSection">
+
+<div class="section-heading">
+
+<div>
 
 <span class="section-kicker">
-PIPELINE
+USERS
 </span>
 
 <h2>
-自动处理流程
+用户与权限
 </h2>
 
-<ol class="pipeline">
-
-<li>
-
-<span>
-01
-</span>
-
-<div>
-
-<strong>
-身份与权限
-</strong>
-
-<small>
-D1 Session
-</small>
+</div>
 
 </div>
 
-</li>
 
-<li>
+<div class="section-collapsible-content">
 
-<span>
-02
-</span>
+<div id="usersTools"></div>
 
-<div>
-
-<strong>
-临时接收
-</strong>
-
-<small>
-Cloudflare KV
-</small>
-
+<div
+class="admin-empty hidden"
+id="usersEmpty">
+暂无用户
 </div>
 
-</li>
-
-<li>
-
-<span>
-03
-</span>
-
-<div>
-
-<strong>
-自动处理
-</strong>
-
-<small>
-GitHub Actions
-</small>
-
+<div
+class="entity-list"
+id="usersList">
 </div>
 
-</li>
-
-<li>
-
-<span>
-04
-</span>
-
-<div>
-
-<strong>
-源仓分发
-</strong>
-
-<small>
-GitHub Media Repositories
-</small>
+<div id="usersPagination"></div>
 
 </div>
-
-</li>
-
-<li>
-
-<span>
-05
-</span>
-
-<div>
-
-<strong>
-统一 CDN
-</strong>
-
-<small>
-Cloudflare Static Assets
-</small>
-
-</div>
-
-</li>
-
-</ol>
 
 </section>
 
 
 
-<section class="card compact-card limits-card">
+<section
+class="card admin-card deleted-users-card"
+id="deletedUsersSection">
+
+<div class="section-heading">
+
+<div>
 
 <span class="section-kicker">
-FORMATS
+USER TRASH
 </span>
 
 <h2>
-支持格式
+已删除用户
 </h2>
 
-<p>
-<strong>图片</strong>
-JPG · JPEG · PNG · WEBP · GIF
+</div>
+
+</div>
+
+
+<div class="section-collapsible-content">
+
+<p class="invite-note">
+删除后立即禁止登录，并撤销 Session、恢复码和 Passkey。媒体与上传历史不会删除。7 天内可恢复。
 </p>
 
-<p>
-<strong>音频</strong>
-MP3 · WAV · FLAC · AAC
-</p>
+<div
+class="admin-empty hidden"
+id="deletedUsersEmpty">
+暂无已删除用户
+</div>
 
-<p>
-<strong>视频</strong>
-MP4 · WEBM
-</p>
+<div
+id="deletedUsersList">
+</div>
+
+</div>
+
+</section>
+
+
+</div>
+
+
+
+<aside class="admin-side-column">
+
+
+<section
+class="card admin-card"
+id="invitesSection">
+
+<div class="section-heading">
+
+<div>
+
+<span class="section-kicker">
+INVITES
+</span>
+
+<h2>
+邀请码
+</h2>
+
+</div>
+
+</div>
+
+
+<div class="section-collapsible-content">
+
+<div id="invitesTools"></div>
+
+<div
+class="admin-empty hidden"
+id="invitesEmpty">
+暂无邀请码
+</div>
+
+<div
+class="entity-list compact"
+id="invitesList">
+</div>
+
+<div id="invitesPagination"></div>
+
+</div>
+
+</section>
+
+
+
+<section
+class="card admin-card"
+id="auditSection">
+
+<div class="section-heading">
+
+<div>
+
+<span class="section-kicker">
+AUDIT
+</span>
+
+<h2>
+安全审计
+</h2>
+
+</div>
+
+</div>
+
+
+<div class="section-collapsible-content">
+
+<div id="auditTools"></div>
+
+<div
+class="admin-empty hidden"
+id="auditEmpty">
+暂无审计记录
+</div>
+
+<div
+class="audit-list"
+id="auditList">
+</div>
+
+<div id="auditPagination"></div>
+
+</div>
 
 </section>
 
@@ -538,7 +605,7 @@ MP4 · WEBM
 </aside>
 
 
-</section>
+</div>
 
 
 </main>
@@ -552,13 +619,14 @@ Jingyan Media Center
 </span>
 
 <span>
-GitHub source · Cloudflare delivery
+Owner-only administration
 </span>
 
 </footer>
 
 
 </div>
+
 
 
 <div
