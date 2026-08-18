@@ -13,6 +13,11 @@ import {
 } from "./upload-api.mjs";
 
 import {
+  reconcileUploadJob,
+  reconcileUserUploadJobs
+} from "./upload-reconcile.mjs";
+
+import {
   handleAdminMediaRequest
 } from "./media-api.mjs";
 
@@ -74,19 +79,24 @@ function cloneWithCookie(
   response,
   cookie
 ) {
-  if (!cookie) {
+  if (
+    !cookie
+  ) {
     return response;
   }
+
 
   const headers =
     new Headers(
       response.headers
     );
 
+
   headers.append(
     "Set-Cookie",
     cookie
   );
+
 
   return new Response(
     response.body,
@@ -114,6 +124,7 @@ function redirectWithCookie(
       request.url
     );
 
+
   const headers =
     new Headers({
       Location:
@@ -123,12 +134,16 @@ function redirectWithCookie(
         "no-store"
     });
 
-  if (cookie) {
+
+  if (
+    cookie
+  ) {
     headers.append(
       "Set-Cookie",
       cookie
     );
   }
+
 
   return new Response(
     null,
@@ -152,11 +167,14 @@ async function authenticateThroughExistingWorker(
       request.url
     );
 
+
   url.pathname =
     "/api/auth/me";
 
+
   url.search =
     "";
+
 
   const authRequest =
     new Request(
@@ -172,12 +190,14 @@ async function authenticateThroughExistingWorker(
       }
     );
 
+
   const response =
     await authWorker.fetch(
       authRequest,
       env,
       ctx
     );
+
 
   if (
     !response.ok
@@ -190,13 +210,16 @@ async function authenticateThroughExistingWorker(
     };
   }
 
+
   const cookie =
     response.headers.get(
       "Set-Cookie"
     );
 
+
   const data =
     await response.json();
+
 
   if (
     !data?.authenticated ||
@@ -216,6 +239,7 @@ async function authenticateThroughExistingWorker(
         )
     };
   }
+
 
   return {
     ok:
@@ -277,6 +301,7 @@ async function serveProtectedOwnerAsset(
     request.method
       .toUpperCase();
 
+
   if (
     ![
       "GET",
@@ -299,12 +324,14 @@ async function serveProtectedOwnerAsset(
     );
   }
 
+
   const authentication =
     await authenticateThroughExistingWorker(
       request,
       env,
       ctx
     );
+
 
   if (
     !authentication.ok
@@ -316,6 +343,7 @@ async function serveProtectedOwnerAsset(
         .get(
           "Set-Cookie"
         );
+
 
     if (
       authentication
@@ -330,9 +358,11 @@ async function serveProtectedOwnerAsset(
       );
     }
 
+
     return authentication
       .response;
   }
+
 
   if (
     !hasOwnerControlAccess(
@@ -348,16 +378,20 @@ async function serveProtectedOwnerAsset(
     );
   }
 
+
   const assetUrl =
     new URL(
       request.url
     );
 
+
   assetUrl.pathname =
     canonicalPath;
 
+
   assetUrl.search =
     "";
+
 
   const assetRequest =
     new Request(
@@ -372,10 +406,12 @@ async function serveProtectedOwnerAsset(
       }
     );
 
+
   const response =
     await env.ASSETS.fetch(
       assetRequest
     );
+
 
   return cloneWithCookie(
     response,
@@ -396,12 +432,14 @@ async function handleProtectedAdminMediaApi(
       ctx
     );
 
+
   if (
     !authentication.ok
   ) {
     return authentication
       .response;
   }
+
 
   if (
     !hasOwnerControlAccess(
@@ -419,12 +457,14 @@ async function handleProtectedAdminMediaApi(
     );
   }
 
+
   const response =
     await handleAdminMediaRequest(
       request,
       env,
       authentication.auth
     );
+
 
   return cloneWithCookie(
     response,
@@ -445,12 +485,14 @@ async function handleProtectedAdminUserLifecycleApi(
       ctx
     );
 
+
   if (
     !authentication.ok
   ) {
     return authentication
       .response;
   }
+
 
   if (
     !hasOwnerControlAccess(
@@ -468,12 +510,14 @@ async function handleProtectedAdminUserLifecycleApi(
     );
   }
 
+
   const response =
     await handleAdminUserLifecycleRequest(
       request,
       env,
       authentication.auth
     );
+
 
   return cloneWithCookie(
     response,
@@ -492,6 +536,7 @@ async function handlePasskeyApi(
       request.url
     ).pathname;
 
+
   if (
     isPublicPasskeyApiPath(
       pathname
@@ -504,6 +549,7 @@ async function handlePasskeyApi(
     );
   }
 
+
   const authentication =
     await authenticateThroughExistingWorker(
       request,
@@ -511,12 +557,14 @@ async function handlePasskeyApi(
       ctx
     );
 
+
   if (
     !authentication.ok
   ) {
     return authentication
       .response;
   }
+
 
   if (
     !hasActiveAccount(
@@ -534,12 +582,14 @@ async function handlePasskeyApi(
     );
   }
 
+
   const response =
     await handlePasskeyApiRequest(
       request,
       env,
       authentication.auth
     );
+
 
   return cloneWithCookie(
     response,
@@ -555,6 +605,7 @@ async function serveLoginPage(
     request.method
       .toUpperCase();
 
+
   if (
     method !==
     "GET"
@@ -563,6 +614,7 @@ async function serveLoginPage(
       "GET"
     ]);
   }
+
 
   return renderLoginPage();
 }
@@ -577,6 +629,7 @@ async function servePasskeyManagerPage(
     request.method
       .toUpperCase();
 
+
   if (
     method !==
     "GET"
@@ -586,12 +639,14 @@ async function servePasskeyManagerPage(
     ]);
   }
 
+
   const authentication =
     await authenticateThroughExistingWorker(
       request,
       env,
       ctx
     );
+
 
   if (
     !authentication.ok
@@ -603,6 +658,7 @@ async function servePasskeyManagerPage(
         .get(
           "Set-Cookie"
         );
+
 
     if (
       authentication
@@ -617,9 +673,11 @@ async function servePasskeyManagerPage(
       );
     }
 
+
     return authentication
       .response;
   }
+
 
   if (
     !hasActiveAccount(
@@ -635,6 +693,7 @@ async function servePasskeyManagerPage(
     );
   }
 
+
   const response =
     renderPasskeyManagerPage(
       authentication
@@ -642,9 +701,71 @@ async function servePasskeyManagerPage(
         .user
     );
 
+
   return cloneWithCookie(
     response,
     authentication.cookie
+  );
+}
+
+
+async function reconcileUserUploadRequest(
+  request,
+  env,
+  auth
+) {
+  const url =
+    new URL(
+      request.url
+    );
+
+
+  const method =
+    request.method
+      .toUpperCase();
+
+
+  if (
+    method !==
+    "GET"
+  ) {
+    return;
+  }
+
+
+  if (
+    url.pathname ===
+    "/api/uploads"
+  ) {
+    await reconcileUserUploadJobs(
+      env,
+      auth
+    );
+
+
+    return;
+  }
+
+
+  const jobMatch =
+    url.pathname.match(
+      /^\/api\/uploads\/([^/]+)$/
+    );
+
+
+  if (
+    !jobMatch
+  ) {
+    return;
+  }
+
+
+  await reconcileUploadJob(
+    env,
+    auth,
+    decodeURIComponent(
+      jobMatch[1]
+    )
   );
 }
 
@@ -665,10 +786,12 @@ function errorResponse(
     );
   }
 
+
   console.error(
     "Unhandled app error:",
     error
   );
+
 
   return jsonResponse(
     {
@@ -690,6 +813,7 @@ export default {
       new URL(
         request.url
       );
+
 
     try {
       if (
@@ -804,6 +928,7 @@ export default {
             ctx
           );
 
+
         if (
           !authentication.ok
         ) {
@@ -811,12 +936,40 @@ export default {
             .response;
         }
 
+
+        /*
+         * Upload Reconciler V1
+         *
+         * GET 上传任务之前，先向 GitHub
+         * 对账当前任务的真实 Workflow 状态。
+         *
+         * Reconciler 自身出错不会阻止用户
+         * 读取原本的 Upload API。
+         */
+        try {
+          await reconcileUserUploadRequest(
+            request,
+            env,
+            authentication.auth
+          );
+
+        } catch (
+          error
+        ) {
+          console.error(
+            "Upload reconcile request failed:",
+            error
+          );
+        }
+
+
         const response =
           await handleUserUploadRequest(
             request,
             env,
             authentication.auth
           );
+
 
         return cloneWithCookie(
           response,
@@ -842,6 +995,7 @@ export default {
           .get(
             url.pathname
           );
+
 
       if (
         protectedAsset
