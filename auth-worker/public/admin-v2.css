@@ -1,0 +1,491 @@
+.admin-toolbar {
+    margin: 0 0 16px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+
+    gap: 10px;
+}
+
+
+.admin-search {
+    flex: 1 1 220px;
+
+    min-height: 42px;
+
+    padding: 0 13px;
+
+    border: 1px solid var(--line);
+
+    border-radius: 13px;
+
+    color: var(--text);
+
+    background: #faf8ff;
+
+    outline: none;
+
+    font: inherit;
+}
+
+
+.admin-search:focus {
+    border-color: #a589ee;
+
+    background: white;
+
+    box-shadow:
+        0 0 0 4px
+        rgba(128,88,232,.09);
+}
+
+
+.admin-page-info {
+    color: var(--muted);
+
+    font-size: 10px;
+}
+
+
+.pagination {
+    margin-top: 16px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 10px;
+}
+
+
+.pagination button {
+    min-width: 76px;
+}
+
+
+.pagination span {
+    color: var(--muted);
+
+    font-size: 10px;
+}
+
+
+.entity-head.clickable {
+    cursor: pointer;
+
+    -webkit-tap-highlight-color:
+        transparent;
+}
+
+
+.entity-head.clickable:hover {
+    opacity: .84;
+}
+
+
+.entity-expand-icon {
+    flex: 0 0 auto;
+
+    width: 28px;
+    height: 28px;
+
+    display: grid;
+    place-items: center;
+
+    color: var(--primary-dark);
+
+    background: var(--primary-soft);
+
+    border-radius: 999px;
+
+    font-size: 12px;
+
+    transition:
+        transform .16s ease;
+}
+
+
+.entity-card.expanded
+.entity-expand-icon {
+    transform: rotate(90deg);
+}
+
+
+.entity-details {
+    margin-top: 14px;
+
+    padding-top: 14px;
+
+    border-top: 1px solid var(--line);
+}
+
+
+.entity-details.hidden {
+    display: none;
+}
+
+
+.mobile-section-toggle {
+    width: 30px;
+    height: 30px;
+
+    padding: 0;
+
+    display: grid;
+    place-items: center;
+
+    border: 0;
+
+    border-radius: 999px;
+
+    color: var(--primary-dark);
+
+    background: var(--primary-soft);
+
+    cursor: pointer;
+
+    font-size: 12px;
+}
+
+
+.admin-card.section-collapsed
+.section-collapsible-content {
+    display: none;
+}
+
+
+.deleted-users-card {
+    margin-top: 24px;
+}
+
+
+.deleted-user-item {
+    padding: 16px;
+
+    border: 1px solid
+        rgba(185,72,88,.13);
+
+    border-radius: 15px;
+
+    background:
+        rgba(
+            255,
+            246,
+            248,
+            .72
+        );
+}
+
+
+.deleted-user-item + .deleted-user-item {
+    margin-top: 10px;
+}
+
+
+.deleted-user-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+
+    gap: 12px;
+}
+
+
+.deleted-user-head h3 {
+    margin: 0;
+
+    font-size: 14px;
+}
+
+
+.deleted-user-head p {
+    margin: 5px 0 0;
+
+    color: var(--muted);
+
+    font-size: 9px;
+    line-height: 1.55;
+}
+
+
+.deleted-user-actions {
+    margin-top: 12px;
+
+    display: flex;
+    flex-wrap: wrap;
+
+    gap: 8px;
+}
+
+
+.delete-warning {
+    margin-top: 12px;
+
+    padding: 11px 12px;
+
+    color: var(--danger);
+
+    background:
+        rgba(
+            185,
+            72,
+            88,
+            .07
+        );
+
+    border-radius: 11px;
+
+    font-size: 9px;
+    line-height: 1.55;
+}
+
+
+.user-danger-zone {
+    margin-top: 16px;
+
+    padding-top: 14px;
+
+    border-top: 1px dashed
+        rgba(185,72,88,.25);
+}
+
+
+.user-danger-zone strong {
+    display: block;
+
+    margin-bottom: 8px;
+
+    color: var(--danger);
+
+    font-size: 10px;
+}
+
+
+.compact-summary {
+    display: grid;
+
+    grid-template-columns:
+        repeat(
+            3,
+            minmax(0, 1fr)
+        );
+
+    gap: 8px;
+
+    margin-bottom: 13px;
+}
+
+
+.compact-stat {
+    padding: 10px;
+
+    border-radius: 12px;
+
+    background: var(--surface-soft);
+}
+
+
+.compact-stat span,
+.compact-stat strong {
+    display: block;
+}
+
+
+.compact-stat span {
+    color: var(--muted);
+
+    font-size: 8px;
+}
+
+
+.compact-stat strong {
+    margin-top: 3px;
+
+    font-size: 14px;
+}
+
+
+@media (max-width: 640px) {
+
+    .admin-page {
+        padding-bottom: 30px;
+    }
+
+
+    .admin-hero {
+        padding:
+            34px 0
+            24px;
+    }
+
+
+    .admin-hero h1 {
+        font-size: 38px;
+    }
+
+
+    .admin-hero p {
+        margin-top: 14px;
+
+        font-size: 13px;
+    }
+
+
+    .admin-summary {
+        gap: 8px;
+
+        margin-bottom: 14px;
+    }
+
+
+    .summary-card {
+        min-height: 92px;
+
+        padding: 13px;
+
+        border-radius: 17px;
+    }
+
+
+    .summary-card strong {
+        font-size: 24px;
+    }
+
+
+    .summary-card span {
+        font-size: 10px;
+    }
+
+
+    .summary-card small {
+        font-size: 8px;
+    }
+
+
+    .admin-main-column,
+    .admin-side-column {
+        gap: 13px;
+    }
+
+
+    .admin-grid {
+        gap: 13px;
+    }
+
+
+    .admin-card {
+        padding: 16px;
+
+        border-radius: 18px;
+    }
+
+
+    .section-heading {
+        margin-bottom: 0;
+    }
+
+
+    .admin-card:not(.section-collapsed)
+    .section-collapsible-content {
+        margin-top: 16px;
+    }
+
+
+    .entity-card {
+        padding: 14px;
+
+        border-radius: 15px;
+    }
+
+
+    .entity-title h3 {
+        font-size: 14px;
+    }
+
+
+    .entity-title p {
+        font-size: 9px;
+    }
+
+
+    .badge-row {
+        max-width: 110px;
+    }
+
+
+    .permission-grid {
+        gap: 7px;
+    }
+
+
+    .permission-toggle {
+        min-height: 47px;
+
+        padding: 8px 10px;
+    }
+
+
+    .entity-actions {
+        display: grid;
+
+        grid-template-columns:
+            repeat(
+                2,
+                minmax(0,1fr)
+            );
+    }
+
+
+    .entity-actions
+    .button.small {
+        width: 100%;
+
+        min-height: 39px;
+    }
+
+
+    .user-danger-zone
+    .button {
+        width: 100%;
+    }
+
+
+    .admin-toolbar {
+        align-items: stretch;
+
+        flex-direction: column;
+    }
+
+
+    .admin-search {
+        flex-basis: auto;
+
+        width: 100%;
+    }
+
+
+    .pagination {
+        justify-content:
+            space-between;
+    }
+
+
+    .pagination button {
+        flex: 1;
+    }
+
+
+    .audit-list {
+        max-height: none;
+
+        overflow: visible;
+    }
+
+
+    .deleted-user-head {
+        flex-direction: column;
+    }
+
+}
