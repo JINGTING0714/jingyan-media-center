@@ -13,6 +13,10 @@ import {
 } from "./upload-api.mjs";
 
 import {
+  handleUserUploadBatchRequest
+} from "./upload-batch-api.mjs";
+
+import {
   reconcileUploadJob,
   reconcileUserUploadJobs
 } from "./upload-reconcile.mjs";
@@ -43,6 +47,7 @@ import {
 
 const PROTECTED_OWNER_ASSETS =
   new Map([
+
     [
       "/admin",
       "/admin/"
@@ -72,6 +77,7 @@ const PROTECTED_OWNER_ASSETS =
       "/library/index.html",
       "/library/"
     ]
+
   ]);
 
 
@@ -79,10 +85,13 @@ function cloneWithCookie(
   response,
   cookie
 ) {
+
   if (
     !cookie
   ) {
+
     return response;
+
   }
 
 
@@ -110,6 +119,7 @@ function cloneWithCookie(
       headers
     }
   );
+
 }
 
 
@@ -118,6 +128,7 @@ function redirectWithCookie(
   pathname,
   cookie = null
 ) {
+
   const url =
     new URL(
       pathname,
@@ -138,10 +149,12 @@ function redirectWithCookie(
   if (
     cookie
   ) {
+
     headers.append(
       "Set-Cookie",
       cookie
     );
+
   }
 
 
@@ -154,6 +167,7 @@ function redirectWithCookie(
       headers
     }
   );
+
 }
 
 
@@ -162,6 +176,7 @@ async function authenticateThroughExistingWorker(
   env,
   ctx
 ) {
+
   const url =
     new URL(
       request.url
@@ -202,12 +217,14 @@ async function authenticateThroughExistingWorker(
   if (
     !response.ok
   ) {
+
     return {
       ok:
         false,
 
       response
     };
+
   }
 
 
@@ -225,6 +242,7 @@ async function authenticateThroughExistingWorker(
     !data?.authenticated ||
     !data?.user
   ) {
+
     return {
       ok:
         false,
@@ -238,6 +256,7 @@ async function authenticateThroughExistingWorker(
           401
         )
     };
+
   }
 
 
@@ -255,39 +274,51 @@ async function authenticateThroughExistingWorker(
 
     cookie
   };
+
 }
 
 
 function hasOwnerControlAccess(
   user
 ) {
+
   return Boolean(
+
     user &&
+
     user.role ===
       "owner" &&
+
     user.status ===
       "active" &&
+
     user.permissions
       ?.manageUsers ===
       true &&
+
     user.permissions
       ?.manageInvites ===
       true &&
+
     user.permissions
       ?.manageSystem ===
       true
+
   );
+
 }
 
 
 function hasActiveAccount(
   user
 ) {
+
   return Boolean(
     user &&
     user.status ===
       "active"
   );
+
 }
 
 
@@ -297,6 +328,7 @@ async function serveProtectedOwnerAsset(
   ctx,
   canonicalPath
 ) {
+
   const method =
     request.method
       .toUpperCase();
@@ -310,6 +342,7 @@ async function serveProtectedOwnerAsset(
       method
     )
   ) {
+
     return new Response(
       null,
       {
@@ -322,6 +355,7 @@ async function serveProtectedOwnerAsset(
         }
       }
     );
+
   }
 
 
@@ -336,6 +370,7 @@ async function serveProtectedOwnerAsset(
   if (
     !authentication.ok
   ) {
+
     const clearCookie =
       authentication
         .response
@@ -351,16 +386,19 @@ async function serveProtectedOwnerAsset(
         .status ===
       401
     ) {
+
       return redirectWithCookie(
         request,
         "/login",
         clearCookie
       );
+
     }
 
 
     return authentication
       .response;
+
   }
 
 
@@ -371,11 +409,13 @@ async function serveProtectedOwnerAsset(
         .user
     )
   ) {
+
     return redirectWithCookie(
       request,
       "/",
       authentication.cookie
     );
+
   }
 
 
@@ -417,6 +457,7 @@ async function serveProtectedOwnerAsset(
     response,
     authentication.cookie
   );
+
 }
 
 
@@ -425,6 +466,7 @@ async function handleProtectedAdminMediaApi(
   env,
   ctx
 ) {
+
   const authentication =
     await authenticateThroughExistingWorker(
       request,
@@ -436,8 +478,10 @@ async function handleProtectedAdminMediaApi(
   if (
     !authentication.ok
   ) {
+
     return authentication
       .response;
+
   }
 
 
@@ -448,6 +492,7 @@ async function handleProtectedAdminMediaApi(
         .user
     )
   ) {
+
     return jsonResponse(
       {
         error:
@@ -455,6 +500,7 @@ async function handleProtectedAdminMediaApi(
       },
       403
     );
+
   }
 
 
@@ -470,6 +516,7 @@ async function handleProtectedAdminMediaApi(
     response,
     authentication.cookie
   );
+
 }
 
 
@@ -478,6 +525,7 @@ async function handleProtectedAdminUserLifecycleApi(
   env,
   ctx
 ) {
+
   const authentication =
     await authenticateThroughExistingWorker(
       request,
@@ -489,8 +537,10 @@ async function handleProtectedAdminUserLifecycleApi(
   if (
     !authentication.ok
   ) {
+
     return authentication
       .response;
+
   }
 
 
@@ -501,6 +551,7 @@ async function handleProtectedAdminUserLifecycleApi(
         .user
     )
   ) {
+
     return jsonResponse(
       {
         error:
@@ -508,6 +559,7 @@ async function handleProtectedAdminUserLifecycleApi(
       },
       403
     );
+
   }
 
 
@@ -523,6 +575,7 @@ async function handleProtectedAdminUserLifecycleApi(
     response,
     authentication.cookie
   );
+
 }
 
 
@@ -531,6 +584,7 @@ async function handlePasskeyApi(
   env,
   ctx
 ) {
+
   const pathname =
     new URL(
       request.url
@@ -542,11 +596,13 @@ async function handlePasskeyApi(
       pathname
     )
   ) {
+
     return handlePasskeyApiRequest(
       request,
       env,
       null
     );
+
   }
 
 
@@ -561,8 +617,10 @@ async function handlePasskeyApi(
   if (
     !authentication.ok
   ) {
+
     return authentication
       .response;
+
   }
 
 
@@ -573,6 +631,7 @@ async function handlePasskeyApi(
         .user
     )
   ) {
+
     return jsonResponse(
       {
         error:
@@ -580,6 +639,7 @@ async function handlePasskeyApi(
       },
       403
     );
+
   }
 
 
@@ -595,12 +655,14 @@ async function handlePasskeyApi(
     response,
     authentication.cookie
   );
+
 }
 
 
 async function serveLoginPage(
   request
 ) {
+
   const method =
     request.method
       .toUpperCase();
@@ -610,13 +672,16 @@ async function serveLoginPage(
     method !==
     "GET"
   ) {
+
     return methodNotAllowed([
       "GET"
     ]);
+
   }
 
 
   return renderLoginPage();
+
 }
 
 
@@ -625,6 +690,7 @@ async function servePasskeyManagerPage(
   env,
   ctx
 ) {
+
   const method =
     request.method
       .toUpperCase();
@@ -634,9 +700,11 @@ async function servePasskeyManagerPage(
     method !==
     "GET"
   ) {
+
     return methodNotAllowed([
       "GET"
     ]);
+
   }
 
 
@@ -651,6 +719,7 @@ async function servePasskeyManagerPage(
   if (
     !authentication.ok
   ) {
+
     const clearCookie =
       authentication
         .response
@@ -666,16 +735,19 @@ async function servePasskeyManagerPage(
         .status ===
       401
     ) {
+
       return redirectWithCookie(
         request,
         "/login",
         clearCookie
       );
+
     }
 
 
     return authentication
       .response;
+
   }
 
 
@@ -686,11 +758,13 @@ async function servePasskeyManagerPage(
         .user
     )
   ) {
+
     return redirectWithCookie(
       request,
       "/",
       authentication.cookie
     );
+
   }
 
 
@@ -706,6 +780,7 @@ async function servePasskeyManagerPage(
     response,
     authentication.cookie
   );
+
 }
 
 
@@ -714,6 +789,7 @@ async function reconcileUserUploadRequest(
   env,
   auth
 ) {
+
   const url =
     new URL(
       request.url
@@ -729,7 +805,9 @@ async function reconcileUserUploadRequest(
     method !==
     "GET"
   ) {
+
     return;
+
   }
 
 
@@ -737,6 +815,7 @@ async function reconcileUserUploadRequest(
     url.pathname ===
     "/api/uploads"
   ) {
+
     await reconcileUserUploadJobs(
       env,
       auth
@@ -744,6 +823,7 @@ async function reconcileUserUploadRequest(
 
 
     return;
+
   }
 
 
@@ -756,7 +836,9 @@ async function reconcileUserUploadRequest(
   if (
     !jobMatch
   ) {
+
     return;
+
   }
 
 
@@ -767,16 +849,78 @@ async function reconcileUserUploadRequest(
       jobMatch[1]
     )
   );
+
+}
+
+
+async function handleAuthenticatedBatchApi(
+  request,
+  env,
+  ctx
+) {
+
+  const authentication =
+    await authenticateThroughExistingWorker(
+      request,
+      env,
+      ctx
+    );
+
+
+  if (
+    !authentication.ok
+  ) {
+
+    return authentication
+      .response;
+
+  }
+
+
+  if (
+    !hasActiveAccount(
+      authentication
+        .auth
+        .user
+    )
+  ) {
+
+    return jsonResponse(
+      {
+        error:
+          "active_account_required"
+      },
+      403
+    );
+
+  }
+
+
+  const response =
+    await handleUserUploadBatchRequest(
+      request,
+      env,
+      authentication.auth
+    );
+
+
+  return cloneWithCookie(
+    response,
+    authentication.cookie
+  );
+
 }
 
 
 function errorResponse(
   error
 ) {
+
   if (
     error instanceof
     HttpError
   ) {
+
     return jsonResponse(
       {
         error:
@@ -784,6 +928,7 @@ function errorResponse(
       },
       error.status
     );
+
   }
 
 
@@ -800,15 +945,18 @@ function errorResponse(
     },
     500
   );
+
 }
 
 
 export default {
+
   async fetch(
     request,
     env,
     ctx
   ) {
+
     const url =
       new URL(
         request.url
@@ -816,52 +964,66 @@ export default {
 
 
     try {
+
       if (
         url.pathname ===
           "/login" ||
+
         url.pathname ===
           "/login/" ||
+
         url.pathname ===
           "/owner-login" ||
+
         url.pathname ===
           "/owner-login/"
       ) {
+
         return await serveLoginPage(
           request
         );
+
       }
 
 
       if (
         url.pathname ===
           "/passkeys" ||
+
         url.pathname ===
           "/passkeys/" ||
+
         url.pathname ===
           "/security/passkeys" ||
+
         url.pathname ===
           "/security/passkeys/"
       ) {
+
         return await servePasskeyManagerPage(
           request,
           env,
           ctx
         );
+
       }
 
 
       if (
         url.pathname ===
           "/api/passkeys" ||
+
         url.pathname.startsWith(
           "/api/passkeys/"
         )
       ) {
+
         return await handlePasskeyApi(
           request,
           env,
           ctx
         );
+
       }
 
 
@@ -869,6 +1031,7 @@ export default {
         isAdminUserLifecyclePath(
           url.pathname
         ) &&
+
         (
           request.method
             .toUpperCase() ===
@@ -882,11 +1045,13 @@ export default {
           )
         )
       ) {
+
         return await handleProtectedAdminUserLifecycleApi(
           request,
           env,
           ctx
         );
+
       }
 
 
@@ -895,10 +1060,12 @@ export default {
           "/api/internal/media-sync/"
         )
       ) {
+
         return await handleInternalMediaSyncRequest(
           request,
           env
         );
+
       }
 
 
@@ -907,20 +1074,49 @@ export default {
           "/api/internal/uploads/"
         )
       ) {
+
         return await handleInternalUploadRequest(
           request,
           env
         );
+
+      }
+
+
+      /*
+       * Batch Upload V2
+       *
+       * V2-A 现在只建立持久化 Batch 和 Item。
+       * 文件 staging 与单次 GitHub Dispatch
+       * 会在 V2-B 接入。
+       */
+      if (
+        url.pathname ===
+          "/api/upload-batches" ||
+
+        url.pathname.startsWith(
+          "/api/upload-batches/"
+        )
+      ) {
+
+        return await handleAuthenticatedBatchApi(
+          request,
+          env,
+          ctx
+        );
+
       }
 
 
       if (
         url.pathname ===
           "/api/uploads" ||
+
         url.pathname.startsWith(
           "/api/uploads/"
         )
       ) {
+
         const authentication =
           await authenticateThroughExistingWorker(
             request,
@@ -932,8 +1128,10 @@ export default {
         if (
           !authentication.ok
         ) {
+
           return authentication
             .response;
+
         }
 
 
@@ -947,6 +1145,7 @@ export default {
          * 读取原本的 Upload API。
          */
         try {
+
           await reconcileUserUploadRequest(
             request,
             env,
@@ -956,10 +1155,12 @@ export default {
         } catch (
           error
         ) {
+
           console.error(
             "Upload reconcile request failed:",
             error
           );
+
         }
 
 
@@ -975,6 +1176,7 @@ export default {
           response,
           authentication.cookie
         );
+
       }
 
 
@@ -982,30 +1184,33 @@ export default {
         url.pathname ===
         "/api/admin/media"
       ) {
+
         return await handleProtectedAdminMediaApi(
           request,
           env,
           ctx
         );
+
       }
 
 
       const protectedAsset =
-        PROTECTED_OWNER_ASSETS
-          .get(
-            url.pathname
-          );
+        PROTECTED_OWNER_ASSETS.get(
+          url.pathname
+        );
 
 
       if (
         protectedAsset
       ) {
+
         return await serveProtectedOwnerAsset(
           request,
           env,
           ctx,
           protectedAsset
         );
+
       }
 
 
@@ -1018,9 +1223,13 @@ export default {
     } catch (
       error
     ) {
+
       return errorResponse(
         error
       );
+
     }
+
   }
+
 };
