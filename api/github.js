@@ -2,37 +2,88 @@ const https = require("https");
 const fs = require("fs");
 const crypto = require("crypto");
 
+function getRepositoryOwner(
+    repo
+) {
+    return String(
+        repo ||
+        ""
+    ).split("/")[0] || "";
+}
 
-function getToken() {
+function getStorageOwner() {
+    return String(
+        process.env
+            .STORAGE_GITHUB_OWNER ||
+        "jingyan-media-storage"
+    ).trim();
+}
 
+function getMediaToken() {
     const token =
+        process.env.MEDIA_TOKEN ||
         process.env.GH_TOKEN;
 
     if (!token) {
-
         throw new Error(
-            "GH_TOKEN missing"
+            "MEDIA_TOKEN/GH_TOKEN missing"
         );
-
     }
 
     return token;
-
 }
 
+function getStorageToken() {
+    const token =
+        process.env.STORAGE_TOKEN;
 
-function encodeContentPath(filePath) {
+    if (!token) {
+        throw new Error(
+            "STORAGE_TOKEN missing"
+        );
+    }
 
+    return token;
+}
+
+function getTokenForOwner(
+    owner
+) {
+    if (
+        String(owner)
+            .toLowerCase() ===
+        getStorageOwner()
+            .toLowerCase()
+    ) {
+        return getStorageToken();
+    }
+
+    return getMediaToken();
+}
+
+function getTokenForRepository(
+    repo
+) {
+    return getTokenForOwner(
+        getRepositoryOwner(
+            repo
+        )
+    );
+}
+
+function encodeContentPath(
+    filePath
+) {
     return String(filePath)
         .split("/")
         .map(
             part =>
-                encodeURIComponent(part)
+                encodeURIComponent(
+                    part
+                )
         )
         .join("/");
-
 }
-
 
 function githubRequest(
     method,
@@ -40,20 +91,20 @@ function githubRequest(
     token,
     data = null
 ) {
-
     return new Promise(
-        (resolve, reject) => {
+        (
+            resolve,
+            reject
+        ) => {
 
             const body =
                 data !== null
-                    ? JSON.stringify(data)
+                    ? JSON.stringify(
+                        data
+                    )
                     : null;
 
-
             const headers = {
-
-                "Authorization":
-                    `Bearer ${token}`,
 
                 "User-Agent":
                     "jingyan-media-center",
@@ -63,26 +114,32 @@ function githubRequest(
 
                 "X-GitHub-Api-Version":
                     "2022-11-28"
-
             };
 
-
-            if (body !== null) {
-
-                headers["Content-Type"] =
-                    "application/json";
-
-                headers["Content-Length"] =
-                    Buffer.byteLength(body);
-
+            if (token) {
+                headers.Authorization =
+                    `Bearer ${token}`;
             }
 
+            if (
+                body !== null
+            ) {
+                headers[
+                    "Content-Type"
+                ] =
+                    "application/json";
+
+                headers[
+                    "Content-Length"
+                ] =
+                    Buffer.byteLength(
+                        body
+                    );
+            }
 
             const req =
                 https.request(
-
                     {
-
                         hostname:
                             "api.github.com",
 
@@ -92,7 +149,6 @@ function githubRequest(
                         method,
 
                         headers
-
                     },
 
                     res => {
@@ -100,17 +156,14 @@ function githubRequest(
                         let responseBody =
                             "";
 
-
                         res.on(
                             "data",
                             chunk => {
 
                                 responseBody +=
                                     chunk;
-
                             }
                         );
-
 
                         res.on(
                             "end",
@@ -119,9 +172,9 @@ function githubRequest(
                                 let result =
                                     null;
 
-
-                                if (responseBody) {
-
+                                if (
+                                    responseBody
+                                ) {
                                     try {
 
                                         result =
@@ -133,17 +186,15 @@ function githubRequest(
 
                                         result =
                                             responseBody;
-
                                     }
-
                                 }
 
-
                                 if (
-                                    res.statusCode < 200 ||
-                                    res.statusCode >= 300
+                                    res.statusCode <
+                                        200 ||
+                                    res.statusCode >=
+                                        300
                                 ) {
-
                                     const error =
                                         new Error(
 
@@ -155,9 +206,7 @@ function githubRequest(
                                                 : JSON.stringify(
                                                     result
                                                 )
-
                                         );
-
 
                                     error.statusCode =
                                         res.statusCode;
@@ -165,153 +214,137 @@ function githubRequest(
                                     error.response =
                                         result;
 
-
-                                    reject(error);
+                                    reject(
+                                        error
+                                    );
 
                                     return;
-
                                 }
 
-
-                                resolve(result);
-
+                                resolve(
+                                    result
+                                );
                             }
                         );
-
                     }
-
                 );
-
 
             req.on(
                 "error",
                 reject
             );
 
-
-            if (body !== null) {
-
-                req.write(body);
-
+            if (
+                body !== null
+            ) {
+                req.write(
+                    body
+                );
             }
 
-
             req.end();
-
         }
     );
-
 }
 
-
-async function getAuthenticatedUser() {
-
+async function getAuthenticatedUser(
+    token = null
+) {
     return githubRequest(
 
         "GET",
 
         "/user",
 
-        getToken()
-
+        token ||
+            getMediaToken()
     );
-
 }
-
 
 async function assertAuthenticatedOwner(
     expectedOwner
 ) {
+    const token =
+        getTokenForOwner(
+            expectedOwner
+        );
 
     const user =
-        await getAuthenticatedUser();
-
+        await getAuthenticatedUser(
+            token
+        );
 
     if (
         !user ||
         !user.login ||
-        user.login.toLowerCase() !==
+        user.login
+            .toLowerCase() !==
         String(
             expectedOwner
         ).toLowerCase()
     ) {
-
         throw new Error(
 
-            `MEDIA_TOKEN owner mismatch: expected ${expectedOwner}, got ${
-                user && user.login
+            `GitHub token owner mismatch: expected ${expectedOwner}, got ${
+                user &&
+                user.login
                     ? user.login
                     : "unknown"
             }`
-
         );
-
     }
 
-
     return user;
-
 }
-
 
 async function getRepositoryInfo(
     repo
 ) {
-
     return githubRequest(
 
         "GET",
 
         `/repos/${repo}`,
 
-        getToken()
-
+        getTokenForRepository(
+            repo
+        )
     );
-
 }
-
 
 async function assertRepositoryOwner(
     repo,
     expectedOwner
 ) {
-
     const info =
         await getRepositoryInfo(
             repo
         );
-
 
     const actualOwner =
         info &&
         info.owner &&
         info.owner.login;
 
-
     if (
         !actualOwner ||
-        actualOwner.toLowerCase() !==
+        actualOwner
+            .toLowerCase() !==
         String(
             expectedOwner
         ).toLowerCase()
     ) {
-
         throw new Error(
             `Repository owner mismatch: ${repo}`
         );
-
     }
 
-
     return info;
-
 }
-
 
 async function repositoryExists(
     repo
 ) {
-
     try {
 
         await getRepositoryInfo(
@@ -326,53 +359,42 @@ async function repositoryExists(
             error.statusCode ===
             404
         ) {
-
             return false;
-
         }
 
         throw error;
-
     }
-
 }
-
 
 async function getRepositorySizeMB(
     repo
 ) {
-
     const data =
         await getRepositoryInfo(
             repo
         );
 
-
     const sizeKB =
         Number(
-            data.size || 0
+            data.size ||
+            0
         );
-
 
     return (
         sizeKB /
         1024
     );
-
 }
-
 
 async function getFile(
     repo,
     filePath,
     branch = "main"
 ) {
-
     const encodedPath =
         encodeContentPath(
             filePath
         );
-
 
     try {
 
@@ -385,26 +407,28 @@ async function getFile(
                     branch
                 )}`,
 
-                getToken()
-
+                getTokenForRepository(
+                    repo
+                )
             );
-
 
         const content =
 
             result &&
 
             typeof result.content ===
-            "string" &&
+                "string" &&
 
-            result.content.length > 0
+            result.content.length >
+                0
 
                 ? Buffer.from(
 
-                    result.content.replace(
-                        /\n/g,
-                        ""
-                    ),
+                    result.content
+                        .replace(
+                            /\n/g,
+                            ""
+                        ),
 
                     "base64"
 
@@ -414,7 +438,6 @@ async function getFile(
 
                 : "";
 
-
         return {
 
             sha:
@@ -422,14 +445,14 @@ async function getFile(
 
             size:
                 Number(
-                    result.size || 0
+                    result.size ||
+                    0
                 ),
 
             path:
                 result.path,
 
             content
-
         };
 
     } catch (error) {
@@ -438,45 +461,36 @@ async function getFile(
             error.statusCode ===
             404
         ) {
-
             return null;
-
         }
 
         throw error;
-
     }
-
 }
-
 
 async function fileExists(
     repo,
     filePath,
     branch = "main"
 ) {
-
     return Boolean(
 
         await getFile(
-
             repo,
-
             filePath,
-
             branch
-
         )
-
     );
-
 }
-
 
 async function getBranchTreeSha(
     repo,
     branch = "main"
 ) {
+    const token =
+        getTokenForRepository(
+            repo
+        );
 
     const branchData =
         await githubRequest(
@@ -487,23 +501,18 @@ async function getBranchTreeSha(
                 branch
             )}`,
 
-            getToken()
-
+            token
         );
-
 
     if (
         !branchData ||
         !branchData.commit ||
         !branchData.commit.sha
     ) {
-
         throw new Error(
             `Unable to resolve branch: ${repo}@${branch}`
         );
-
     }
-
 
     const commit =
         await githubRequest(
@@ -512,45 +521,44 @@ async function getBranchTreeSha(
 
             `/repos/${repo}/git/commits/${branchData.commit.sha}`,
 
-            getToken()
-
+            token
         );
-
 
     if (
         !commit ||
         !commit.tree ||
         !commit.tree.sha
     ) {
-
         throw new Error(
             `Unable to resolve Git tree: ${repo}@${branch}`
         );
-
     }
 
-
-    return commit.tree.sha;
-
+    return commit
+        .tree.sha;
 }
-
 
 async function getGitTree(
     repo,
-    treeSha
+    treeSha,
+    recursive = false
 ) {
+    const query =
+        recursive
+            ? "?recursive=1"
+            : "";
 
     const tree =
         await githubRequest(
 
             "GET",
 
-            `/repos/${repo}/git/trees/${treeSha}`,
+            `/repos/${repo}/git/trees/${treeSha}${query}`,
 
-            getToken()
-
+            getTokenForRepository(
+                repo
+            )
         );
-
 
     if (
         !tree ||
@@ -558,63 +566,53 @@ async function getGitTree(
             tree.tree
         )
     ) {
-
         throw new Error(
             `Invalid Git tree response: ${repo}`
         );
-
     }
-
 
     if (
         tree.truncated ===
         true
     ) {
-
         throw new Error(
             `Git tree truncated: ${repo}`
         );
-
     }
 
-
     return tree;
-
 }
-
 
 async function getDirectoryEntries(
     repo,
     folder,
     branch = "main"
 ) {
-
     let treeSha =
         await getBranchTreeSha(
             repo,
             branch
         );
 
-
     const parts =
         String(
-            folder || ""
+            folder ||
+            ""
         )
-        .split("/")
-        .filter(Boolean);
-
+            .split("/")
+            .filter(
+                Boolean
+            );
 
     for (
         const part
         of parts
     ) {
-
         const tree =
             await getGitTree(
                 repo,
                 treeSha
             );
-
 
         const directory =
             tree.tree.find(
@@ -625,19 +623,13 @@ async function getDirectoryEntries(
                         part
             );
 
-
         if (!directory) {
-
             return [];
-
         }
-
 
         treeSha =
             directory.sha;
-
     }
-
 
     const tree =
         await getGitTree(
@@ -645,135 +637,178 @@ async function getDirectoryEntries(
             treeSha
         );
 
-
     return tree.tree;
-
 }
 
+async function getRecursiveEntries(
+    repo,
+    branch = "main"
+) {
+    const treeSha =
+        await getBranchTreeSha(
+            repo,
+            branch
+        );
+
+    const tree =
+        await getGitTree(
+            repo,
+            treeSha,
+            true
+        );
+
+    return tree.tree;
+}
+
+function pathIsInsideFolder(
+    entryPath,
+    folder
+) {
+    const normalizedFolder =
+        String(
+            folder ||
+            ""
+        )
+            .replace(
+                /^\/+|\/+$/g,
+                ""
+            );
+
+    if (
+        !normalizedFolder
+    ) {
+        return true;
+    }
+
+    return (
+        entryPath ===
+            normalizedFolder ||
+        entryPath.startsWith(
+            normalizedFolder +
+            "/"
+        )
+    );
+}
 
 async function getMaxFileSequence(
     repo,
     folder,
     branch = "main"
 ) {
-
     const entries =
-        await getDirectoryEntries(
+        await getRecursiveEntries(
             repo,
-            folder,
             branch
         );
 
-
     let maximum =
         0;
-
 
     for (
         const entry
         of entries
     ) {
-
         if (
             !entry ||
             entry.type !==
-            "blob"
+                "blob" ||
+            !pathIsInsideFolder(
+                String(
+                    entry.path ||
+                    ""
+                ),
+                folder
+            )
         ) {
-
             continue;
-
         }
 
+        const basename =
+            String(
+                entry.path ||
+                ""
+            )
+                .split("/")
+                .pop();
 
         const match =
-            String(
-                entry.path || ""
-            ).match(
+            basename.match(
                 /^(\d+)-/
             );
 
-
         if (!match) {
-
             continue;
-
         }
-
 
         maximum =
             Math.max(
+
                 maximum,
+
                 Number(
                     match[1]
                 )
             );
-
     }
 
-
     return maximum;
-
 }
-
 
 async function getDirectorySizeMB(
     repo,
     folder,
     branch = "main"
 ) {
-
     const entries =
-        await getDirectoryEntries(
+        await getRecursiveEntries(
             repo,
-            folder,
             branch
         );
 
-
     let totalBytes =
         0;
-
 
     for (
         const entry
         of entries
     ) {
-
         if (
             entry &&
             entry.type ===
-                "blob"
+                "blob" &&
+            pathIsInsideFolder(
+                String(
+                    entry.path ||
+                    ""
+                ),
+                folder
+            )
         ) {
-
             totalBytes +=
                 Number(
-                    entry.size || 0
+                    entry.size ||
+                    0
                 );
-
         }
-
     }
-
 
     return (
         totalBytes /
         1024 /
         1024
     );
-
 }
-
 
 function calculateGitBlobSHA(
     buffer
 ) {
-
     const header =
         Buffer.from(
+
             `blob ${buffer.length}\0`,
+
             "utf8"
         );
-
 
     return crypto
         .createHash(
@@ -788,26 +823,20 @@ function calculateGitBlobSHA(
         .digest(
             "hex"
         );
-
 }
-
 
 function calculateFileGitBlobSHA(
     localFilePath
 ) {
-
     const buffer =
         fs.readFileSync(
             localFilePath
         );
 
-
     return calculateGitBlobSHA(
         buffer
     );
-
 }
-
 
 async function verifyRemoteFileMatchesLocal(
     repo,
@@ -815,33 +844,24 @@ async function verifyRemoteFileMatchesLocal(
     localFilePath,
     branch = "main"
 ) {
-
     const remote =
         await getFile(
-
             repo,
-
             targetPath,
-
             branch
-
         );
-
 
     const localSize =
         fs.statSync(
             localFilePath
         ).size;
 
-
     const localGitSha =
         calculateFileGitBlobSHA(
             localFilePath
         );
 
-
     if (!remote) {
-
         return {
 
             exists:
@@ -859,11 +879,8 @@ async function verifyRemoteFileMatchesLocal(
 
             remoteSize:
                 null
-
         };
-
     }
-
 
     const matches =
 
@@ -876,7 +893,6 @@ async function verifyRemoteFileMatchesLocal(
             Number(
                 localSize
             );
-
 
     return {
 
@@ -894,11 +910,8 @@ async function verifyRemoteFileMatchesLocal(
 
         remoteSize:
             remote.size
-
     };
-
 }
-
 
 async function upsertTextFile(
     repo,
@@ -907,18 +920,12 @@ async function upsertTextFile(
     branch = "main",
     message = "Update file"
 ) {
-
     const existing =
         await getFile(
-
             repo,
-
             filePath,
-
             branch
-
         );
-
 
     const payload = {
 
@@ -933,23 +940,17 @@ async function upsertTextFile(
             ),
 
         branch
-
     };
 
-
     if (existing) {
-
         payload.sha =
             existing.sha;
-
     }
-
 
     const encodedPath =
         encodeContentPath(
             filePath
         );
-
 
     return githubRequest(
 
@@ -957,43 +958,64 @@ async function upsertTextFile(
 
         `/repos/${repo}/contents/${encodedPath}`,
 
-        getToken(),
+        getTokenForRepository(
+            repo
+        ),
 
         payload
-
     );
-
 }
 
-
 async function createRepository({
-
     expectedOwner,
-
     name,
-
     description = "",
-
     privateRepo = false
-
 }) {
+    const storageOwner =
+        getStorageOwner();
 
-    await assertAuthenticatedOwner(
-        expectedOwner
-    );
+    let endpoint;
+    let token;
 
+    if (
+        String(
+            expectedOwner
+        ).toLowerCase() ===
+        storageOwner
+            .toLowerCase()
+    ) {
+        endpoint =
+            `/orgs/${encodeURIComponent(
+                expectedOwner
+            )}/repos`;
+
+        token =
+            getStorageToken();
+
+    } else {
+
+        await assertAuthenticatedOwner(
+            expectedOwner
+        );
+
+        endpoint =
+            "/user/repos";
+
+        token =
+            getMediaToken();
+    }
 
     const result =
         await githubRequest(
 
             "POST",
 
-            "/user/repos",
+            endpoint,
 
-            getToken(),
+            token,
 
             {
-
                 name,
 
                 description,
@@ -1003,11 +1025,8 @@ async function createRepository({
 
                 auto_init:
                     true
-
             }
-
         );
-
 
     if (
         !result ||
@@ -1020,7 +1039,6 @@ async function createRepository({
             expectedOwner
         ).toLowerCase()
     ) {
-
         throw new Error(
 
             `Repository created under unexpected owner: ${
@@ -1029,11 +1047,8 @@ async function createRepository({
                     ? result.full_name
                     : "unknown"
             }`
-
         );
-
     }
-
 
     return {
 
@@ -1046,11 +1061,8 @@ async function createRepository({
         defaultBranch:
             result.default_branch ||
             "main"
-
     };
-
 }
-
 
 async function uploadFile(
     repo,
@@ -1058,43 +1070,32 @@ async function uploadFile(
     targetPath,
     branch = "main"
 ) {
-
     if (
         await fileExists(
-
             repo,
-
             targetPath,
-
             branch
-
         )
     ) {
-
         throw new Error(
             `Target already exists: ${repo}/${targetPath}`
         );
-
     }
-
 
     const buffer =
         fs.readFileSync(
             localFilePath
         );
 
-
     const expectedGitSha =
         calculateGitBlobSHA(
             buffer
         );
 
-
     const encodedPath =
         encodeContentPath(
             targetPath
         );
-
 
     const result =
         await githubRequest(
@@ -1103,10 +1104,11 @@ async function uploadFile(
 
             `/repos/${repo}/contents/${encodedPath}`,
 
-            getToken(),
+            getTokenForRepository(
+                repo
+            ),
 
             {
-
                 message:
                     `Upload ${targetPath}`,
 
@@ -1116,30 +1118,23 @@ async function uploadFile(
                     ),
 
                 branch
-
             }
-
         );
-
 
     const actualGitSha =
         result &&
         result.content &&
         result.content.sha;
 
-
     if (
         !actualGitSha ||
         actualGitSha !==
             expectedGitSha
     ) {
-
         throw new Error(
             `GitHub upload verification failed: ${repo}/${targetPath}`
         );
-
     }
-
 
     return {
 
@@ -1148,11 +1143,8 @@ async function uploadFile(
 
         path:
             targetPath
-
     };
-
 }
-
 
 module.exports = {
 
@@ -1190,6 +1182,13 @@ module.exports = {
 
     createRepository,
 
-    uploadFile
+    uploadFile,
 
+    getTokenForRepository,
+
+    getTokenForOwner,
+
+    getRepositoryOwner,
+
+    getStorageOwner
 };
