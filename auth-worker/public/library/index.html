@@ -20,7 +20,7 @@ content="light">
 
 <meta
 name="description"
-content="Jingyan Media Center Owner 媒体库">
+content="Jingyan Media Center 媒体库">
 
 <link
 rel="stylesheet"
@@ -28,10 +28,10 @@ href="/style.css">
 
 <link
 rel="stylesheet"
-href="/library.css">
+href="/library.css?v=20260818-collection-preview-v1">
 
 <script
-src="/library.js"
+src="/library.js?v=20260818-collection-preview-v1"
 defer>
 </script>
 
@@ -82,6 +82,12 @@ class="nav-link active">
 </a>
 
 <a
+href="/profile/"
+class="nav-link">
+我的主页
+</a>
+
+<a
 href="/admin"
 class="nav-link">
 管理后台
@@ -128,7 +134,8 @@ MEDIA LIBRARY
 </h1>
 
 <p>
-统一查看 Cloudflare CDN 中已发布的图片、音频和视频，同时保留其 GitHub 源仓位置、媒体 ID 与完整性信息。
+搜索、预览和整理已经发布的图片、音频与视频。
+GitHub 源仓、SHA256 等工程信息继续收纳在高级信息中。
 </p>
 
 </div>
@@ -227,6 +234,28 @@ data-type="video">
 
 <section class="card library-toolbar">
 
+
+<div
+class="library-mode-switch"
+id="libraryModeSwitch">
+
+<button
+type="button"
+class="library-mode-button active"
+data-status="published">
+媒体库
+</button>
+
+<button
+type="button"
+class="library-mode-button"
+data-status="trashed">
+回收站
+</button>
+
+</div>
+
+
 <div class="search-box">
 
 <span>
@@ -244,11 +273,38 @@ autocomplete="off">
 
 <div class="toolbar-actions">
 
+
+<label class="page-size-control">
+
+<span>
+每页
+</span>
+
+<select id="pageSizeSelect">
+
+<option value="12">
+12
+</option>
+
+<option value="24">
+24
+</option>
+
+<option value="48">
+48
+</option>
+
+</select>
+
+</label>
+
+
 <span
 class="result-count"
 id="resultCount">
 —
 </span>
+
 
 <button
 type="button"
@@ -266,21 +322,15 @@ id="refreshLibrary">
 <section
 class="library-loading"
 id="libraryLoading">
-
 正在读取媒体库…
-
 </section>
-
 
 
 <section
 class="library-empty hidden"
 id="libraryEmpty">
-
 没有找到符合条件的媒体。
-
 </section>
-
 
 
 <section
@@ -299,7 +349,7 @@ aria-label="媒体分页">
 type="button"
 class="button secondary"
 id="previousPage">
-上一页
+‹ 上一页
 </button>
 
 <span id="pageText">
@@ -310,7 +360,7 @@ id="previousPage">
 type="button"
 class="button secondary"
 id="nextPage">
-下一页
+下一页 ›
 </button>
 
 </nav>
@@ -334,6 +384,192 @@ GitHub source · Cloudflare delivery
 
 
 </div>
+
+
+
+<!-- 媒体预览 -->
+
+
+<div
+class="sheet-backdrop hidden"
+id="previewBackdrop">
+</div>
+
+
+<aside
+class="bottom-sheet hidden"
+id="previewSheet"
+aria-hidden="true">
+
+<div class="sheet-handle">
+</div>
+
+
+<div class="sheet-header">
+
+<div>
+
+<span class="section-kicker">
+PREVIEW
+</span>
+
+<h2 id="previewTitle">
+媒体预览
+</h2>
+
+</div>
+
+
+<button
+type="button"
+class="sheet-close"
+id="previewClose"
+aria-label="关闭">
+×
+</button>
+
+</div>
+
+
+<div
+class="preview-stage"
+id="previewStage">
+</div>
+
+
+<div
+class="preview-info"
+id="previewInfo">
+</div>
+
+
+<div class="preview-actions">
+
+<button
+type="button"
+class="button primary"
+id="previewOpen">
+打开原文件
+</button>
+
+<button
+type="button"
+class="button secondary"
+id="previewCopy">
+复制 CDN
+</button>
+
+</div>
+
+</aside>
+
+
+
+<!-- Collection -->
+
+
+<div
+class="sheet-backdrop hidden"
+id="collectionBackdrop">
+</div>
+
+
+<aside
+class="bottom-sheet collection-sheet hidden"
+id="collectionSheet"
+aria-hidden="true">
+
+<div class="sheet-handle">
+</div>
+
+
+<div class="sheet-header">
+
+<div>
+
+<span
+class="section-kicker"
+id="collectionKicker">
+COLLECTION
+</span>
+
+<h2 id="collectionTitle">
+加入图库
+</h2>
+
+<p
+class="sheet-subtitle"
+id="collectionMediaName">
+—
+</p>
+
+</div>
+
+
+<button
+type="button"
+class="sheet-close"
+id="collectionClose"
+aria-label="关闭">
+×
+</button>
+
+</div>
+
+
+<div class="collection-create-inline">
+
+<input
+type="text"
+id="newCollectionName"
+maxlength="60"
+placeholder="新建分组名称">
+
+<button
+type="button"
+id="createCollectionButton">
+新建并加入
+</button>
+
+</div>
+
+
+<div
+class="collection-picker-loading hidden"
+id="collectionPickerLoading">
+正在读取你的分组…
+</div>
+
+
+<div
+class="collection-picker-empty hidden"
+id="collectionPickerEmpty">
+
+<strong>
+还没有可用分组
+</strong>
+
+<span>
+可以直接在上方输入名称，新建后会自动加入当前媒体。
+</span>
+
+</div>
+
+
+<div
+class="collection-picker-list"
+id="collectionPickerList">
+</div>
+
+
+<a
+class="collection-manage-link"
+href="/profile/">
+管理我的图库 / 歌单 / 影集 →
+</a>
+
+</aside>
+
 
 
 <div
