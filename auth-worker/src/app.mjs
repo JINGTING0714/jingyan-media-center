@@ -36,6 +36,10 @@ import {
 } from "./media-sync-api.mjs";
 
 import {
+  handleCollectionRequest
+} from "./collections-api.mjs";
+
+import {
   handlePasskeyApiRequest,
   isPublicPasskeyApiPath
 } from "./passkeys.mjs";
@@ -625,7 +629,7 @@ async function serveLoginPage(
 
   if (
     method !==
-    "GET"
+      "GET"
   ) {
     return methodNotAllowed([
       "GET"
@@ -649,7 +653,7 @@ async function servePasskeyManagerPage(
 
   if (
     method !==
-    "GET"
+      "GET"
   ) {
     return methodNotAllowed([
       "GET"
@@ -744,7 +748,7 @@ async function reconcileUserUploadRequest(
 
   if (
     method !==
-    "GET"
+      "GET"
   ) {
     return;
   }
@@ -752,7 +756,7 @@ async function reconcileUserUploadRequest(
 
   if (
     url.pathname ===
-    "/api/uploads"
+      "/api/uploads"
   ) {
     await reconcileUserUploadJobs(
       env,
@@ -860,12 +864,65 @@ async function handleAuthenticatedBatchApi(
 }
 
 
+async function handleAuthenticatedCollectionApi(
+  request,
+  env,
+  ctx
+) {
+  const authentication =
+    await authenticateThroughExistingWorker(
+      request,
+      env,
+      ctx
+    );
+
+
+  if (
+    !authentication.ok
+  ) {
+    return authentication
+      .response;
+  }
+
+
+  if (
+    !hasActiveAccount(
+      authentication
+        .auth
+        .user
+    )
+  ) {
+    return jsonResponse(
+      {
+        error:
+          "active_account_required"
+      },
+      403
+    );
+  }
+
+
+  const response =
+    await handleCollectionRequest(
+      request,
+      env,
+      authentication.auth
+    );
+
+
+  return cloneWithCookie(
+    response,
+    authentication.cookie
+  );
+}
+
+
 function errorResponse(
   error
 ) {
   if (
     error instanceof
-    HttpError
+      HttpError
   ) {
     return jsonResponse(
       {
@@ -1025,6 +1082,28 @@ export default {
       }
 
 
+      /*
+       * Collections Core
+       */
+      if (
+        url.pathname ===
+          "/api/collections" ||
+
+        url.pathname.startsWith(
+          "/api/collections/"
+        )
+      ) {
+        return await handleAuthenticatedCollectionApi(
+          request,
+          env,
+          ctx
+        );
+      }
+
+
+      /*
+       * Batch Upload V2
+       */
       if (
         url.pathname ===
           "/api/upload-batches" ||
@@ -1099,7 +1178,7 @@ export default {
 
       if (
         url.pathname ===
-        "/api/admin/media"
+          "/api/admin/media"
       ) {
         return await handleProtectedAdminMediaApi(
           request,
