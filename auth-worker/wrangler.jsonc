@@ -26,6 +26,11 @@
     "TURNSTILE_EXPECTED_HOSTNAME": "jingyan-media-app.jingyancdn.workers.dev",
     "TURNSTILE_SITE_KEY": "0x4AAAAAAESbkU04OZtwVxyX",
 
+    "PASSKEY_RP_NAME": "Jingyan Media Center",
+    "PASSKEY_RP_ID": "jingyan-media-app.jingyancdn.workers.dev",
+    "PASSKEY_ORIGIN": "https://jingyan-media-app.jingyancdn.workers.dev",
+    "PASSKEY_CHALLENGE_TTL_SECONDS": "300",
+
     "GITHUB_OWNER": "JINGTING0714",
     "GITHUB_REPO": "jingyan-media-center",
     "GITHUB_UPLOAD_WORKFLOW": "upload.yml",
@@ -77,6 +82,12 @@
 
     "run_worker_first": [
       "/api/*",
+
+      "/owner-login",
+      "/owner-login/",
+
+      "/passkeys",
+      "/passkeys/",
 
       "/admin",
       "/admin/",
