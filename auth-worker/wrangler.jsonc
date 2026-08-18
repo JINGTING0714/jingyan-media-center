@@ -29,8 +29,10 @@
     "GITHUB_OWNER": "JINGTING0714",
     "GITHUB_REPO": "jingyan-media-center",
     "GITHUB_UPLOAD_WORKFLOW": "upload.yml",
+    "GITHUB_MEDIA_SYNC_WORKFLOW": "media-index-sync.yml",
     "GITHUB_UPLOAD_REF": "main",
 
+    "MEDIA_CDN_WORKER": "jingyan-media-cdn",
     "MEDIA_CDN_BASE_URL": "https://jingyan-media-cdn.jingyancdn.workers.dev",
 
     "UPLOAD_STAGING_TTL_SECONDS": "21600"
@@ -42,6 +44,12 @@
       "database_name": "jingyan-media-auth",
       "database_id": "b622c541-ebdb-4740-be12-ac356fbb62c7",
       "migrations_dir": "migrations"
+    },
+    {
+      "binding": "MEDIA_DB",
+      "database_name": "jingyan-media-index",
+      "database_id": "16a1ee2e-f5db-4827-bf19-e264c7b98ef3",
+      "migrations_dir": "media-migrations"
     }
   ],
 
@@ -66,6 +74,7 @@
   "assets": {
     "directory": "./public",
     "binding": "ASSETS",
+
     "run_worker_first": [
       "/api/*",
 
@@ -77,6 +86,7 @@
       "/library/",
       "/library/index.html"
     ],
+
     "html_handling": "auto-trailing-slash",
     "not_found_handling": "none"
   }
