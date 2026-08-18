@@ -1,0 +1,169 @@
+name: Storage Switch Preflight
+
+on:
+  workflow_dispatch:
+    inputs:
+      media_type:
+        description: "Media type to pre-provision and validate"
+        required: true
+        type: choice
+        default: image
+        options:
+          - image
+          - audio
+          - video
+
+concurrency:
+  group: jingyan-storage-switch-preflight
+  cancel-in-progress: false
+
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    env:
+      STORAGE_GITHUB_OWNER: jingyan-media-storage
+      MEDIA_TYPE: ${{ inputs.media_type }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Validate Storage Code
+        run: |
+          node --check api/storage-registry.js
+          node --check api/github.js
+          node --check api/repository.js
+          node --check api/storage-switch-test.js
+          node -e "JSON.parse(require('fs').readFileSync('config.json','utf8'))"
+          node -e "JSON.parse(require('fs').readFileSync('data/storage-registry.json','utf8'))"
+
+      - name: Prepare Standby Repository
+        env:
+          GH_TOKEN: ${{ secrets.MEDIA_TOKEN }}
+          MEDIA_TOKEN: ${{ secrets.MEDIA_TOKEN }}
+          STORAGE_TOKEN: ${{ secrets.STORAGE_TOKEN }}
+        run: |
+          node api/storage-switch-test.js "$MEDIA_TYPE"
+
+      - name: Save Registry State
+        shell: bash
+        run: |
+          set -e
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add \
+            config.json \
+            data/storage-registry.json
+
+          if git diff --cached --quiet; then
+            echo "No registry state changes. Standby repository already validated."
+            exit 0
+          fi
+
+          git commit -m "chore: prepare ${MEDIA_TYPE} standby repository"
+
+          for attempt in 1 2 3; do
+            echo "Push attempt: $attempt"
+
+            git fetch origin main
+
+            if ! git rebase origin/main; then
+              echo "Rebase conflict. Aborting safely."
+              git rebase --abort || true
+              exit 1
+            fi
+
+            if git push origin HEAD:main; then
+              echo "Standby registry state pushed."
+              exit 0
+            fi
+
+            sleep $((attempt * 2))
+          done
+
+          echo "Failed to push standby registry state."
+          exit 1
+
+      - name: Verify Active Repository Unchanged
+        run: |
+          node - <<'NODE'
+          const fs = require("fs");
+
+          const config = JSON.parse(
+            fs.readFileSync(
+              "config.json",
+              "utf8"
+            )
+          );
+
+          const registry = JSON.parse(
+            fs.readFileSync(
+              "data/storage-registry.json",
+              "utf8"
+            )
+          );
+
+          const type =
+            process.env.MEDIA_TYPE;
+
+          const activeId =
+            config.storage
+              .activeRepository[type];
+
+          const active =
+            registry.repositories.find(
+              repository =>
+                repository.type === type &&
+                repository.id === activeId
+            );
+
+          const standby =
+            registry.repositories.find(
+              repository =>
+                repository.type === type &&
+                repository.state === "standby"
+            );
+
+          if (
+            !active ||
+            active.state !== "active"
+          ) {
+            throw new Error(
+              `Active repository validation failed for ${type}`
+            );
+          }
+
+          if (!standby) {
+            throw new Error(
+              `Standby repository missing for ${type}`
+            );
+          }
+
+          if (
+            standby.owner !==
+              "jingyan-media-storage" ||
+            standby.layout !==
+              "bucket-v1"
+          ) {
+            throw new Error(
+              `Standby repository metadata invalid: ${standby.repo}`
+            );
+          }
+
+          console.log(
+            `Active remains ${active.id}; standby ready ${standby.id} (${standby.repo})`
+          );
+          NODE
