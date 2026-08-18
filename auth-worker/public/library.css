@@ -255,14 +255,91 @@
     gap:
         12px;
 
+    flex-wrap:
+        wrap;
+
     scroll-margin-top:
         20px;
 }
 
 
+.library-mode-switch {
+    display:
+        inline-flex;
+
+    padding:
+        4px;
+
+    gap:
+        4px;
+
+    border:
+        1px solid
+        var(--line);
+
+    border-radius:
+        13px;
+
+    background:
+        var(--surface-soft);
+}
+
+
+.library-mode-button {
+    min-height:
+        36px;
+
+    padding:
+        0 14px;
+
+    border:
+        0;
+
+    border-radius:
+        10px;
+
+    color:
+        var(--muted);
+
+    background:
+        transparent;
+
+    cursor:
+        pointer;
+
+    font-size:
+        11px;
+
+    font-weight:
+        700;
+}
+
+
+.library-mode-button.active {
+    color:
+        white;
+
+    background:
+        linear-gradient(
+            145deg,
+            #956df0,
+            #6d45dc
+        );
+
+    box-shadow:
+        0 8px 20px
+        rgba(
+            109,
+            69,
+            220,
+            .18
+        );
+}
+
+
 .search-box {
     min-width:
-        0;
+        260px;
 
     flex:
         1;
@@ -462,6 +539,24 @@
 }
 
 
+.media-card.trashed {
+    border-color:
+        rgba(
+            220,
+            105,
+            105,
+            .18
+        );
+
+    background:
+        linear-gradient(
+            145deg,
+            #ffffff,
+            #fff9f9
+        );
+}
+
+
 .media-card-header {
     min-width:
         0;
@@ -591,6 +686,15 @@
 }
 
 
+.media-badge.trashed {
+    color:
+        #a34848;
+
+    background:
+        #ffe9e9;
+}
+
+
 .media-essentials {
     margin-top:
         15px;
@@ -691,6 +795,50 @@
 
     font-size:
         10px;
+}
+
+
+.media-actions .button.danger {
+    color:
+        #a53939;
+
+    border:
+        1px solid
+        #ffd4d4;
+
+    background:
+        #fff1f1;
+}
+
+
+.media-actions .button.danger:hover:not(:disabled) {
+    background:
+        #ffe4e4;
+}
+
+
+.media-actions .button.danger:disabled {
+    cursor:
+        not-allowed;
+
+    opacity:
+        .55;
+}
+
+
+.media-actions .button.restore {
+    color:
+        #ffffff;
+
+    border:
+        0;
+
+    background:
+        linear-gradient(
+            145deg,
+            #45b78d,
+            #319773
+        );
 }
 
 
@@ -915,6 +1063,27 @@
 
         padding:
             12px;
+    }
+
+
+    .library-mode-switch {
+        width:
+            100%;
+    }
+
+
+    .library-mode-button {
+        flex:
+            1;
+    }
+
+
+    .search-box {
+        width:
+            100%;
+
+        min-width:
+            0;
     }
 
 
