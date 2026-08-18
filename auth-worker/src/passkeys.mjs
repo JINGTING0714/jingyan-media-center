@@ -38,19 +38,37 @@ const DEFAULT_CHALLENGE_TTL_SECONDS =
 
 
 /*
- * WebAuthn / COSE algorithms used for registration.
+ * Broad WebAuthn / COSE algorithm compatibility.
  *
- * -8   EdDSA
- * -7   ES256
- * -257 RS256
+ * Modern algorithms supported by SimpleWebAuthn 13.x:
  *
- * Keep all three for broad desktop/mobile authenticator
- * compatibility.
+ * -8    EdDSA
+ * -7    ES256
+ * -35   ES384
+ * -36   ES512
+ * -37   PS256
+ * -38   PS384
+ * -39   PS512
+ * -257  RS256
+ * -258  RS384
+ * -259  RS512
+ *
+ * Intentionally DO NOT enable RS1 / SHA-1 (-65535).
+ *
+ * This broader list is important for heterogeneous mobile
+ * authenticators and credential providers.
  */
 const REGISTRATION_ALGORITHM_IDS = [
   -8,
   -7,
-  -257
+  -35,
+  -36,
+  -37,
+  -38,
+  -39,
+  -257,
+  -258,
+  -259
 ];
 
 
@@ -262,8 +280,7 @@ function bytesToBase64Url(
   value
 ) {
   const bytes =
-    value instanceof
-    Uint8Array
+    value instanceof Uint8Array
       ? value
       : new Uint8Array(
           value
