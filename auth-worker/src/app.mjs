@@ -26,14 +26,13 @@ import {
 } from "./passkeys.mjs";
 
 import {
-  renderOwnerLoginPage,
+  renderLoginPage,
   renderPasskeyManagerPage
 } from "./passkey-pages.mjs";
 
 
 const PROTECTED_OWNER_ASSETS =
   new Map([
-
     [
       "/admin",
       "/admin/"
@@ -63,7 +62,6 @@ const PROTECTED_OWNER_ASSETS =
       "/library/index.html",
       "/library/"
     ]
-
   ]);
 
 
@@ -71,30 +69,23 @@ function cloneWithCookie(
   response,
   cookie
 ) {
-
   if (!cookie) {
-
     return response;
-
   }
-
 
   const headers =
     new Headers(
       response.headers
     );
 
-
   headers.append(
     "Set-Cookie",
     cookie
   );
 
-
   return new Response(
     response.body,
     {
-
       status:
         response.status,
 
@@ -102,10 +93,8 @@ function cloneWithCookie(
         response.statusText,
 
       headers
-
     }
   );
-
 }
 
 
@@ -114,48 +103,37 @@ function redirectWithCookie(
   pathname,
   cookie = null
 ) {
-
   const url =
     new URL(
       pathname,
       request.url
     );
 
-
   const headers =
     new Headers({
-
       Location:
         url.toString(),
 
       "Cache-Control":
         "no-store"
-
     });
 
-
   if (cookie) {
-
     headers.append(
       "Set-Cookie",
       cookie
     );
-
   }
-
 
   return new Response(
     null,
     {
-
       status:
         302,
 
       headers
-
     }
   );
-
 }
 
 
@@ -164,26 +142,21 @@ async function authenticateThroughExistingWorker(
   env,
   ctx
 ) {
-
   const url =
     new URL(
       request.url
     );
 
-
   url.pathname =
     "/api/auth/me";
 
-
   url.search =
     "";
-
 
   const authRequest =
     new Request(
       url.toString(),
       {
-
         method:
           "GET",
 
@@ -191,10 +164,8 @@ async function authenticateThroughExistingWorker(
           new Headers(
             request.headers
           )
-
       }
     );
-
 
   const response =
     await authWorker.fetch(
@@ -203,112 +174,91 @@ async function authenticateThroughExistingWorker(
       ctx
     );
 
-
   if (
     !response.ok
   ) {
-
     return {
-
       ok:
         false,
 
       response
-
     };
-
   }
-
 
   const cookie =
     response.headers.get(
       "Set-Cookie"
     );
 
-
   const data =
     await response.json();
 
-
   if (
-
     !data?.authenticated ||
-
     !data?.user
-
   ) {
-
     return {
-
       ok:
         false,
 
       response:
         jsonResponse(
           {
-
             error:
               "authentication_required"
-
           },
           401
         )
-
     };
-
   }
 
-
   return {
-
     ok:
       true,
 
     auth: {
-
       user:
         data.user,
 
       session:
         data.session
-
     },
 
     cookie
-
   };
-
 }
 
 
 function hasOwnerControlAccess(
   user
 ) {
-
   return Boolean(
-
     user &&
-
     user.role ===
       "owner" &&
-
     user.status ===
       "active" &&
-
     user.permissions
       ?.manageUsers ===
       true &&
-
     user.permissions
       ?.manageInvites ===
       true &&
-
     user.permissions
       ?.manageSystem ===
       true
-
   );
+}
 
+
+function hasActiveAccount(
+  user
+) {
+  return Boolean(
+    user &&
+    user.status ===
+      "active"
+  );
 }
 
 
@@ -318,11 +268,9 @@ async function serveProtectedOwnerAsset(
   ctx,
   canonicalPath
 ) {
-
   const method =
     request.method
       .toUpperCase();
-
 
   if (
     ![
@@ -332,11 +280,9 @@ async function serveProtectedOwnerAsset(
       method
     )
   ) {
-
     return new Response(
       null,
       {
-
         status:
           405,
 
@@ -344,12 +290,9 @@ async function serveProtectedOwnerAsset(
           Allow:
             "GET, HEAD"
         }
-
       }
     );
-
   }
-
 
   const authentication =
     await authenticateThroughExistingWorker(
@@ -358,11 +301,9 @@ async function serveProtectedOwnerAsset(
       ctx
     );
 
-
   if (
     !authentication.ok
   ) {
-
     const clearCookie =
       authentication
         .response
@@ -371,28 +312,22 @@ async function serveProtectedOwnerAsset(
           "Set-Cookie"
         );
 
-
     if (
       authentication
         .response
         .status ===
       401
     ) {
-
       return redirectWithCookie(
         request,
-        "/activate",
+        "/login",
         clearCookie
       );
-
     }
-
 
     return authentication
       .response;
-
   }
-
 
   if (
     !hasOwnerControlAccess(
@@ -401,57 +336,46 @@ async function serveProtectedOwnerAsset(
         .user
     )
   ) {
-
     return redirectWithCookie(
       request,
       "/",
       authentication.cookie
     );
-
   }
-
 
   const assetUrl =
     new URL(
       request.url
     );
 
-
   assetUrl.pathname =
     canonicalPath;
 
-
   assetUrl.search =
     "";
-
 
   const assetRequest =
     new Request(
       assetUrl.toString(),
       {
-
         method,
 
         headers:
           new Headers(
             request.headers
           )
-
       }
     );
-
 
   const response =
     await env.ASSETS.fetch(
       assetRequest
     );
 
-
   return cloneWithCookie(
     response,
     authentication.cookie
   );
-
 }
 
 
@@ -460,7 +384,6 @@ async function handleProtectedAdminMediaApi(
   env,
   ctx
 ) {
-
   const authentication =
     await authenticateThroughExistingWorker(
       request,
@@ -468,16 +391,12 @@ async function handleProtectedAdminMediaApi(
       ctx
     );
 
-
   if (
     !authentication.ok
   ) {
-
     return authentication
       .response;
-
   }
-
 
   if (
     !hasOwnerControlAccess(
@@ -486,19 +405,14 @@ async function handleProtectedAdminMediaApi(
         .user
     )
   ) {
-
     return jsonResponse(
       {
-
         error:
           "permission_denied"
-
       },
       403
     );
-
   }
-
 
   const response =
     await handleAdminMediaRequest(
@@ -507,12 +421,10 @@ async function handleProtectedAdminMediaApi(
       authentication.auth
     );
 
-
   return cloneWithCookie(
     response,
     authentication.cookie
   );
-
 }
 
 
@@ -521,27 +433,22 @@ async function handlePasskeyApi(
   env,
   ctx
 ) {
-
   const pathname =
     new URL(
       request.url
     ).pathname;
-
 
   if (
     isPublicPasskeyApiPath(
       pathname
     )
   ) {
-
     return handlePasskeyApiRequest(
       request,
       env,
       null
     );
-
   }
-
 
   const authentication =
     await authenticateThroughExistingWorker(
@@ -550,16 +457,28 @@ async function handlePasskeyApi(
       ctx
     );
 
-
   if (
     !authentication.ok
   ) {
-
     return authentication
       .response;
-
   }
 
+  if (
+    !hasActiveAccount(
+      authentication
+        .auth
+        .user
+    )
+  ) {
+    return jsonResponse(
+      {
+        error:
+          "active_account_required"
+      },
+      403
+    );
+  }
 
   const response =
     await handlePasskeyApiRequest(
@@ -568,38 +487,30 @@ async function handlePasskeyApi(
       authentication.auth
     );
 
-
   return cloneWithCookie(
     response,
     authentication.cookie
   );
-
 }
 
 
-async function serveOwnerLoginPage(
+async function serveLoginPage(
   request
 ) {
-
   const method =
     request.method
       .toUpperCase();
-
 
   if (
     method !==
     "GET"
   ) {
-
     return methodNotAllowed([
       "GET"
     ]);
-
   }
 
-
-  return renderOwnerLoginPage();
-
+  return renderLoginPage();
 }
 
 
@@ -608,23 +519,18 @@ async function servePasskeyManagerPage(
   env,
   ctx
 ) {
-
   const method =
     request.method
       .toUpperCase();
-
 
   if (
     method !==
     "GET"
   ) {
-
     return methodNotAllowed([
       "GET"
     ]);
-
   }
-
 
   const authentication =
     await authenticateThroughExistingWorker(
@@ -633,11 +539,9 @@ async function servePasskeyManagerPage(
       ctx
     );
 
-
   if (
     !authentication.ok
   ) {
-
     const clearCookie =
       authentication
         .response
@@ -646,45 +550,36 @@ async function servePasskeyManagerPage(
           "Set-Cookie"
         );
 
-
     if (
       authentication
         .response
         .status ===
       401
     ) {
-
       return redirectWithCookie(
         request,
-        "/owner-login",
+        "/login",
         clearCookie
       );
-
     }
-
 
     return authentication
       .response;
-
   }
 
-
   if (
-    !hasOwnerControlAccess(
+    !hasActiveAccount(
       authentication
         .auth
         .user
     )
   ) {
-
     return redirectWithCookie(
       request,
       "/",
       authentication.cookie
     );
-
   }
-
 
   const response =
     renderPasskeyManagerPage(
@@ -693,167 +588,131 @@ async function servePasskeyManagerPage(
         .user
     );
 
-
   return cloneWithCookie(
     response,
     authentication.cookie
   );
-
 }
 
 
 function errorResponse(
   error
 ) {
-
   if (
     error instanceof
     HttpError
   ) {
-
     return jsonResponse(
       {
-
         error:
           error.code
-
       },
       error.status
     );
-
   }
-
 
   console.error(
     "Unhandled app error:",
     error
   );
 
-
   return jsonResponse(
     {
-
       error:
         "internal_error"
-
     },
     500
   );
-
 }
 
 
 export default {
-
   async fetch(
     request,
     env,
     ctx
   ) {
-
     const url =
       new URL(
         request.url
       );
 
-
     try {
-
       if (
-
+        url.pathname ===
+          "/login" ||
+        url.pathname ===
+          "/login/" ||
         url.pathname ===
           "/owner-login" ||
-
         url.pathname ===
           "/owner-login/"
-
       ) {
-
-        return await serveOwnerLoginPage(
+        return await serveLoginPage(
           request
         );
-
       }
 
-
       if (
-
         url.pathname ===
           "/passkeys" ||
-
         url.pathname ===
-          "/passkeys/"
-
+          "/passkeys/" ||
+        url.pathname ===
+          "/security/passkeys" ||
+        url.pathname ===
+          "/security/passkeys/"
       ) {
-
         return await servePasskeyManagerPage(
           request,
           env,
           ctx
         );
-
       }
 
-
       if (
-
         url.pathname ===
           "/api/passkeys" ||
-
         url.pathname.startsWith(
           "/api/passkeys/"
         )
-
       ) {
-
         return await handlePasskeyApi(
           request,
           env,
           ctx
         );
-
       }
-
 
       if (
         url.pathname.startsWith(
           "/api/internal/media-sync/"
         )
       ) {
-
         return await handleInternalMediaSyncRequest(
           request,
           env
         );
-
       }
-
 
       if (
         url.pathname.startsWith(
           "/api/internal/uploads/"
         )
       ) {
-
         return await handleInternalUploadRequest(
           request,
           env
         );
-
       }
 
-
       if (
-
         url.pathname ===
           "/api/uploads" ||
-
         url.pathname.startsWith(
           "/api/uploads/"
         )
-
       ) {
-
         const authentication =
           await authenticateThroughExistingWorker(
             request,
@@ -861,16 +720,12 @@ export default {
             ctx
           );
 
-
         if (
           !authentication.ok
         ) {
-
           return authentication
             .response;
-
         }
-
 
         const response =
           await handleUserUploadRequest(
@@ -879,28 +734,22 @@ export default {
             authentication.auth
           );
 
-
         return cloneWithCookie(
           response,
           authentication.cookie
         );
-
       }
-
 
       if (
         url.pathname ===
         "/api/admin/media"
       ) {
-
         return await handleProtectedAdminMediaApi(
           request,
           env,
           ctx
         );
-
       }
-
 
       const protectedAsset =
         PROTECTED_OWNER_ASSETS
@@ -908,20 +757,16 @@ export default {
             url.pathname
           );
 
-
       if (
         protectedAsset
       ) {
-
         return await serveProtectedOwnerAsset(
           request,
           env,
           ctx,
           protectedAsset
         );
-
       }
-
 
       return await authWorker.fetch(
         request,
@@ -929,15 +774,10 @@ export default {
         ctx
       );
 
-
     } catch (error) {
-
       return errorResponse(
         error
       );
-
     }
-
   }
-
 };
