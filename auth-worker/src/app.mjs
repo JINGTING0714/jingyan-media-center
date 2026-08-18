@@ -17,6 +17,12 @@ import {
 } from "./upload-batch-api.mjs";
 
 import {
+  handleUserUploadBatchStageRequest,
+  handleInternalUploadBatchRequest,
+  isUserUploadBatchStagePath
+} from "./upload-batch-stage-api.mjs";
+
+import {
   reconcileUploadJob,
   reconcileUserUploadJobs
 } from "./upload-reconcile.mjs";
@@ -85,13 +91,10 @@ function cloneWithCookie(
   response,
   cookie
 ) {
-
   if (
     !cookie
   ) {
-
     return response;
-
   }
 
 
@@ -119,7 +122,6 @@ function cloneWithCookie(
       headers
     }
   );
-
 }
 
 
@@ -128,7 +130,6 @@ function redirectWithCookie(
   pathname,
   cookie = null
 ) {
-
   const url =
     new URL(
       pathname,
@@ -149,12 +150,10 @@ function redirectWithCookie(
   if (
     cookie
   ) {
-
     headers.append(
       "Set-Cookie",
       cookie
     );
-
   }
 
 
@@ -167,7 +166,6 @@ function redirectWithCookie(
       headers
     }
   );
-
 }
 
 
@@ -176,7 +174,6 @@ async function authenticateThroughExistingWorker(
   env,
   ctx
 ) {
-
   const url =
     new URL(
       request.url
@@ -217,14 +214,12 @@ async function authenticateThroughExistingWorker(
   if (
     !response.ok
   ) {
-
     return {
       ok:
         false,
 
       response
     };
-
   }
 
 
@@ -242,7 +237,6 @@ async function authenticateThroughExistingWorker(
     !data?.authenticated ||
     !data?.user
   ) {
-
     return {
       ok:
         false,
@@ -256,7 +250,6 @@ async function authenticateThroughExistingWorker(
           401
         )
     };
-
   }
 
 
@@ -274,16 +267,13 @@ async function authenticateThroughExistingWorker(
 
     cookie
   };
-
 }
 
 
 function hasOwnerControlAccess(
   user
 ) {
-
   return Boolean(
-
     user &&
 
     user.role ===
@@ -303,22 +293,18 @@ function hasOwnerControlAccess(
     user.permissions
       ?.manageSystem ===
       true
-
   );
-
 }
 
 
 function hasActiveAccount(
   user
 ) {
-
   return Boolean(
     user &&
     user.status ===
       "active"
   );
-
 }
 
 
@@ -328,7 +314,6 @@ async function serveProtectedOwnerAsset(
   ctx,
   canonicalPath
 ) {
-
   const method =
     request.method
       .toUpperCase();
@@ -342,7 +327,6 @@ async function serveProtectedOwnerAsset(
       method
     )
   ) {
-
     return new Response(
       null,
       {
@@ -355,7 +339,6 @@ async function serveProtectedOwnerAsset(
         }
       }
     );
-
   }
 
 
@@ -370,7 +353,6 @@ async function serveProtectedOwnerAsset(
   if (
     !authentication.ok
   ) {
-
     const clearCookie =
       authentication
         .response
@@ -386,19 +368,16 @@ async function serveProtectedOwnerAsset(
         .status ===
       401
     ) {
-
       return redirectWithCookie(
         request,
         "/login",
         clearCookie
       );
-
     }
 
 
     return authentication
       .response;
-
   }
 
 
@@ -409,13 +388,11 @@ async function serveProtectedOwnerAsset(
         .user
     )
   ) {
-
     return redirectWithCookie(
       request,
       "/",
       authentication.cookie
     );
-
   }
 
 
@@ -457,7 +434,6 @@ async function serveProtectedOwnerAsset(
     response,
     authentication.cookie
   );
-
 }
 
 
@@ -466,7 +442,6 @@ async function handleProtectedAdminMediaApi(
   env,
   ctx
 ) {
-
   const authentication =
     await authenticateThroughExistingWorker(
       request,
@@ -478,10 +453,8 @@ async function handleProtectedAdminMediaApi(
   if (
     !authentication.ok
   ) {
-
     return authentication
       .response;
-
   }
 
 
@@ -492,7 +465,6 @@ async function handleProtectedAdminMediaApi(
         .user
     )
   ) {
-
     return jsonResponse(
       {
         error:
@@ -500,7 +472,6 @@ async function handleProtectedAdminMediaApi(
       },
       403
     );
-
   }
 
 
@@ -516,7 +487,6 @@ async function handleProtectedAdminMediaApi(
     response,
     authentication.cookie
   );
-
 }
 
 
@@ -525,7 +495,6 @@ async function handleProtectedAdminUserLifecycleApi(
   env,
   ctx
 ) {
-
   const authentication =
     await authenticateThroughExistingWorker(
       request,
@@ -537,10 +506,8 @@ async function handleProtectedAdminUserLifecycleApi(
   if (
     !authentication.ok
   ) {
-
     return authentication
       .response;
-
   }
 
 
@@ -551,7 +518,6 @@ async function handleProtectedAdminUserLifecycleApi(
         .user
     )
   ) {
-
     return jsonResponse(
       {
         error:
@@ -559,7 +525,6 @@ async function handleProtectedAdminUserLifecycleApi(
       },
       403
     );
-
   }
 
 
@@ -575,7 +540,6 @@ async function handleProtectedAdminUserLifecycleApi(
     response,
     authentication.cookie
   );
-
 }
 
 
@@ -584,7 +548,6 @@ async function handlePasskeyApi(
   env,
   ctx
 ) {
-
   const pathname =
     new URL(
       request.url
@@ -596,13 +559,11 @@ async function handlePasskeyApi(
       pathname
     )
   ) {
-
     return handlePasskeyApiRequest(
       request,
       env,
       null
     );
-
   }
 
 
@@ -617,10 +578,8 @@ async function handlePasskeyApi(
   if (
     !authentication.ok
   ) {
-
     return authentication
       .response;
-
   }
 
 
@@ -631,7 +590,6 @@ async function handlePasskeyApi(
         .user
     )
   ) {
-
     return jsonResponse(
       {
         error:
@@ -639,7 +597,6 @@ async function handlePasskeyApi(
       },
       403
     );
-
   }
 
 
@@ -655,14 +612,12 @@ async function handlePasskeyApi(
     response,
     authentication.cookie
   );
-
 }
 
 
 async function serveLoginPage(
   request
 ) {
-
   const method =
     request.method
       .toUpperCase();
@@ -672,16 +627,13 @@ async function serveLoginPage(
     method !==
     "GET"
   ) {
-
     return methodNotAllowed([
       "GET"
     ]);
-
   }
 
 
   return renderLoginPage();
-
 }
 
 
@@ -690,7 +642,6 @@ async function servePasskeyManagerPage(
   env,
   ctx
 ) {
-
   const method =
     request.method
       .toUpperCase();
@@ -700,11 +651,9 @@ async function servePasskeyManagerPage(
     method !==
     "GET"
   ) {
-
     return methodNotAllowed([
       "GET"
     ]);
-
   }
 
 
@@ -719,7 +668,6 @@ async function servePasskeyManagerPage(
   if (
     !authentication.ok
   ) {
-
     const clearCookie =
       authentication
         .response
@@ -735,19 +683,16 @@ async function servePasskeyManagerPage(
         .status ===
       401
     ) {
-
       return redirectWithCookie(
         request,
         "/login",
         clearCookie
       );
-
     }
 
 
     return authentication
       .response;
-
   }
 
 
@@ -758,13 +703,11 @@ async function servePasskeyManagerPage(
         .user
     )
   ) {
-
     return redirectWithCookie(
       request,
       "/",
       authentication.cookie
     );
-
   }
 
 
@@ -780,7 +723,6 @@ async function servePasskeyManagerPage(
     response,
     authentication.cookie
   );
-
 }
 
 
@@ -789,7 +731,6 @@ async function reconcileUserUploadRequest(
   env,
   auth
 ) {
-
   const url =
     new URL(
       request.url
@@ -805,9 +746,7 @@ async function reconcileUserUploadRequest(
     method !==
     "GET"
   ) {
-
     return;
-
   }
 
 
@@ -815,7 +754,6 @@ async function reconcileUserUploadRequest(
     url.pathname ===
     "/api/uploads"
   ) {
-
     await reconcileUserUploadJobs(
       env,
       auth
@@ -823,7 +761,6 @@ async function reconcileUserUploadRequest(
 
 
     return;
-
   }
 
 
@@ -836,20 +773,18 @@ async function reconcileUserUploadRequest(
   if (
     !jobMatch
   ) {
-
     return;
-
   }
 
 
   await reconcileUploadJob(
     env,
     auth,
+
     decodeURIComponent(
       jobMatch[1]
     )
   );
-
 }
 
 
@@ -858,7 +793,6 @@ async function handleAuthenticatedBatchApi(
   env,
   ctx
 ) {
-
   const authentication =
     await authenticateThroughExistingWorker(
       request,
@@ -870,10 +804,8 @@ async function handleAuthenticatedBatchApi(
   if (
     !authentication.ok
   ) {
-
     return authentication
       .response;
-
   }
 
 
@@ -884,7 +816,6 @@ async function handleAuthenticatedBatchApi(
         .user
     )
   ) {
-
     return jsonResponse(
       {
         error:
@@ -892,35 +823,50 @@ async function handleAuthenticatedBatchApi(
       },
       403
     );
-
   }
 
 
-  const response =
-    await handleUserUploadBatchRequest(
-      request,
-      env,
-      authentication.auth
-    );
+  let response;
+
+
+  if (
+    isUserUploadBatchStagePath(
+      new URL(
+        request.url
+      ).pathname
+    )
+  ) {
+    response =
+      await handleUserUploadBatchStageRequest(
+        request,
+        env,
+        authentication.auth
+      );
+
+  } else {
+    response =
+      await handleUserUploadBatchRequest(
+        request,
+        env,
+        authentication.auth
+      );
+  }
 
 
   return cloneWithCookie(
     response,
     authentication.cookie
   );
-
 }
 
 
 function errorResponse(
   error
 ) {
-
   if (
     error instanceof
     HttpError
   ) {
-
     return jsonResponse(
       {
         error:
@@ -928,7 +874,6 @@ function errorResponse(
       },
       error.status
     );
-
   }
 
 
@@ -945,7 +890,6 @@ function errorResponse(
     },
     500
   );
-
 }
 
 
@@ -956,7 +900,6 @@ export default {
     env,
     ctx
   ) {
-
     const url =
       new URL(
         request.url
@@ -964,7 +907,6 @@ export default {
 
 
     try {
-
       if (
         url.pathname ===
           "/login" ||
@@ -978,11 +920,9 @@ export default {
         url.pathname ===
           "/owner-login/"
       ) {
-
         return await serveLoginPage(
           request
         );
-
       }
 
 
@@ -999,13 +939,11 @@ export default {
         url.pathname ===
           "/security/passkeys/"
       ) {
-
         return await servePasskeyManagerPage(
           request,
           env,
           ctx
         );
-
       }
 
 
@@ -1017,13 +955,11 @@ export default {
           "/api/passkeys/"
         )
       ) {
-
         return await handlePasskeyApi(
           request,
           env,
           ctx
         );
-
       }
 
 
@@ -1045,13 +981,11 @@ export default {
           )
         )
       ) {
-
         return await handleProtectedAdminUserLifecycleApi(
           request,
           env,
           ctx
         );
-
       }
 
 
@@ -1060,12 +994,22 @@ export default {
           "/api/internal/media-sync/"
         )
       ) {
-
         return await handleInternalMediaSyncRequest(
           request,
           env
         );
+      }
 
+
+      if (
+        url.pathname.startsWith(
+          "/api/internal/upload-batches/"
+        )
+      ) {
+        return await handleInternalUploadBatchRequest(
+          request,
+          env
+        );
       }
 
 
@@ -1074,22 +1018,13 @@ export default {
           "/api/internal/uploads/"
         )
       ) {
-
         return await handleInternalUploadRequest(
           request,
           env
         );
-
       }
 
 
-      /*
-       * Batch Upload V2
-       *
-       * V2-A 现在只建立持久化 Batch 和 Item。
-       * 文件 staging 与单次 GitHub Dispatch
-       * 会在 V2-B 接入。
-       */
       if (
         url.pathname ===
           "/api/upload-batches" ||
@@ -1098,13 +1033,11 @@ export default {
           "/api/upload-batches/"
         )
       ) {
-
         return await handleAuthenticatedBatchApi(
           request,
           env,
           ctx
         );
-
       }
 
 
@@ -1116,7 +1049,6 @@ export default {
           "/api/uploads/"
         )
       ) {
-
         const authentication =
           await authenticateThroughExistingWorker(
             request,
@@ -1128,24 +1060,12 @@ export default {
         if (
           !authentication.ok
         ) {
-
           return authentication
             .response;
-
         }
 
 
-        /*
-         * Upload Reconciler V1
-         *
-         * GET 上传任务之前，先向 GitHub
-         * 对账当前任务的真实 Workflow 状态。
-         *
-         * Reconciler 自身出错不会阻止用户
-         * 读取原本的 Upload API。
-         */
         try {
-
           await reconcileUserUploadRequest(
             request,
             env,
@@ -1155,12 +1075,10 @@ export default {
         } catch (
           error
         ) {
-
           console.error(
             "Upload reconcile request failed:",
             error
           );
-
         }
 
 
@@ -1176,7 +1094,6 @@ export default {
           response,
           authentication.cookie
         );
-
       }
 
 
@@ -1184,33 +1101,30 @@ export default {
         url.pathname ===
         "/api/admin/media"
       ) {
-
         return await handleProtectedAdminMediaApi(
           request,
           env,
           ctx
         );
-
       }
 
 
       const protectedAsset =
-        PROTECTED_OWNER_ASSETS.get(
-          url.pathname
-        );
+        PROTECTED_OWNER_ASSETS
+          .get(
+            url.pathname
+          );
 
 
       if (
         protectedAsset
       ) {
-
         return await serveProtectedOwnerAsset(
           request,
           env,
           ctx,
           protectedAsset
         );
-
       }
 
 
@@ -1223,13 +1137,9 @@ export default {
     } catch (
       error
     ) {
-
       return errorResponse(
         error
       );
-
     }
-
   }
-
 };
