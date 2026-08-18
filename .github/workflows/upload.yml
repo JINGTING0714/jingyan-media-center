@@ -12,16 +12,23 @@ on:
         required: false
         type: string
 
+      web_batch_id:
+        description: "Upload batch ID created by jingyan-media-app"
+        required: false
+        type: string
+
+
 concurrency:
   group: jingyan-media-pipeline
   cancel-in-progress: false
   queue: max
 
+
 jobs:
   upload:
     runs-on: ubuntu-latest
 
-    timeout-minutes: 30
+    timeout-minutes: 45
 
     permissions:
       contents: write
@@ -29,19 +36,27 @@ jobs:
 
     env:
       WEB_JOB_ID: ${{ inputs.web_job_id }}
+      WEB_BATCH_ID: ${{ inputs.web_batch_id }}
+
       APP_URL: https://jingyan-media-app.jingyancdn.workers.dev
+
       STORAGE_GITHUB_OWNER: jingyan-media-storage
+
 
     steps:
       - name: Checkout Latest Main
         uses: actions/checkout@v4
+
         with:
           ref: main
           fetch-depth: 0
 
+
       - name: Refresh Latest Pipeline State
-        if: ${{ inputs.web_job_id != '' }}
+        if: ${{ inputs.web_job_id != '' || inputs.web_batch_id != '' }}
+
         shell: bash
+
         run: |
           set -e
 
@@ -52,12 +67,16 @@ jobs:
           git reset --hard origin/main
 
           echo "Pipeline state refreshed."
+
           git status --short
+
 
       - name: Setup Node
         uses: actions/setup-node@v4
+
         with:
           node-version: 22
+
 
       - name: Validate Storage V2
         run: |
@@ -66,15 +85,19 @@ jobs:
           node --check api/repository.js
           node --check api/upload.js
           node --check api/web-upload-runner.js
+          node --check api/batch-upload-runner.js
 
           node -e "JSON.parse(require('fs').readFileSync('config.json','utf8'))"
+
           node -e "JSON.parse(require('fs').readFileSync('data/storage-registry.json','utf8'))"
+
 
       - name: Check Storage Credentials
         env:
           GH_TOKEN: ${{ secrets.MEDIA_TOKEN }}
           MEDIA_TOKEN: ${{ secrets.MEDIA_TOKEN }}
           STORAGE_TOKEN: ${{ secrets.STORAGE_TOKEN }}
+
         run: |
           node - <<'NODE'
           const {
@@ -125,11 +148,23 @@ jobs:
           });
           NODE
 
+
       - name: Check Upload Files
         id: check
+
         shell: bash
+
         run: |
           set -e
+
+          if [ -n "${WEB_BATCH_ID}" ]; then
+            echo "Web upload batch detected: ${WEB_BATCH_ID}"
+
+            echo "mode=web_batch" >> "$GITHUB_OUTPUT"
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+
+            exit 0
+          fi
 
           if [ -n "${WEB_JOB_ID}" ]; then
             echo "Web upload job detected: ${WEB_JOB_ID}"
@@ -161,43 +196,77 @@ jobs:
             echo "skip=false" >> "$GITHUB_OUTPUT"
           fi
 
+
       - name: Install Dependencies
         if: steps.check.outputs.skip == 'false'
+
         run: |
           npm install --omit=dev --package-lock=false
 
-      - name: Run Web Media Upload
-        id: web_upload
-        if: steps.check.outputs.mode == 'web'
+
+      - name: Run Web Batch Upload
+        id: batch_upload
+
+        if: steps.check.outputs.mode == 'web_batch'
+
         env:
           GH_TOKEN: ${{ secrets.MEDIA_TOKEN }}
           MEDIA_TOKEN: ${{ secrets.MEDIA_TOKEN }}
           STORAGE_TOKEN: ${{ secrets.STORAGE_TOKEN }}
+
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+        run: |
+          node api/batch-upload-runner.js run "$WEB_BATCH_ID"
+
+
+      - name: Run Web Media Upload
+        id: web_upload
+
+        if: steps.check.outputs.mode == 'web'
+
+        env:
+          GH_TOKEN: ${{ secrets.MEDIA_TOKEN }}
+          MEDIA_TOKEN: ${{ secrets.MEDIA_TOKEN }}
+          STORAGE_TOKEN: ${{ secrets.STORAGE_TOKEN }}
+
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
         run: |
           node api/web-upload-runner.js run "$WEB_JOB_ID"
 
+
       - name: Run Standard Media Upload
         id: standard_upload
+
         if: steps.check.outputs.mode == 'standard' && steps.check.outputs.skip == 'false'
+
         env:
           GH_TOKEN: ${{ secrets.MEDIA_TOKEN }}
           MEDIA_TOKEN: ${{ secrets.MEDIA_TOKEN }}
           STORAGE_TOKEN: ${{ secrets.STORAGE_TOKEN }}
+
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
         run: |
           node api/upload.js
 
+
       - name: Save Automation State
         id: save_state
+
         if: always() && steps.check.outputs.skip == 'false'
+
         shell: bash
+
         run: |
           set -e
 
           git config user.name "github-actions[bot]"
+
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
           git add \
@@ -208,6 +277,7 @@ jobs:
 
           if git diff --cached --quiet; then
             echo "No local state changes."
+
             exit 0
           fi
 
@@ -239,13 +309,30 @@ jobs:
 
           exit 1
 
+
+      - name: Report Web Batch Result
+        id: report_batch
+
+        if: always() && steps.check.outputs.mode == 'web_batch'
+
+        env:
+          PIPELINE_OK: ${{ steps.batch_upload.outcome == 'success' && steps.save_state.outcome == 'success' }}
+
+        run: |
+          node api/batch-upload-runner.js callback "$WEB_BATCH_ID"
+
+
       - name: Report Web Upload Result
         id: report_web
+
         if: always() && steps.check.outputs.mode == 'web'
+
         env:
           PIPELINE_OK: ${{ steps.web_upload.outcome == 'success' && steps.save_state.outcome == 'success' }}
+
         run: |
           node api/web-upload-runner.js callback "$WEB_JOB_ID"
+
 
       - name: Index Web Upload
         if: >
@@ -254,9 +341,25 @@ jobs:
           steps.web_upload.outcome == 'success' &&
           steps.save_state.outcome == 'success' &&
           steps.report_web.outcome == 'success'
+
         continue-on-error: true
+
         run: |
           node api/media-index-sync.js upload "$WEB_JOB_ID"
+
+
+      - name: Sync Batch Media Index
+        if: >
+          always() &&
+          steps.check.outputs.mode == 'web_batch' &&
+          steps.save_state.outcome == 'success' &&
+          steps.report_batch.outcome == 'success'
+
+        continue-on-error: true
+
+        run: |
+          node api/media-index-sync.js full
+
 
       - name: Sync Media Index
         if: >
@@ -268,5 +371,6 @@ jobs:
               steps.save_state.outcome == 'success'
             )
           )
+
         run: |
           node api/media-index-sync.js full
