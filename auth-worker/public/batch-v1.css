@@ -8,11 +8,11 @@
             128,
             88,
             232,
-            .16
+            .18
         );
 
     border-radius:
-        18px;
+        20px;
 
     background:
         linear-gradient(
@@ -22,12 +22,12 @@
         );
 
     box-shadow:
-        0 10px 34px
+        0 12px 36px
         rgba(
             65,
             43,
             105,
-            .05
+            .06
         );
 }
 
@@ -86,7 +86,7 @@
 
 .batch-v1-count {
     padding:
-        7px 10px;
+        7px 11px;
 
     flex:
         0 0 auto;
@@ -111,12 +111,83 @@
 }
 
 
+.batch-v1-stage {
+    margin-top:
+        14px;
+
+    padding:
+        10px 12px;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        space-between;
+
+    gap:
+        10px;
+
+    border:
+        1px solid
+        rgba(
+            128,
+            88,
+            232,
+            .12
+        );
+
+    border-radius:
+        11px;
+
+    background:
+        rgba(
+            245,
+            240,
+            255,
+            .72
+        );
+}
+
+
+.batch-v1-stage strong {
+    color:
+        var(--text);
+
+    font-size:
+        10px;
+}
+
+
+.batch-v1-stage span {
+    max-width:
+        48%;
+
+    overflow:
+        hidden;
+
+    color:
+        var(--muted);
+
+    font-size:
+        8px;
+
+    text-overflow:
+        ellipsis;
+
+    white-space:
+        nowrap;
+}
+
+
 .batch-v1-progress {
     height:
         9px;
 
     margin-top:
-        16px;
+        14px;
 
     overflow:
         hidden;
@@ -147,7 +218,7 @@
         );
 
     transition:
-        width .24s ease;
+        width .3s ease;
 }
 
 
@@ -214,6 +285,39 @@
 }
 
 
+.batch-v1-notice {
+    margin-top:
+        12px;
+
+    padding:
+        10px 12px;
+
+    border:
+        1px solid
+        rgba(
+            143,
+            101,
+            232,
+            .14
+        );
+
+    border-radius:
+        11px;
+
+    color:
+        #725c8e;
+
+    background:
+        #faf7ff;
+
+    font-size:
+        9px;
+
+    line-height:
+        1.65;
+}
+
+
 .batch-v1-actions {
     margin-top:
         14px;
@@ -229,12 +333,25 @@
 }
 
 
-.batch-v1-actions button {
+.batch-v1-actions button,
+.batch-v1-link {
     min-height:
         36px;
 
     padding:
         0 13px;
+
+    display:
+        inline-flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    box-sizing:
+        border-box;
 
     border:
         1px solid
@@ -260,6 +377,9 @@
 
     font-weight:
         700;
+
+    text-decoration:
+        none;
 }
 
 
@@ -275,6 +395,15 @@
             145deg,
             #956df0,
             #6d45dc
+        );
+
+    box-shadow:
+        0 6px 16px
+        rgba(
+            111,
+            70,
+            220,
+            .16
         );
 }
 
@@ -297,6 +426,15 @@
 
     opacity:
         .42;
+}
+
+
+.batch-v1-link {
+    color:
+        var(--primary);
+
+    background:
+        #f7f2ff;
 }
 
 
@@ -344,7 +482,7 @@
             255,
             255,
             255,
-            .76
+            .78
         );
 }
 
@@ -436,6 +574,51 @@
 
     white-space:
         nowrap;
+}
+
+
+.batch-v1-status.created {
+    color:
+        #69547f;
+
+    background:
+        #f1ebff;
+}
+
+
+.batch-v1-status.staging {
+    color:
+        #6c48c8;
+
+    background:
+        #eee7ff;
+}
+
+
+.batch-v1-status.staged {
+    color:
+        #5c548c;
+
+    background:
+        #efedf9;
+}
+
+
+.batch-v1-status.queued {
+    color:
+        #6e5792;
+
+    background:
+        #eee7fb;
+}
+
+
+.batch-v1-status.processing {
+    color:
+        #7443d5;
+
+    background:
+        #ece3ff;
 }
 
 
@@ -560,6 +743,21 @@
     }
 
 
+    .batch-v1-stage {
+        align-items:
+            flex-start;
+
+        flex-direction:
+            column;
+    }
+
+
+    .batch-v1-stage span {
+        max-width:
+            100%;
+    }
+
+
     .batch-v1-actions {
         display:
             grid;
@@ -575,7 +773,8 @@
     }
 
 
-    .batch-v1-actions button {
+    .batch-v1-actions button,
+    .batch-v1-link {
         width:
             100%;
     }
