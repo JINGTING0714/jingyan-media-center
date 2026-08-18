@@ -2,10 +2,10 @@
   "version": 1,
   "worker": "jingyan-media-cdn",
   "baseURL": "https://jingyan-media-cdn.jingyancdn.workers.dev",
-  "updatedAt": "2026-08-18T13:10:31.627Z",
-  "lastPublishedAt": "2026-08-18T13:10:31.627Z",
-  "lastVersionId": "636071a9-a4be-4384-8999-5f285a2c4876",
-  "lastDeploymentId": "9675af81-2e77-4756-8e68-0e106645d2d2",
+  "updatedAt": "2026-08-18T13:11:55.516Z",
+  "lastPublishedAt": "2026-08-18T13:11:55.516Z",
+  "lastVersionId": "abc9d175-477f-4d3b-8ddd-ea00b9abf2e0",
+  "lastDeploymentId": "49df23cd-c191-4d47-b67e-309f748b6e78",
   "assets": {
     "/audio/001-christmas.mp3": {
       "hash": "6c23ab88513bb99a558582c6f14cef89",
@@ -201,6 +201,19 @@
         "path": "image/011-a-bo-luo-di-wen.jpg"
       },
       "addedAt": "2026-08-18T13:10:25.751Z"
+    },
+    "/image/012-a-bo-luo-shui-yin.jpg": {
+      "hash": "77f2d3f3bda2c4b177ab6aafd8f4bd17",
+      "size": 1085819,
+      "sha256": "d9f485c292437890c87fad0530b866f438a32395764d67ccc61086c3877d3b1e",
+      "type": "image",
+      "mediaId": "image-000012",
+      "source": {
+        "repo": "JINGTING0714/jingyan-image-01",
+        "branch": "main",
+        "path": "image/012-a-bo-luo-shui-yin.jpg"
+      },
+      "addedAt": "2026-08-18T13:11:49.382Z"
     }
   }
 }
