@@ -1,0 +1,65 @@
+name: Media Index Sync
+
+on:
+
+  workflow_dispatch:
+
+  schedule:
+    - cron: "23 3 * * *"
+
+
+concurrency:
+
+  group: jingyan-media-index-sync
+
+  cancel-in-progress: false
+
+
+jobs:
+
+  sync:
+
+    runs-on: ubuntu-latest
+
+
+    permissions:
+
+      contents: read
+
+      id-token: write
+
+
+    env:
+
+      APP_URL: https://jingyan-media-app.jingyancdn.workers.dev
+
+
+    steps:
+
+
+      - name: Checkout
+
+        uses: actions/checkout@v4
+
+
+      - name: Setup Node
+
+        uses: actions/setup-node@v4
+
+        with:
+
+          node-version: 22
+
+
+      - name: Validate Sync Script
+
+        run: |
+
+          node --check api/media-index-sync.js
+
+
+      - name: Sync Media Index
+
+        run: |
+
+          node api/media-index-sync.js full
