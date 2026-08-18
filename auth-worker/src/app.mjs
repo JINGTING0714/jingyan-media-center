@@ -15,6 +15,10 @@ import {
   handleAdminMediaRequest
 } from "./media-api.mjs";
 
+import {
+  handleInternalMediaSyncRequest
+} from "./media-sync-api.mjs";
+
 
 const PROTECTED_OWNER_ASSETS =
   new Map([
@@ -534,6 +538,20 @@ export default {
 
 
     try {
+
+      if (
+        url.pathname.startsWith(
+          "/api/internal/media-sync/"
+        )
+      ) {
+
+        return await handleInternalMediaSyncRequest(
+          request,
+          env
+        );
+
+      }
+
 
       if (
         url.pathname.startsWith(
