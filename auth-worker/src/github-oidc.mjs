@@ -26,7 +26,8 @@ function decodeBase64Url(
 
   let base64 =
     String(
-      value || ""
+      value ||
+      ""
     )
       .replace(
         /-/g,
@@ -62,7 +63,9 @@ function decodeBase64Url(
 
     character =>
       character
-        .charCodeAt(0)
+        .charCodeAt(
+          0
+        )
 
   );
 
@@ -263,26 +266,21 @@ function audienceMatches(
 }
 
 
-function expectedWorkflowRef(
-  env
+function workflowRef(
+  env,
+  workflow
 ) {
 
-  const repository =
-    `${env.GITHUB_OWNER}/${env.GITHUB_REPO}`;
-
-
   return (
-    repository +
-    "/.github/workflows/" +
-    env.GITHUB_UPLOAD_WORKFLOW +
-    "@refs/heads/" +
-    env.GITHUB_UPLOAD_REF
+    `${env.GITHUB_OWNER}/${env.GITHUB_REPO}` +
+    `/.github/workflows/${workflow}` +
+    `@refs/heads/${env.GITHUB_UPLOAD_REF}`
   );
 
 }
 
 
-export async function verifyGitHubOidc(
+async function verifyBaseToken(
   request,
   env
 ) {
@@ -312,7 +310,9 @@ export async function verifyGitHubOidc(
 
   const token =
     authorization
-      .slice(7)
+      .slice(
+        7
+      )
       .trim();
 
 
@@ -412,6 +412,7 @@ export async function verifyGitHubOidc(
 
 
   if (
+
     payload.iss !==
       ISSUER ||
 
@@ -437,8 +438,10 @@ export async function verifyGitHubOidc(
       Number(
         payload.nbf
       ) >
-        now + 30
+        now +
+        30
     )
+
   ) {
 
     throw new HttpError(
@@ -454,19 +457,13 @@ export async function verifyGitHubOidc(
 
 
   if (
+
     payload.repository !==
       repository ||
 
-    payload.event_name !==
-      "workflow_dispatch" ||
-
     payload.ref !==
-      `refs/heads/${env.GITHUB_UPLOAD_REF}` ||
+      `refs/heads/${env.GITHUB_UPLOAD_REF}`
 
-    payload.workflow_ref !==
-      expectedWorkflowRef(
-        env
-      )
   ) {
 
     throw new HttpError(
@@ -503,5 +500,114 @@ export async function verifyGitHubOidc(
     ...payload,
     runId
   };
+
+}
+
+
+export async function verifyGitHubOidc(
+  request,
+  env
+) {
+
+  const payload =
+    await verifyBaseToken(
+      request,
+      env
+    );
+
+
+  if (
+
+    payload.event_name !==
+      "workflow_dispatch" ||
+
+    payload.workflow_ref !==
+      workflowRef(
+        env,
+        env.GITHUB_UPLOAD_WORKFLOW
+      )
+
+  ) {
+
+    throw new HttpError(
+      403,
+      "github_workflow_rejected"
+    );
+
+  }
+
+
+  return payload;
+
+}
+
+
+export async function verifyGitHubMediaSyncOidc(
+  request,
+  env
+) {
+
+  const payload =
+    await verifyBaseToken(
+      request,
+      env
+    );
+
+
+  const uploadWorkflow =
+    workflowRef(
+      env,
+      env.GITHUB_UPLOAD_WORKFLOW
+    );
+
+
+  const syncWorkflow =
+    workflowRef(
+      env,
+      env.GITHUB_MEDIA_SYNC_WORKFLOW ||
+      "media-index-sync.yml"
+    );
+
+
+  const fromUploadWorkflow =
+
+    payload.workflow_ref ===
+      uploadWorkflow &&
+
+    [
+      "workflow_dispatch",
+      "push"
+    ].includes(
+      payload.event_name
+    );
+
+
+  const fromSyncWorkflow =
+
+    payload.workflow_ref ===
+      syncWorkflow &&
+
+    [
+      "workflow_dispatch",
+      "schedule"
+    ].includes(
+      payload.event_name
+    );
+
+
+  if (
+    !fromUploadWorkflow &&
+    !fromSyncWorkflow
+  ) {
+
+    throw new HttpError(
+      403,
+      "github_workflow_rejected"
+    );
+
+  }
+
+
+  return payload;
 
 }
