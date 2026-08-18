@@ -251,6 +251,8 @@ jobs:
 
       - name: Report Web Upload Result
 
+        id: report_web
+
         if: always() && steps.check.outputs.mode == 'web'
 
         env:
@@ -260,3 +262,38 @@ jobs:
         run: |
 
           node api/web-upload-runner.js callback "$WEB_JOB_ID"
+
+
+
+      - name: Index Web Upload
+
+        if: >
+          always() &&
+          steps.check.outputs.mode == 'web' &&
+          steps.web_upload.outcome == 'success' &&
+          steps.save_state.outcome == 'success' &&
+          steps.report_web.outcome == 'success'
+
+        continue-on-error: true
+
+        run: |
+
+          node api/media-index-sync.js upload "$WEB_JOB_ID"
+
+
+
+      - name: Sync Media Index
+
+        if: >
+          always() &&
+          (
+            steps.check.outputs.skip == 'true' ||
+            (
+              steps.check.outputs.mode == 'standard' &&
+              steps.save_state.outcome == 'success'
+            )
+          )
+
+        run: |
+
+          node api/media-index-sync.js full
