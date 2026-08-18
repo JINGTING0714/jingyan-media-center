@@ -2,10 +2,10 @@
   "version": 1,
   "worker": "jingyan-media-cdn",
   "baseURL": "https://jingyan-media-cdn.jingyancdn.workers.dev",
-  "updatedAt": "2026-08-18T11:25:12.802Z",
-  "lastPublishedAt": "2026-08-18T11:25:12.802Z",
-  "lastVersionId": "c1087ec6-c970-453b-9917-9164a57f08a3",
-  "lastDeploymentId": "ce8098f9-5bb3-40ec-8aae-7125d50c2270",
+  "updatedAt": "2026-08-18T13:10:31.627Z",
+  "lastPublishedAt": "2026-08-18T13:10:31.627Z",
+  "lastVersionId": "636071a9-a4be-4384-8999-5f285a2c4876",
+  "lastDeploymentId": "9675af81-2e77-4756-8e68-0e106645d2d2",
   "assets": {
     "/audio/001-christmas.mp3": {
       "hash": "6c23ab88513bb99a558582c6f14cef89",
@@ -188,6 +188,19 @@
         "path": "image/010-98615fc7206337871061b1874e0521f8.png"
       },
       "addedAt": "2026-08-18T11:25:05.291Z"
+    },
+    "/image/011-a-bo-luo-di-wen.jpg": {
+      "hash": "5f7da1f939d606604486988438b40457",
+      "size": 1079359,
+      "sha256": "39d5406d1d321b7b1e6ac7e4a7e004d9f1fa05aea7d3510334ee86758d568e1b",
+      "type": "image",
+      "mediaId": "image-000011",
+      "source": {
+        "repo": "JINGTING0714/jingyan-image-01",
+        "branch": "main",
+        "path": "image/011-a-bo-luo-di-wen.jpg"
+      },
+      "addedAt": "2026-08-18T13:10:25.751Z"
     }
   }
 }
