@@ -5,35 +5,13 @@
     const MAX_FILES =
         20;
 
-    /*
-     * 同时最多有 3 个任务进入 GitHub 流水线。
-     *
-     * GitHub Workflow 本身使用 concurrency
-     * 做真正串行发布，因此这里的 3 指的是：
-     *
-     * 1 个执行
-     * +
-     * 最多 2 个等待
-     *
-     * 而不是同时修改 Registry。
-     */
-    const MAX_IN_FLIGHT =
+
+    const STAGING_CONCURRENCY =
         3;
 
 
-    const CREATE_BURST =
-        8;
-
-    const CREATE_WINDOW_MS =
-        61000;
-
     const POLL_INTERVAL_MS =
         4000;
-
-    const TASK_TIMEOUT_MS =
-        40 *
-        60 *
-        1000;
 
 
     const RULES = {
@@ -116,20 +94,56 @@
     }
 
 
+    const ACTIVE_BATCH_STATUSES =
+        new Set([
+            "created",
+            "staging",
+            "ready",
+            "queued",
+            "processing"
+        ]);
+
+
+    const TERMINAL_ITEM_STATUSES =
+        new Set([
+            "complete",
+            "failed",
+            "review",
+            "cancelled"
+        ]);
+
+
     let currentUser =
         null;
+
 
     let batch =
         null;
 
-    let schedulerRunning =
+
+    let fileByItemId =
+        new Map();
+
+
+    let clientErrors =
+        new Map();
+
+
+    let clientStaging =
+        new Set();
+
+
+    let pollRunning =
         false;
 
-    let paused =
+
+    let stageRunning =
         false;
 
-    let createTimestamps =
-        [];
+
+    let startRunning =
+        false;
+
 
     let toastTimer =
         null;
@@ -147,8 +161,10 @@
                 code
             );
 
+
             this.status =
                 status;
+
 
             this.code =
                 code;
@@ -192,6 +208,21 @@
 
 
         return element;
+
+    }
+
+
+    function sleep(
+        milliseconds
+    ) {
+
+        return new Promise(
+            resolve =>
+                setTimeout(
+                    resolve,
+                    milliseconds
+                )
+        );
 
     }
 
@@ -244,16 +275,82 @@
     }
 
 
-    function sleep(
-        milliseconds
+    async function readResponse(
+        response
     ) {
 
-        return new Promise(
-            resolve =>
-                setTimeout(
-                    resolve,
-                    milliseconds
-                )
+        let data =
+            {};
+
+
+        try {
+
+            data =
+                await response.json();
+
+        } catch {
+
+            data =
+                {};
+
+        }
+
+
+        if (
+            !response.ok
+        ) {
+
+            throw new ApiError(
+                response.status,
+                data.error ||
+                "request_failed"
+            );
+
+        }
+
+
+        return data;
+
+    }
+
+
+    async function apiJson(
+        url,
+        options = {}
+    ) {
+
+        const response =
+            await fetch(
+                url,
+                {
+                    credentials:
+                        "same-origin",
+
+                    ...options,
+
+                    headers: {
+
+                        ...(
+                            options.body
+                                ? {
+                                    "Content-Type":
+                                        "application/json"
+                                  }
+                                : {}
+                        ),
+
+                        ...(
+                            options.headers ||
+                            {}
+                        )
+
+                    }
+                }
+            );
+
+
+        return readResponse(
+            response
         );
 
     }
@@ -434,7 +531,7 @@
         ) {
 
             throw new Error(
-                `没有 ${type} 上传权限`
+                `当前账号没有 ${type} 上传权限`
             );
 
         }
@@ -444,178 +541,6 @@
             type,
             extension
         };
-
-    }
-
-
-    async function readResponse(
-        response
-    ) {
-
-        let data =
-            {};
-
-
-        try {
-
-            data =
-                await response.json();
-
-        } catch {
-
-            data =
-                {};
-
-        }
-
-
-        if (
-            !response.ok
-        ) {
-
-            throw new ApiError(
-                response.status,
-                data.error ||
-                "request_failed"
-            );
-
-        }
-
-
-        return data;
-
-    }
-
-
-    async function createJob(
-        task
-    ) {
-
-        const response =
-            await fetch(
-                "/api/uploads",
-                {
-                    method:
-                        "POST",
-
-                    credentials:
-                        "same-origin",
-
-                    headers: {
-                        "Content-Type":
-                            "application/json"
-                    },
-
-                    body:
-                        JSON.stringify({
-                            originalName:
-                                task.file.name,
-
-                            sizeBytes:
-                                task.file.size,
-
-                            contentType:
-                                task.file.type ||
-                                "application/octet-stream"
-                        })
-                }
-            );
-
-
-        const data =
-            await readResponse(
-                response
-            );
-
-
-        return data.job;
-
-    }
-
-
-    async function sendContent(
-        task,
-        job
-    ) {
-
-        const response =
-            await fetch(
-                `/api/uploads/${encodeURIComponent(job.id)}/content`,
-                {
-                    method:
-                        "PUT",
-
-                    credentials:
-                        "same-origin",
-
-                    headers: {
-                        "Content-Type":
-                            "application/octet-stream"
-                    },
-
-                    body:
-                        task.file
-                }
-            );
-
-
-        const data =
-            await readResponse(
-                response
-            );
-
-
-        return data.job;
-
-    }
-
-
-    async function getJob(
-        jobId
-    ) {
-
-        const response =
-            await fetch(
-                `/api/uploads/${encodeURIComponent(jobId)}`,
-                {
-                    credentials:
-                        "same-origin"
-                }
-            );
-
-
-        const data =
-            await readResponse(
-                response
-            );
-
-
-        return data.job;
-
-    }
-
-
-    function isUnsafeRetryCode(
-        code
-    ) {
-
-        const value =
-            String(
-                code ||
-                ""
-            )
-                .toLowerCase();
-
-
-        return (
-            value.includes(
-                "pipeline_state_not_saved"
-            ) ||
-
-            value.includes(
-                "duplicate"
-            )
-        );
 
     }
 
@@ -633,41 +558,76 @@
 
         const messages = {
 
-            upload_rate_limited:
-                "上传频率达到安全上限，将自动等待后重试。",
+            request_failed:
+                "请求失败，请稍后重试。",
+
+            upload_batch_active_exists:
+                "当前账号已经有一个批量任务，请先处理现有批次。",
+
+            upload_batch_files_required:
+                "没有收到批量文件信息。",
+
+            upload_batch_file_count_invalid:
+                "批量上传一次支持 2～20 个文件。",
+
+            invalid_upload_batch_file:
+                "批量文件信息无效。",
+
+            invalid_filename:
+                "文件名不符合上传规则。",
 
             unsupported_media_type:
-                "不支持这种媒体格式。",
+                "存在不支持的媒体格式。",
 
             media_too_large:
-                "文件超过允许大小。",
+                "有文件超过允许大小。",
 
             upload_permission_denied:
                 "当前账号没有这种媒体的上传权限。",
 
+            upload_batch_not_found:
+                "找不到这个批量任务。",
+
+            upload_batch_not_stageable:
+                "这个批次已经不能继续上传临时文件。",
+
+            upload_batch_item_not_found:
+                "找不到批次中的文件。",
+
+            upload_batch_item_not_ready:
+                "这个文件已经上传过临时存储。",
+
+            upload_batch_item_changed:
+                "文件状态已经改变，请刷新后再试。",
+
+            upload_size_mismatch:
+                "上传文件大小与创建批次时不一致。",
+
+            upload_body_required:
+                "没有收到文件内容。",
+
+            upload_batch_not_ready:
+                "还有文件没有完成临时上传。",
+
+            upload_batch_items_not_ready:
+                "批次中的文件还没有全部准备完成。",
+
+            upload_batch_start_conflict:
+                "这个批次已经开始发布。",
+
+            github_batch_dispatch_failed:
+                "GitHub 批量发布任务启动失败，可以稍后再次启动。",
+
             pipeline_state_not_saved:
-                "媒体处理可能已经完成，但 Pipeline 状态提交发生冲突。请先到媒体库确认，不要直接重试。",
+                "媒体可能已经处理，但最终状态没有安全保存。请先检查媒体库，不要盲目重传。",
 
-            pipeline_failed:
-                "GitHub 媒体流水线失败。",
+            batch_item_result_missing:
+                "媒体流水线没有返回这个文件的最终结果，请先检查媒体库。",
 
-            request_failed:
-                "请求失败。"
+            batch_item_pipeline_failed:
+                "这个文件在媒体流水线中处理失败。"
 
         };
-
-
-        if (
-            value
-                .toLowerCase()
-                .includes(
-                    "duplicate"
-                )
-        ) {
-
-            return "检测到重复媒体。请到媒体库搜索原文件，不要重复上传。";
-
-        }
 
 
         return (
@@ -680,23 +640,54 @@
     }
 
 
-    function statusText(
-        status
+    function isActiveBatch(
+        value = batch
     ) {
+
+        return Boolean(
+            value &&
+            ACTIVE_BATCH_STATUSES.has(
+                value.status
+            )
+        );
+
+    }
+
+
+    function isTerminalItem(
+        item
+    ) {
+
+        return TERMINAL_ITEM_STATUSES
+            .has(
+                item.status
+            );
+
+    }
+
+
+    function statusText(
+        item
+    ) {
+
+        if (
+            clientStaging.has(
+                item.id
+            )
+        ) {
+
+            return "临时上传";
+
+        }
+
 
         return {
 
-            pending:
-                "等待",
+            created:
+                "等待临时上传",
 
-            waiting_limit:
-                "安全排队",
-
-            creating:
-                "创建任务",
-
-            staging:
-                "临时上传",
+            staged:
+                "已暂存",
 
             queued:
                 "GitHub 排队",
@@ -717,68 +708,50 @@
                 "已取消"
 
         }[
+            item.status
+        ] ||
+        item.status;
+
+    }
+
+
+    function batchStatusText(
+        status
+    ) {
+
+        return {
+
+            created:
+                "准备文件",
+
+            staging:
+                "正在临时上传",
+
+            ready:
+                "准备启动发布",
+
+            queued:
+                "GitHub 已接收整批任务",
+
+            processing:
+                "GitHub 正在发布",
+
+            partial:
+                "部分完成",
+
+            complete:
+                "全部完成",
+
+            failed:
+                "批次失败",
+
+            cancelled:
+                "已取消"
+
+        }[
             status
         ] ||
         status;
-
-    }
-
-
-    function isSettled(
-        task
-    ) {
-
-        return [
-            "complete",
-            "failed",
-            "review",
-            "cancelled"
-        ].includes(
-            task.status
-        );
-
-    }
-
-
-    function statusNote(
-        task
-    ) {
-
-        if (
-            task.status !==
-            "queued" ||
-            !task.queuedAt
-        ) {
-
-            return "";
-
-        }
-
-
-        const seconds =
-            Math.max(
-                0,
-                Math.floor(
-                    (
-                        Date.now() -
-                        task.queuedAt
-                    ) /
-                    1000
-                )
-            );
-
-
-        if (
-            seconds <
-            60
-        ) {
-
-            return `已排队 ${seconds} 秒`;
-
-        }
-
-
-        return `已排队 ${Math.floor(seconds / 60)} 分钟`;
 
     }
 
@@ -865,6 +838,271 @@
     }
 
 
+    function batchAgeText() {
+
+        if (
+            !batch
+        ) {
+
+            return "";
+
+        }
+
+
+        const start =
+            Number(
+                batch.startedAt ||
+                batch.createdAt ||
+                0
+            );
+
+
+        if (
+            !start
+        ) {
+
+            return "";
+
+        }
+
+
+        const seconds =
+            Math.max(
+                0,
+                Math.floor(
+                    Date.now() /
+                    1000 -
+                    start
+                )
+            );
+
+
+        if (
+            seconds <
+            60
+        ) {
+
+            return `${seconds} 秒`;
+
+        }
+
+
+        if (
+            seconds <
+            3600
+        ) {
+
+            return `${Math.floor(seconds / 60)} 分钟`;
+
+        }
+
+
+        return `${Math.floor(seconds / 3600)} 小时 ${Math.floor((seconds % 3600) / 60)} 分钟`;
+
+    }
+
+
+    function getMissingItems() {
+
+        if (
+            !batch
+        ) {
+
+            return [];
+
+        }
+
+
+        return (
+            batch.items ||
+            []
+        )
+            .filter(
+                item =>
+                    item.status ===
+                    "created"
+            );
+
+    }
+
+
+    function availableMissingFiles() {
+
+        return getMissingItems()
+            .filter(
+                item =>
+                    fileByItemId.has(
+                        item.id
+                    )
+            );
+
+    }
+
+
+    function calculateProgress() {
+
+        if (
+            !batch ||
+            !batch.totalCount
+        ) {
+
+            return 0;
+
+        }
+
+
+        if (
+            [
+                "complete",
+                "partial",
+                "failed",
+                "cancelled"
+            ].includes(
+                batch.status
+            )
+        ) {
+
+            return 100;
+
+        }
+
+
+        const total =
+            Number(
+                batch.totalCount
+            );
+
+
+        const terminal =
+            (
+                batch.items ||
+                []
+            )
+                .filter(
+                    isTerminalItem
+                )
+                .length;
+
+
+        if (
+            [
+                "created",
+                "staging",
+                "ready"
+            ].includes(
+                batch.status
+            )
+        ) {
+
+            return Math.min(
+                35,
+
+                (
+                    Number(
+                        batch.stagedCount ||
+                        0
+                    ) /
+                    total
+                ) *
+                35
+            );
+
+        }
+
+
+        return Math.min(
+            99,
+
+            35 +
+            (
+                terminal /
+                total
+            ) *
+            65
+        );
+
+    }
+
+
+    function batchNotice() {
+
+        if (
+            !batch
+        ) {
+
+            return "";
+
+        }
+
+
+        const missing =
+            getMissingItems();
+
+
+        if (
+            missing.length >
+            0 &&
+            availableMissingFiles().length ===
+            0
+        ) {
+
+            return `这个批次还有 ${missing.length} 个文件没有进入临时存储。如果刚刚刷新了页面，请重新选择原批次文件，系统会自动匹配并继续，不会重新创建批次。`;
+
+        }
+
+
+        if (
+            batch.status ===
+            "queued"
+        ) {
+
+            const age =
+                batchAgeText();
+
+
+            return `整个批次只对应 1 个 GitHub Workflow。当前已等待 ${age || "0 秒"}。`;
+
+        }
+
+
+        if (
+            batch.status ===
+            "processing"
+        ) {
+
+            return "GitHub 正在逐个处理这一批文件。单个文件失败不会让整批文件重新上传。";
+
+        }
+
+
+        if (
+            batch.status ===
+            "partial"
+        ) {
+
+            return "这一批已经结束，但部分文件需要检查。成功的文件不会受到影响。";
+
+        }
+
+
+        if (
+            Number(
+                batch.reviewCount ||
+                0
+            ) >
+            0
+        ) {
+
+            return "存在“需确认”文件。此类状态可能已经写入媒体仓，请先到媒体库搜索，不要直接重复上传。";
+
+        }
+
+
+        return "";
+
+    }
+
+
     function renderPanel() {
 
         const panel =
@@ -872,9 +1110,22 @@
 
 
         if (
-            !panel ||
+            !panel
+        ) {
+
+            return;
+
+        }
+
+
+        if (
             !batch
         ) {
+
+            panel.classList.add(
+                "hidden"
+            );
+
 
             return;
 
@@ -907,71 +1158,59 @@
             "";
 
 
-        const settled =
-            batch.tasks.filter(
-                isSettled
-            ).length;
+        const items =
+            batch.items ||
+            [];
 
 
         const complete =
-            batch.tasks.filter(
-                task =>
-                    task.status ===
+            items.filter(
+                item =>
+                    item.status ===
                     "complete"
             ).length;
 
 
         const failed =
-            batch.tasks.filter(
-                task =>
-                    task.status ===
+            items.filter(
+                item =>
+                    item.status ===
                     "failed"
             ).length;
 
 
         const review =
-            batch.tasks.filter(
-                task =>
-                    task.status ===
+            items.filter(
+                item =>
+                    item.status ===
                     "review"
             ).length;
 
 
+        const terminal =
+            items.filter(
+                isTerminalItem
+            ).length;
+
+
+        const processing =
+            items.filter(
+                item =>
+                    item.status ===
+                        "processing" ||
+                    item.status ===
+                        "queued"
+            ).length;
+
+
         const waiting =
-            batch.tasks.filter(
-                task =>
-                    [
-                        "pending",
-                        "waiting_limit"
-                    ].includes(
-                        task.status
-                    )
+            items.filter(
+                item =>
+                    item.status ===
+                        "created" ||
+                    item.status ===
+                        "staged"
             ).length;
-
-
-        const active =
-            batch.tasks.filter(
-                task =>
-                    [
-                        "creating",
-                        "staging",
-                        "queued",
-                        "processing"
-                    ].includes(
-                        task.status
-                    )
-            ).length;
-
-
-        const progress =
-            batch.tasks.length
-                ? (
-                    settled /
-                    batch.tasks.length
-                ) *
-                100
-
-                : 0;
 
 
         const head =
@@ -988,32 +1227,62 @@
 
 
         title.append(
+
             createElement(
                 "h3",
                 "",
-                "批量上传"
+                "批量上传 V2"
             ),
 
             createElement(
                 "p",
                 "",
-                `最多 ${MAX_FILES} 个文件 · 同时跟踪 ${MAX_IN_FLIGHT} 个 · GitHub 发布严格串行`
+                `最多 ${MAX_FILES} 个文件 · 临时上传并发 ${STAGING_CONCURRENCY} · 整批只启动 1 个 GitHub Workflow`
             )
+
         );
 
 
         head.append(
+
             title,
 
             createElement(
                 "div",
                 "batch-v1-count",
-                `${settled} / ${batch.tasks.length}`
+                `${terminal} / ${batch.totalCount}`
             )
+
         );
 
 
-        const progressWrap =
+        const statusLine =
+            createElement(
+                "div",
+                "batch-v1-stage"
+            );
+
+
+        statusLine.append(
+
+            createElement(
+                "strong",
+                "",
+                batchStatusText(
+                    batch.status
+                )
+            ),
+
+            createElement(
+                "span",
+                "",
+                `Batch ${batch.id}`
+            )
+
+        );
+
+
+        const progress =
             createElement(
                 "div",
                 "batch-v1-progress"
@@ -1028,10 +1297,10 @@
 
 
         progressBar.style.width =
-            `${progress}%`;
+            `${calculateProgress()}%`;
 
 
-        progressWrap.append(
+        progress.append(
             progressBar
         );
 
@@ -1044,6 +1313,7 @@
 
 
         stats.append(
+
             createElement(
                 "span",
                 "batch-v1-stat success",
@@ -1053,13 +1323,13 @@
             createElement(
                 "span",
                 "batch-v1-stat",
-                `● 处理中 ${active}`
+                `● 处理中 ${processing}`
             ),
 
             createElement(
                 "span",
                 "batch-v1-stat",
-                `○ 等待 ${waiting}`
+                `○ 准备 ${waiting}`
             ),
 
             createElement(
@@ -1073,7 +1343,30 @@
                 "batch-v1-stat review",
                 `? 需确认 ${review}`
             )
+
         );
+
+
+        const noticeText =
+            batchNotice();
+
+
+        let notice =
+            null;
+
+
+        if (
+            noticeText
+        ) {
+
+            notice =
+                createElement(
+                    "div",
+                    "batch-v1-notice",
+                    noticeText
+                );
+
+        }
 
 
         const actions =
@@ -1083,162 +1376,178 @@
             );
 
 
-        const pauseButton =
-            createElement(
-                "button",
-                "primary",
-                paused
-                    ? "继续新任务"
-                    : "暂停新任务"
-            );
+        const missing =
+            getMissingItems();
 
 
-        pauseButton.type =
-            "button";
+        if (
+            missing.length >
+            0
+        ) {
 
-        pauseButton.disabled =
-            !batch.active;
-
-
-        pauseButton.addEventListener(
-            "click",
-            () => {
-
-                paused =
-                    !paused;
+            const retryable =
+                availableMissingFiles();
 
 
-                renderPanel();
-
-            }
-        );
-
-
-        const cancelButton =
-            createElement(
-                "button",
-                "danger",
-                "取消等待任务"
-            );
+            const retry =
+                createElement(
+                    "button",
+                    "primary",
+                    "继续临时上传"
+                );
 
 
-        cancelButton.type =
-            "button";
-
-        cancelButton.disabled =
-            waiting ===
-            0;
+            retry.type =
+                "button";
 
 
-        cancelButton.addEventListener(
-            "click",
-            () => {
+            retry.disabled =
+                retryable.length ===
+                    0 ||
+                stageRunning;
 
-                for (
-                    const task
-                    of batch.tasks
-                ) {
 
-                    if (
-                        [
-                            "pending",
-                            "waiting_limit"
-                        ].includes(
-                            task.status
-                        )
-                    ) {
+            retry.addEventListener(
+                "click",
+                () => {
 
-                        task.status =
-                            "cancelled";
+                    stageAvailableFiles()
+                        .catch(
+                            error => {
 
-                    }
+                                showToast(
+                                    humanError(
+                                        error.code ||
+                                        error.message
+                                    )
+                                );
+
+                            }
+                        );
 
                 }
-
-
-                renderPanel();
-
-            }
-        );
-
-
-        const retryable =
-            batch.tasks.filter(
-                task =>
-                    task.status ===
-                        "failed" &&
-                    task.retryable ===
-                        true
             );
 
 
-        const retryButton =
-            createElement(
-                "button",
-                "",
-                "重试安全失败"
-            );
+            const choose =
+                createElement(
+                    "button",
+                    "",
+                    "重新选择缺失文件"
+                );
 
 
-        retryButton.type =
-            "button";
-
-        retryButton.disabled =
-            retryable.length ===
-            0;
+            choose.type =
+                "button";
 
 
-        retryButton.addEventListener(
-            "click",
-            () => {
+            choose.disabled =
+                stageRunning;
 
-                for (
-                    const task
-                    of retryable
-                ) {
 
-                    task.status =
-                        "pending";
+            choose.addEventListener(
+                "click",
+                () => {
 
-                    task.error =
-                        "";
+                    const fileInput =
+                        document.getElementById(
+                            "fileInput"
+                        );
 
-                    task.errorCode =
-                        "";
 
-                    task.jobId =
-                        null;
-
-                    task.cdnUrl =
-                        null;
-
-                    task.queuedAt =
-                        null;
+                    fileInput?.click();
 
                 }
+            );
 
 
-                batch.active =
-                    true;
+            actions.append(
+                retry,
+                choose
+            );
 
-                paused =
-                    false;
-
-
-                renderPanel();
+        }
 
 
-                runScheduler();
+        if (
+            batch.status ===
+            "ready"
+        ) {
 
-            }
-        );
+            const start =
+                createElement(
+                    "button",
+                    "primary",
+                    "启动整批发布"
+                );
 
 
-        actions.append(
-            pauseButton,
-            cancelButton,
-            retryButton
-        );
+            start.type =
+                "button";
+
+
+            start.disabled =
+                startRunning;
+
+
+            start.addEventListener(
+                "click",
+                () => {
+
+                    startBatchPublishing()
+                        .catch(
+                            error => {
+
+                                showToast(
+                                    humanError(
+                                        error.code ||
+                                        error.message
+                                    )
+                                );
+
+                            }
+                        );
+
+                }
+            );
+
+
+            actions.append(
+                start
+            );
+
+        }
+
+
+        if (
+            batch.githubRunUrl
+        ) {
+
+            const githubLink =
+                createElement(
+                    "a",
+                    "batch-v1-link",
+                    "查看 GitHub Workflow"
+                );
+
+
+            githubLink.href =
+                batch.githubRunUrl;
+
+
+            githubLink.target =
+                "_blank";
+
+
+            githubLink.rel =
+                "noopener noreferrer";
+
+
+            actions.append(
+                githubLink
+            );
+
+        }
 
 
         const list =
@@ -1249,11 +1558,11 @@
 
 
         for (
-            const task
-            of batch.tasks
+            const item
+            of items
         ) {
 
-            const item =
+            const itemElement =
                 createElement(
                     "div",
                     "batch-v1-item"
@@ -1271,7 +1580,7 @@
                 createElement(
                     "div",
                     "batch-v1-name",
-                    task.file.name
+                    item.originalName
                 )
             );
 
@@ -1284,37 +1593,33 @@
 
 
             meta.append(
+
                 createElement(
                     "span",
                     "",
-                    task.type
+                    item.mediaType
                 ),
 
                 createElement(
                     "span",
                     "",
                     formatBytes(
-                        task.file.size
+                        item.sizeBytes
                     )
                 )
+
             );
 
 
-            const note =
-                statusNote(
-                    task
-                );
-
-
             if (
-                note
+                item.mediaId
             ) {
 
                 meta.append(
                     createElement(
                         "span",
                         "",
-                        note
+                        item.mediaId
                     )
                 );
 
@@ -1333,21 +1638,29 @@
                 );
 
 
+            const visualStatus =
+                clientStaging.has(
+                    item.id
+                )
+                    ? "staging"
+                    : item.status;
+
+
             right.append(
                 createElement(
                     "span",
-                    `batch-v1-status ${task.status}`,
+                    `batch-v1-status ${visualStatus}`,
                     statusText(
-                        task.status
+                        item
                     )
                 )
             );
 
 
             if (
-                task.status ===
+                item.status ===
                     "complete" &&
-                task.cdnUrl
+                item.cdnUrl
             ) {
 
                 const copy =
@@ -1371,7 +1684,7 @@
                             await navigator
                                 .clipboard
                                 .writeText(
-                                    task.cdnUrl
+                                    item.cdnUrl
                                 );
 
 
@@ -1398,24 +1711,33 @@
             }
 
 
-            item.append(
+            itemElement.append(
                 file,
                 right
             );
 
 
+            const error =
+                clientErrors.get(
+                    item.id
+                ) ||
+                item.error;
+
+
             if (
-                task.error
+                error
             ) {
 
-                item.append(
+                itemElement.append(
                     createElement(
                         "div",
-                        task.status ===
+                        item.status ===
                             "review"
                             ? "batch-v1-error review"
                             : "batch-v1-error",
-                        task.error
+                        humanError(
+                            error
+                        )
                     )
                 );
 
@@ -1423,7 +1745,7 @@
 
 
             list.append(
-                item
+                itemElement
             );
 
         }
@@ -1431,652 +1753,38 @@
 
         panel.append(
             head,
-            progressWrap,
-            stats,
-            actions,
+            statusLine,
+            progress,
+            stats
+        );
+
+
+        if (
+            notice
+        ) {
+
+            panel.append(
+                notice
+            );
+
+        }
+
+
+        if (
+            actions.children.length >
+            0
+        ) {
+
+            panel.append(
+                actions
+            );
+
+        }
+
+
+        panel.append(
             list
         );
-
-    }
-
-
-    async function waitUntilResumed() {
-
-        while (
-            paused
-        ) {
-
-            await sleep(
-                300
-            );
-
-        }
-
-    }
-
-
-    async function waitForCreateSlot(
-        task
-    ) {
-
-        while (
-            true
-        ) {
-
-            await waitUntilResumed();
-
-
-            if (
-                task.status ===
-                "cancelled"
-            ) {
-
-                return false;
-
-            }
-
-
-            const now =
-                Date.now();
-
-
-            createTimestamps =
-                createTimestamps.filter(
-                    timestamp =>
-                        now -
-                        timestamp <
-                        CREATE_WINDOW_MS
-                );
-
-
-            if (
-                createTimestamps.length <
-                CREATE_BURST
-            ) {
-
-                createTimestamps.push(
-                    now
-                );
-
-
-                return true;
-
-            }
-
-
-            task.status =
-                "waiting_limit";
-
-
-            renderPanel();
-
-
-            const wait =
-                Math.max(
-                    1000,
-
-                    CREATE_WINDOW_MS -
-                    (
-                        now -
-                        createTimestamps[0]
-                    ) +
-                    250
-                );
-
-
-            await sleep(
-                wait
-            );
-
-        }
-
-    }
-
-
-    async function createWithRateRetry(
-        task
-    ) {
-
-        for (
-            let attempt = 1;
-            attempt <= 2;
-            attempt += 1
-        ) {
-
-            const slot =
-                await waitForCreateSlot(
-                    task
-                );
-
-
-            if (
-                !slot
-            ) {
-
-                return null;
-
-            }
-
-
-            task.status =
-                "creating";
-
-            task.error =
-                "";
-
-
-            renderPanel();
-
-
-            try {
-
-                return await createJob(
-                    task
-                );
-
-            } catch (
-                error
-            ) {
-
-                if (
-                    error.status !==
-                        429 ||
-                    attempt >=
-                        2
-                ) {
-
-                    throw error;
-
-                }
-
-
-                task.status =
-                    "waiting_limit";
-
-                task.error =
-                    "服务器上传创建频率达到安全上限，65 秒后自动重试。";
-
-
-                renderPanel();
-
-
-                await sleep(
-                    65000
-                );
-
-            }
-
-        }
-
-
-        return null;
-
-    }
-
-
-    function applyFailedJob(
-        task,
-        code
-    ) {
-
-        const normalized =
-            String(
-                code ||
-                "pipeline_failed"
-            );
-
-
-        task.errorCode =
-            normalized;
-
-
-        task.error =
-            humanError(
-                normalized
-            );
-
-
-        if (
-            isUnsafeRetryCode(
-                normalized
-            )
-        ) {
-
-            task.status =
-                "review";
-
-            task.retryable =
-                false;
-
-        } else {
-
-            task.status =
-                "failed";
-
-            task.retryable =
-                true;
-
-        }
-
-
-        renderPanel();
-
-    }
-
-
-    async function pollJob(
-        task
-    ) {
-
-        const started =
-            Date.now();
-
-
-        while (
-            Date.now() -
-            started <
-            TASK_TIMEOUT_MS
-        ) {
-
-            await sleep(
-                POLL_INTERVAL_MS
-            );
-
-
-            const job =
-                await getJob(
-                    task.jobId
-                );
-
-
-            if (
-                job.status ===
-                "complete"
-            ) {
-
-                task.status =
-                    "complete";
-
-                task.cdnUrl =
-                    job.cdnUrl ||
-                    null;
-
-                task.error =
-                    "";
-
-                task.errorCode =
-                    "";
-
-                task.retryable =
-                    false;
-
-
-                renderPanel();
-
-
-                refreshHistory();
-
-
-                return;
-
-            }
-
-
-            if (
-                job.status ===
-                "failed"
-            ) {
-
-                applyFailedJob(
-                    task,
-                    job.error ||
-                    "pipeline_failed"
-                );
-
-
-                refreshHistory();
-
-
-                return;
-
-            }
-
-
-            if (
-                job.status ===
-                "processing"
-            ) {
-
-                task.status =
-                    "processing";
-
-            } else {
-
-                task.status =
-                    "queued";
-
-
-                if (
-                    !task.queuedAt
-                ) {
-
-                    task.queuedAt =
-                        Date.now();
-
-                }
-
-            }
-
-
-            renderPanel();
-
-        }
-
-
-        task.status =
-            "failed";
-
-        task.retryable =
-            true;
-
-        task.errorCode =
-            "upload_wait_timeout";
-
-        task.error =
-            "等待 GitHub 发布超过 40 分钟。请先刷新上传历史确认状态，再决定是否重试。";
-
-
-        renderPanel();
-
-    }
-
-
-    async function processTask(
-        task
-    ) {
-
-        try {
-
-            const created =
-                await createWithRateRetry(
-                    task
-                );
-
-
-            if (
-                !created ||
-                task.status ===
-                "cancelled"
-            ) {
-
-                return;
-
-            }
-
-
-            task.jobId =
-                created.id;
-
-
-            task.status =
-                "staging";
-
-            task.error =
-                "";
-
-
-            renderPanel();
-
-
-            const queued =
-                await sendContent(
-                    task,
-                    created
-                );
-
-
-            task.jobId =
-                queued.id;
-
-
-            task.queuedAt =
-                Date.now();
-
-
-            task.status =
-                queued.status ===
-                    "processing"
-
-                    ? "processing"
-
-                    : "queued";
-
-
-            renderPanel();
-
-
-            await pollJob(
-                task
-            );
-
-        } catch (
-            error
-        ) {
-
-            const code =
-                error?.code ||
-                error?.message ||
-                "request_failed";
-
-
-            task.errorCode =
-                String(
-                    code
-                );
-
-
-            task.error =
-                humanError(
-                    code
-                );
-
-
-            if (
-                isUnsafeRetryCode(
-                    code
-                )
-            ) {
-
-                task.status =
-                    "review";
-
-                task.retryable =
-                    false;
-
-            } else {
-
-                task.status =
-                    "failed";
-
-                task.retryable =
-                    true;
-
-            }
-
-
-            renderPanel();
-
-        }
-
-    }
-
-
-    function nextPendingTask() {
-
-        if (
-            !batch
-        ) {
-
-            return null;
-
-        }
-
-
-        return (
-            batch.tasks.find(
-                task =>
-                    task.status ===
-                    "pending"
-            ) ||
-            null
-        );
-
-    }
-
-
-    async function worker() {
-
-        while (
-            true
-        ) {
-
-            await waitUntilResumed();
-
-
-            const task =
-                nextPendingTask();
-
-
-            if (
-                !task
-            ) {
-
-                return;
-
-            }
-
-
-            /*
-             * 立即抢占任务，避免多个 Worker
-             * 拿到同一个 pending task。
-             */
-            task.status =
-                "waiting_limit";
-
-
-            renderPanel();
-
-
-            await processTask(
-                task
-            );
-
-        }
-
-    }
-
-
-    async function runScheduler() {
-
-        if (
-            schedulerRunning ||
-            !batch
-        ) {
-
-            return;
-
-        }
-
-
-        schedulerRunning =
-            true;
-
-        batch.active =
-            true;
-
-
-        try {
-
-            await Promise.all(
-                new Array(
-                    MAX_IN_FLIGHT
-                )
-                    .fill(
-                        null
-                    )
-                    .map(
-                        () =>
-                            worker()
-                    )
-            );
-
-        } finally {
-
-            schedulerRunning =
-                false;
-
-
-            const remaining =
-                batch.tasks.some(
-                    task =>
-                        [
-                            "pending",
-                            "waiting_limit",
-                            "creating",
-                            "staging",
-                            "queued",
-                            "processing"
-                        ].includes(
-                            task.status
-                        )
-                );
-
-
-            batch.active =
-                remaining;
-
-
-            renderPanel();
-
-
-            if (
-                !remaining
-            ) {
-
-                const success =
-                    batch.tasks.filter(
-                        task =>
-                            task.status ===
-                            "complete"
-                    ).length;
-
-
-                const failed =
-                    batch.tasks.filter(
-                        task =>
-                            task.status ===
-                            "failed"
-                    ).length;
-
-
-                const review =
-                    batch.tasks.filter(
-                        task =>
-                            task.status ===
-                            "review"
-                    ).length;
-
-
-                showToast(
-                    `批量任务结束：${success} 成功，${failed} 失败，${review} 需确认`
-                );
-
-
-                refreshHistory();
-
-            }
-
-        }
 
     }
 
@@ -2118,7 +1826,8 @@
 
 
             currentUser =
-                data.user;
+                data.user ||
+                null;
 
 
             return Boolean(
@@ -2134,23 +1843,826 @@
     }
 
 
-    async function startBatch(
+    async function createServerBatch(
         files
     ) {
 
+        const response =
+            await apiJson(
+                "/api/upload-batches",
+                {
+                    method:
+                        "POST",
+
+                    body:
+                        JSON.stringify({
+                            files:
+                                files.map(
+                                    file => ({
+                                        originalName:
+                                            file.name,
+
+                                        sizeBytes:
+                                            file.size,
+
+                                        contentType:
+                                            file.type ||
+                                            "application/octet-stream"
+                                    })
+                                )
+                        })
+                }
+            );
+
+
+        return response.batch;
+
+    }
+
+
+    async function getCurrentBatch() {
+
+        const response =
+            await apiJson(
+                "/api/upload-batches/current"
+            );
+
+
+        return (
+            response.batch ||
+            null
+        );
+
+    }
+
+
+    async function getBatch(
+        batchId
+    ) {
+
+        const response =
+            await apiJson(
+                `/api/upload-batches/${encodeURIComponent(batchId)}`
+            );
+
+
+        return response.batch;
+
+    }
+
+
+    async function refreshBatch() {
+
         if (
-            batch?.active
+            !batch
         ) {
 
-            showToast(
-                "已有一个批量任务正在运行。"
+            return null;
+
+        }
+
+
+        batch =
+            await getBatch(
+                batch.id
             );
+
+
+        renderPanel();
+
+
+        return batch;
+
+    }
+
+
+    async function stageItem(
+        item,
+        file
+    ) {
+
+        clientErrors.delete(
+            item.id
+        );
+
+
+        clientStaging.add(
+            item.id
+        );
+
+
+        renderPanel();
+
+
+        try {
+
+            const response =
+                await fetch(
+                    `/api/upload-batches/${encodeURIComponent(batch.id)}/items/${encodeURIComponent(item.id)}/content`,
+                    {
+                        method:
+                            "PUT",
+
+                        credentials:
+                            "same-origin",
+
+                        headers: {
+                            "Content-Type":
+                                "application/octet-stream"
+                        },
+
+                        body:
+                            file
+                    }
+                );
+
+
+            await readResponse(
+                response
+            );
+
+
+            item.status =
+                "staged";
+
+
+            clientErrors.delete(
+                item.id
+            );
+
+        } catch (
+            error
+        ) {
+
+            clientErrors.set(
+                item.id,
+                error.code ||
+                error.message ||
+                "request_failed"
+            );
+
+
+            throw error;
+
+        } finally {
+
+            clientStaging.delete(
+                item.id
+            );
+
+
+            renderPanel();
+
+        }
+
+    }
+
+
+    async function stageAvailableFiles() {
+
+        if (
+            stageRunning ||
+            !batch
+        ) {
+
+            return;
+
+        }
+
+
+        const pending =
+            getMissingItems()
+                .filter(
+                    item =>
+                        fileByItemId.has(
+                            item.id
+                        )
+                );
+
+
+        if (
+            pending.length ===
+            0
+        ) {
+
+            renderPanel();
 
 
             return;
 
         }
 
+
+        stageRunning =
+            true;
+
+
+        renderPanel();
+
+
+        let cursor =
+            0;
+
+
+        const workers =
+            new Array(
+                Math.min(
+                    STAGING_CONCURRENCY,
+                    pending.length
+                )
+            )
+                .fill(
+                    null
+                )
+                .map(
+                    async () => {
+
+                        while (
+                            true
+                        ) {
+
+                            const index =
+                                cursor;
+
+
+                            cursor +=
+                                1;
+
+
+                            if (
+                                index >=
+                                pending.length
+                            ) {
+
+                                return;
+
+                            }
+
+
+                            const item =
+                                pending[
+                                    index
+                                ];
+
+
+                            const file =
+                                fileByItemId.get(
+                                    item.id
+                                );
+
+
+                            try {
+
+                                await stageItem(
+                                    item,
+                                    file
+                                );
+
+                            } catch (
+                                error
+                            ) {
+
+                                console.error(
+                                    "Batch staging failed:",
+                                    item.originalName,
+                                    error
+                                );
+
+                            }
+
+                        }
+
+                    }
+                );
+
+
+        try {
+
+            await Promise.all(
+                workers
+            );
+
+
+            await refreshBatch();
+
+
+            if (
+                batch?.status ===
+                "ready"
+            ) {
+
+                await startBatchPublishing();
+
+            }
+
+        } finally {
+
+            stageRunning =
+                false;
+
+
+            renderPanel();
+
+        }
+
+    }
+
+
+    async function startBatchPublishing() {
+
+        if (
+            startRunning ||
+            !batch ||
+            batch.status !==
+                "ready"
+        ) {
+
+            return;
+
+        }
+
+
+        startRunning =
+            true;
+
+
+        clientErrors.delete(
+            "__batch__"
+        );
+
+
+        renderPanel();
+
+
+        try {
+
+            const response =
+                await apiJson(
+                    `/api/upload-batches/${encodeURIComponent(batch.id)}/start`,
+                    {
+                        method:
+                            "POST",
+
+                        body:
+                            JSON.stringify({})
+                    }
+                );
+
+
+            batch = {
+                ...batch,
+                ...response.batch
+            };
+
+
+            await refreshBatch();
+
+
+            showToast(
+                `整批 ${batch.totalCount} 个文件已交给 GitHub`
+            );
+
+
+            pollBatch()
+                .catch(
+                    error => {
+
+                        console.error(
+                            "Batch polling failed:",
+                            error
+                        );
+
+                    }
+                );
+
+        } catch (
+            error
+        ) {
+
+            clientErrors.set(
+                "__batch__",
+                error.code ||
+                error.message ||
+                "github_batch_dispatch_failed"
+            );
+
+
+            try {
+
+                await refreshBatch();
+
+            } catch {
+
+                // 保留当前 UI 状态。
+
+            }
+
+
+            showToast(
+                humanError(
+                    error.code ||
+                    error.message
+                )
+            );
+
+        } finally {
+
+            startRunning =
+                false;
+
+
+            renderPanel();
+
+        }
+
+    }
+
+
+    function terminalBatch(
+        value = batch
+    ) {
+
+        return Boolean(
+            value &&
+            [
+                "complete",
+                "partial",
+                "failed",
+                "cancelled"
+            ].includes(
+                value.status
+            )
+        );
+
+    }
+
+
+    async function pollBatch() {
+
+        if (
+            pollRunning ||
+            !batch
+        ) {
+
+            return;
+
+        }
+
+
+        pollRunning =
+            true;
+
+
+        try {
+
+            while (
+                batch &&
+                [
+                    "ready",
+                    "queued",
+                    "processing"
+                ].includes(
+                    batch.status
+                )
+            ) {
+
+                if (
+                    batch.status ===
+                    "ready"
+                ) {
+
+                    await startBatchPublishing();
+
+
+                    if (
+                        batch.status ===
+                        "ready"
+                    ) {
+
+                        return;
+
+                    }
+
+                }
+
+
+                await sleep(
+                    POLL_INTERVAL_MS
+                );
+
+
+                await refreshBatch();
+
+
+                if (
+                    terminalBatch()
+                ) {
+
+                    break;
+
+                }
+
+            }
+
+
+            if (
+                terminalBatch()
+            ) {
+
+                const complete =
+                    (
+                        batch.items ||
+                        []
+                    )
+                        .filter(
+                            item =>
+                                item.status ===
+                                "complete"
+                        )
+                        .length;
+
+
+                const review =
+                    (
+                        batch.items ||
+                        []
+                    )
+                        .filter(
+                            item =>
+                                item.status ===
+                                "review"
+                        )
+                        .length;
+
+
+                const failed =
+                    (
+                        batch.items ||
+                        []
+                    )
+                        .filter(
+                            item =>
+                                item.status ===
+                                "failed"
+                        )
+                        .length;
+
+
+                showToast(
+                    `批量上传结束：${complete} 成功，${failed} 失败，${review} 需确认`
+                );
+
+
+                refreshHistory();
+
+            }
+
+        } catch (
+            error
+        ) {
+
+            console.error(
+                "Batch poll error:",
+                error
+            );
+
+
+            showToast(
+                "批量状态读取失败，系统会在刷新页面后继续恢复。"
+            );
+
+        } finally {
+
+            pollRunning =
+                false;
+
+
+            renderPanel();
+
+        }
+
+    }
+
+
+    function assignInitialFiles(
+        serverBatch,
+        selected
+    ) {
+
+        fileByItemId =
+            new Map();
+
+
+        const items =
+            [...(
+                serverBatch.items ||
+                []
+            )]
+                .sort(
+                    (
+                        a,
+                        b
+                    ) =>
+                        Number(
+                            a.position
+                        ) -
+                        Number(
+                            b.position
+                        )
+                );
+
+
+        for (
+            let index = 0;
+            index <
+            items.length;
+            index +=
+            1
+        ) {
+
+            const item =
+                items[
+                    index
+                ];
+
+
+            const file =
+                selected[
+                    index
+                ];
+
+
+            if (
+                !file
+            ) {
+
+                continue;
+
+            }
+
+
+            fileByItemId.set(
+                item.id,
+                file
+            );
+
+        }
+
+    }
+
+
+    function matchRecoveryFiles(
+        selected
+    ) {
+
+        if (
+            !batch
+        ) {
+
+            return 0;
+
+        }
+
+
+        const missing =
+            getMissingItems();
+
+
+        const used =
+            new Set();
+
+
+        let matched =
+            0;
+
+
+        for (
+            const file
+            of selected
+        ) {
+
+            let target =
+                null;
+
+
+            for (
+                const item
+                of missing
+            ) {
+
+                if (
+                    used.has(
+                        item.id
+                    )
+                ) {
+
+                    continue;
+
+                }
+
+
+                if (
+                    item.originalName ===
+                        file.name &&
+
+                    Number(
+                        item.sizeBytes
+                    ) ===
+                        Number(
+                            file.size
+                        )
+                ) {
+
+                    target =
+                        item;
+
+
+                    break;
+
+                }
+
+            }
+
+
+            if (
+                target
+            ) {
+
+                used.add(
+                    target.id
+                );
+
+
+                fileByItemId.set(
+                    target.id,
+                    file
+                );
+
+
+                clientErrors.delete(
+                    target.id
+                );
+
+
+                matched +=
+                    1;
+
+
+                continue;
+
+            }
+
+
+            /*
+             * 如果用户重新选择的是整个原批次，
+             * 已经 staged 的文件可以直接忽略。
+             */
+            const alreadyKnown =
+                (
+                    batch.items ||
+                    []
+                )
+                    .some(
+                        item =>
+                            item.status !==
+                                "created" &&
+
+                            item.originalName ===
+                                file.name &&
+
+                            Number(
+                                item.sizeBytes
+                            ) ===
+                                Number(
+                                    file.size
+                                )
+                    );
+
+
+            if (
+                alreadyKnown
+            ) {
+
+                continue;
+
+            }
+
+
+            throw new Error(
+                `文件不属于当前缺失批次：${file.name}`
+            );
+
+        }
+
+
+        return matched;
+
+    }
+
+
+    async function startNewBatch(
+        files
+    ) {
 
         if (
             !await ensureUser()
@@ -2166,6 +2678,20 @@
         }
 
 
+        if (
+            isActiveBatch()
+        ) {
+
+            showToast(
+                "已有批量任务正在处理。"
+            );
+
+
+            return;
+
+        }
+
+
         const selected =
             Array.from(
                 files
@@ -2173,8 +2699,8 @@
 
 
         if (
-            selected.length ===
-            0
+            selected.length <
+            2
         ) {
 
             return;
@@ -2197,8 +2723,69 @@
         }
 
 
-        const tasks =
-            [];
+        for (
+            const file
+            of selected
+        ) {
+
+            validateFile(
+                file
+            );
+
+        }
+
+
+        batch =
+            await createServerBatch(
+                selected
+            );
+
+
+        clientErrors =
+            new Map();
+
+
+        clientStaging =
+            new Set();
+
+
+        assignInitialFiles(
+            batch,
+            selected
+        );
+
+
+        renderPanel();
+
+
+        showToast(
+            `已创建 ${batch.totalCount} 个文件的批次`
+        );
+
+
+        await stageAvailableFiles();
+
+    }
+
+
+    async function resumeMissingFiles(
+        files
+    ) {
+
+        const selected =
+            Array.from(
+                files
+            );
+
+
+        if (
+            selected.length ===
+            0
+        ) {
+
+            return;
+
+        }
 
 
         for (
@@ -2206,108 +2793,263 @@
             of selected
         ) {
 
-            try {
-
-                const validation =
-                    validateFile(
-                        file
-                    );
-
-
-                tasks.push({
-
-                    file,
-
-                    type:
-                        validation.type,
-
-                    status:
-                        "pending",
-
-                    error:
-                        "",
-
-                    errorCode:
-                        "",
-
-                    retryable:
-                        true,
-
-                    jobId:
-                        null,
-
-                    cdnUrl:
-                        null,
-
-                    queuedAt:
-                        null
-
-                });
-
-            } catch (
-                error
-            ) {
-
-                tasks.push({
-
-                    file,
-
-                    type:
-                        "unknown",
-
-                    status:
-                        "failed",
-
-                    error:
-                        error.message,
-
-                    errorCode:
-                        "local_validation_failed",
-
-                    /*
-                     * 文件本身不合法时，
-                     * 点重试也不会变合法。
-                     */
-                    retryable:
-                        false,
-
-                    jobId:
-                        null,
-
-                    cdnUrl:
-                        null,
-
-                    queuedAt:
-                        null
-
-                });
-
-            }
+            validateFile(
+                file
+            );
 
         }
 
 
-        batch = {
-
-            tasks,
-
-            active:
-                true,
-
-            createdAt:
-                Date.now()
-
-        };
+        const matched =
+            matchRecoveryFiles(
+                selected
+            );
 
 
-        paused =
-            false;
+        if (
+            matched ===
+            0
+        ) {
+
+            showToast(
+                "没有找到需要恢复的文件。"
+            );
+
+
+            return;
+
+        }
+
+
+        showToast(
+            `已匹配 ${matched} 个缺失文件`
+        );
 
 
         renderPanel();
 
 
-        runScheduler();
+        await stageAvailableFiles();
+
+    }
+
+
+    function shouldInterceptSelection(
+        files
+    ) {
+
+        const selected =
+            Array.from(
+                files ||
+                []
+            );
+
+
+        /*
+         * 当前存在 Batch 时，
+         * 不允许单文件上传插入正在运行的批次。
+         *
+         * 如果 Batch 缺文件，则选择文件操作
+         * 用于恢复这个 Batch。
+         */
+        if (
+            isActiveBatch()
+        ) {
+
+            return selected.length >
+                0;
+
+        }
+
+
+        /*
+         * 一个文件仍然交给原 app.js。
+         */
+        return selected.length >
+            1;
+
+    }
+
+
+    async function handleInterceptedFiles(
+        files
+    ) {
+
+        const selected =
+            Array.from(
+                files ||
+                []
+            );
+
+
+        if (
+            selected.length ===
+            0
+        ) {
+
+            return;
+
+        }
+
+
+        try {
+
+            if (
+                isActiveBatch()
+            ) {
+
+                const missing =
+                    getMissingItems();
+
+
+                if (
+                    missing.length ===
+                    0
+                ) {
+
+                    showToast(
+                        "当前批量任务还在处理中，请等待结束后再上传新的文件。"
+                    );
+
+
+                    return;
+
+                }
+
+
+                await resumeMissingFiles(
+                    selected
+                );
+
+
+                return;
+
+            }
+
+
+            await startNewBatch(
+                selected
+            );
+
+        } catch (
+            error
+        ) {
+
+            console.error(
+                "Batch V2 error:",
+                error
+            );
+
+
+            showToast(
+                humanError(
+                    error.code ||
+                    error.message
+                )
+            );
+
+        }
+
+    }
+
+
+    async function restoreBatch() {
+
+        if (
+            !await ensureUser()
+        ) {
+
+            return;
+
+        }
+
+
+        try {
+
+            const current =
+                await getCurrentBatch();
+
+
+            if (
+                !current
+            ) {
+
+                batch =
+                    null;
+
+
+                renderPanel();
+
+
+                return;
+
+            }
+
+
+            batch =
+                current;
+
+
+            fileByItemId =
+                new Map();
+
+
+            clientErrors =
+                new Map();
+
+
+            clientStaging =
+                new Set();
+
+
+            renderPanel();
+
+
+            if (
+                batch.status ===
+                "ready"
+            ) {
+
+                await startBatchPublishing();
+
+
+                return;
+
+            }
+
+
+            if (
+                [
+                    "queued",
+                    "processing"
+                ].includes(
+                    batch.status
+                )
+            ) {
+
+                pollBatch()
+                    .catch(
+                        error => {
+
+                            console.error(
+                                error
+                            );
+
+                        }
+                    );
+
+            }
+
+        } catch (
+            error
+        ) {
+
+            console.error(
+                "Unable to restore Batch V2:",
+                error
+            );
+
+        }
 
     }
 
@@ -2342,36 +3084,9 @@
 
 
                     if (
-                        batch?.active
-                    ) {
-
-                        event.preventDefault();
-
-                        event.stopImmediatePropagation();
-
-
-                        fileInput.value =
-                            "";
-
-
-                        showToast(
-                            "请先等待当前批次结束。"
-                        );
-
-
-                        return;
-
-                    }
-
-
-                    /*
-                     * 一个文件继续走原来的稳定单文件逻辑。
-                     *
-                     * 两个以上才由 Batch V1 接管。
-                     */
-                    if (
-                        files.length <=
-                        1
+                        !shouldInterceptSelection(
+                            files
+                        )
                     ) {
 
                         return;
@@ -2381,6 +3096,7 @@
 
                     event.preventDefault();
 
+
                     event.stopImmediatePropagation();
 
 
@@ -2388,7 +3104,7 @@
                         "";
 
 
-                    startBatch(
+                    handleInterceptedFiles(
                         files
                     );
 
@@ -2416,27 +3132,9 @@
 
 
                     if (
-                        batch?.active
-                    ) {
-
-                        event.preventDefault();
-
-                        event.stopImmediatePropagation();
-
-
-                        showToast(
-                            "请先等待当前批次结束。"
-                        );
-
-
-                        return;
-
-                    }
-
-
-                    if (
-                        files.length <=
-                        1
+                        !shouldInterceptSelection(
+                            files
+                        )
                     ) {
 
                         return;
@@ -2446,6 +3144,7 @@
 
                     event.preventDefault();
 
+
                     event.stopImmediatePropagation();
 
 
@@ -2454,7 +3153,7 @@
                     );
 
 
-                    startBatch(
+                    handleInterceptedFiles(
                         files
                     );
 
@@ -2475,6 +3174,9 @@
         await ensureUser();
 
 
+        await restoreBatch();
+
+
         installInterceptors();
 
     }
@@ -2482,7 +3184,21 @@
 
     window.addEventListener(
         "load",
-        init
+        () => {
+
+            init()
+                .catch(
+                    error => {
+
+                        console.error(
+                            "Batch V2 init failed:",
+                            error
+                        );
+
+                    }
+                );
+
+        }
     );
 
 })();
