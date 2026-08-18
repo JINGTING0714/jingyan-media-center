@@ -5,25 +5,41 @@
     const MAX_FILES =
         20;
 
-    const CONCURRENCY =
+    /*
+     * 同时最多有 3 个任务进入 GitHub 流水线。
+     *
+     * GitHub Workflow 本身使用 concurrency
+     * 做真正串行发布，因此这里的 3 指的是：
+     *
+     * 1 个执行
+     * +
+     * 最多 2 个等待
+     *
+     * 而不是同时修改 Registry。
+     */
+    const MAX_IN_FLIGHT =
         3;
 
-    /*
-     * 当前 Worker 的上传创建接口共享
-     * AUTH_RATE_LIMITER = 10 / 60 秒。
-     *
-     * Batch V1 主动只使用 8 个名额，
-     * 给登录/单文件操作留下安全余量。
-     */
+
     const CREATE_BURST =
         8;
 
     const CREATE_WINDOW_MS =
         61000;
 
+    const POLL_INTERVAL_MS =
+        4000;
+
+    const TASK_TIMEOUT_MS =
+        40 *
+        60 *
+        1000;
+
 
     const RULES = {
+
         image: {
+
             extensions: [
                 "jpg",
                 "jpeg",
@@ -38,7 +54,9 @@
                 1024
         },
 
+
         audio: {
+
             extensions: [
                 "mp3",
                 "wav",
@@ -52,7 +70,9 @@
                 1024
         },
 
+
         video: {
+
             extensions: [
                 "mp4",
                 "webm"
@@ -63,6 +83,7 @@
                 1024 *
                 1024
         }
+
     };
 
 
@@ -79,15 +100,19 @@
             RULES
         )
     ) {
+
         for (
             const extension
             of rule.extensions
         ) {
+
             EXTENSION_MAP.set(
                 extension,
                 type
             );
+
         }
+
     }
 
 
@@ -110,240 +135,26 @@
         null;
 
 
-    function injectStyles() {
-        if (
-            document.getElementById(
-                "batchV1Styles"
-            )
+    class ApiError
+    extends Error {
+
+        constructor(
+            status,
+            code
         ) {
-            return;
-        }
 
-
-        const style =
-            document.createElement(
-                "style"
+            super(
+                code
             );
 
+            this.status =
+                status;
 
-        style.id =
-            "batchV1Styles";
+            this.code =
+                code;
 
+        }
 
-        style.textContent = `
-.batch-v1 {
-    margin-bottom: 16px;
-    padding: 15px;
-    border: 1px solid rgba(128,88,232,.16);
-    border-radius: 16px;
-    background: linear-gradient(145deg,#fff,#f8f4ff);
-}
-
-.batch-v1.hidden {
-    display: none;
-}
-
-.batch-v1-head {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 12px;
-}
-
-.batch-v1-head h3 {
-    margin: 0;
-    font-size: 14px;
-}
-
-.batch-v1-head p {
-    margin: 4px 0 0;
-    color: var(--muted);
-    font-size: 9px;
-    line-height: 1.5;
-}
-
-.batch-v1-count {
-    color: var(--primary);
-    font-size: 12px;
-    font-weight: 800;
-    white-space: nowrap;
-}
-
-.batch-v1-progress {
-    height: 8px;
-    margin-top: 13px;
-    overflow: hidden;
-    border-radius: 999px;
-    background: #ece5fb;
-}
-
-.batch-v1-progress-bar {
-    width: 0;
-    height: 100%;
-    border-radius: inherit;
-    background: linear-gradient(90deg,#9b75ef,#7045df);
-    transition: width .2s ease;
-}
-
-.batch-v1-stats {
-    margin-top: 8px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 9px;
-    color: var(--muted);
-    font-size: 9px;
-}
-
-.batch-v1-actions {
-    margin-top: 12px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 7px;
-}
-
-.batch-v1-actions button {
-    min-height: 34px;
-    padding: 0 11px;
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    color: var(--text);
-    background: var(--surface);
-    cursor: pointer;
-    font-size: 9px;
-}
-
-.batch-v1-actions button.primary {
-    color: #fff;
-    border-color: transparent;
-    background: linear-gradient(145deg,#956df0,#6d45dc);
-}
-
-.batch-v1-actions button.danger {
-    color: #a23d3d;
-    background: #fff1f1;
-}
-
-.batch-v1-actions button:disabled {
-    cursor: default;
-    opacity: .45;
-}
-
-.batch-v1-list {
-    margin-top: 13px;
-    display: grid;
-    gap: 7px;
-}
-
-.batch-v1-item {
-    padding: 10px 11px;
-    display: grid;
-    grid-template-columns: minmax(0,1fr) auto;
-    gap: 10px;
-    align-items: center;
-    border: 1px solid var(--line);
-    border-radius: 11px;
-    background: rgba(255,255,255,.7);
-}
-
-.batch-v1-file {
-    min-width: 0;
-}
-
-.batch-v1-name {
-    overflow: hidden;
-    font-size: 10px;
-    font-weight: 750;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.batch-v1-meta {
-    margin-top: 3px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    color: var(--muted);
-    font-size: 8px;
-}
-
-.batch-v1-right {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.batch-v1-status {
-    padding: 5px 7px;
-    border-radius: 999px;
-    color: #69547f;
-    background: #f1ebff;
-    font-size: 8px;
-    font-weight: 750;
-    white-space: nowrap;
-}
-
-.batch-v1-status.complete {
-    color: #24785c;
-    background: #e2f7ef;
-}
-
-.batch-v1-status.failed {
-    color: #a23d3d;
-    background: #ffe9e9;
-}
-
-.batch-v1-status.cancelled {
-    color: #746b7d;
-    background: #efedf1;
-}
-
-.batch-v1-copy {
-    min-height: 27px;
-    padding: 0 8px;
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    color: var(--primary);
-    background: var(--surface);
-    cursor: pointer;
-    font-size: 8px;
-}
-
-.batch-v1-error {
-    grid-column: 1 / -1;
-    margin: -3px 0 0;
-    color: #ad4949;
-    font-size: 8px;
-    line-height: 1.45;
-}
-
-@media (max-width:560px) {
-    .batch-v1-head {
-        flex-direction: column;
-    }
-
-    .batch-v1-actions {
-        display: grid;
-        grid-template-columns: repeat(2,minmax(0,1fr));
-    }
-
-    .batch-v1-actions button {
-        width: 100%;
-    }
-
-    .batch-v1-item {
-        grid-template-columns: minmax(0,1fr);
-    }
-
-    .batch-v1-right {
-        justify-content: space-between;
-    }
-}
-`;
-
-
-        document.head.append(
-            style
-        );
     }
 
 
@@ -352,6 +163,7 @@
         className = "",
         text = undefined
     ) {
+
         const element =
             document.createElement(
                 tag
@@ -361,8 +173,10 @@
         if (
             className
         ) {
+
             element.className =
                 className;
+
         }
 
 
@@ -370,18 +184,22 @@
             text !==
             undefined
         ) {
+
             element.textContent =
                 text;
+
         }
 
 
         return element;
+
     }
 
 
     function showToast(
         message
     ) {
+
         const toast =
             document.getElementById(
                 "toast"
@@ -391,12 +209,15 @@
         if (
             !toast
         ) {
+
             return;
+
         }
 
 
         toast.textContent =
             message;
+
 
         toast.classList.add(
             "show"
@@ -411,18 +232,22 @@
         toastTimer =
             setTimeout(
                 () => {
+
                     toast.classList.remove(
                         "show"
                     );
+
                 },
                 3000
             );
+
     }
 
 
     function sleep(
         milliseconds
     ) {
+
         return new Promise(
             resolve =>
                 setTimeout(
@@ -430,12 +255,44 @@
                     milliseconds
                 )
         );
+
+    }
+
+
+    function extensionOf(
+        filename
+    ) {
+
+        const index =
+            filename.lastIndexOf(
+                "."
+            );
+
+
+        if (
+            index <=
+            0
+        ) {
+
+            return "";
+
+        }
+
+
+        return filename
+            .slice(
+                index +
+                1
+            )
+            .toLowerCase();
+
     }
 
 
     function formatBytes(
         bytes
     ) {
+
         const value =
             Number(
                 bytes
@@ -443,10 +300,23 @@
 
 
         if (
+            !Number.isFinite(
+                value
+            )
+        ) {
+
+            return "—";
+
+        }
+
+
+        if (
             value <
             1024
         ) {
+
             return `${value} B`;
+
         }
 
 
@@ -455,6 +325,7 @@
             1024 *
             1024
         ) {
+
             return (
                 value /
                 1024
@@ -463,6 +334,7 @@
                     1
                 ) +
                 " KiB";
+
         }
 
 
@@ -475,38 +347,14 @@
                 2
             ) +
             " MiB";
-    }
 
-
-    function extensionOf(
-        filename
-    ) {
-        const index =
-            filename.lastIndexOf(
-                "."
-            );
-
-
-        if (
-            index <=
-            0
-        ) {
-            return "";
-        }
-
-
-        return filename
-            .slice(
-                index +
-                1
-            )
-            .toLowerCase();
     }
 
 
     function validateFile(
         file
     ) {
+
         const extension =
             extensionOf(
                 file.name
@@ -522,9 +370,11 @@
         if (
             !type
         ) {
+
             throw new Error(
                 `不支持的格式：${file.name}`
             );
+
         }
 
 
@@ -538,9 +388,11 @@
             file.size <=
             0
         ) {
+
             throw new Error(
                 `文件为空：${file.name}`
             );
+
         }
 
 
@@ -548,13 +400,16 @@
             file.size >
             rule.maxBytes
         ) {
+
             throw new Error(
-                `${file.name} 超过 ${formatBytes(rule.maxBytes)}`
+                `${file.name} 超过 ${formatBytes(rule.maxBytes)} 限制`
             );
+
         }
 
 
         const permission = {
+
             image:
                 "uploadImage",
 
@@ -563,6 +418,7 @@
 
             video:
                 "uploadVideo"
+
         }[
             type
         ];
@@ -576,9 +432,11 @@
             ] !==
             true
         ) {
+
             throw new Error(
                 `没有 ${type} 上传权限`
             );
+
         }
 
 
@@ -586,26 +444,6 @@
             type,
             extension
         };
-    }
-
-
-    class ApiError
-    extends Error {
-
-        constructor(
-            status,
-            code
-        ) {
-            super(
-                code
-            );
-
-            this.status =
-                status;
-
-            this.code =
-                code;
-        }
 
     }
 
@@ -613,38 +451,46 @@
     async function readResponse(
         response
     ) {
+
         let data =
             {};
 
 
         try {
+
             data =
                 await response.json();
 
         } catch {
+
             data =
                 {};
+
         }
 
 
         if (
             !response.ok
         ) {
+
             throw new ApiError(
                 response.status,
                 data.error ||
                 "request_failed"
             );
+
         }
 
 
         return data;
+
     }
 
 
     async function createJob(
         task
     ) {
+
         const response =
             await fetch(
                 "/api/uploads",
@@ -683,6 +529,7 @@
 
 
         return data.job;
+
     }
 
 
@@ -690,6 +537,7 @@
         task,
         job
     ) {
+
         const response =
             await fetch(
                 `/api/uploads/${encodeURIComponent(job.id)}/content`,
@@ -718,12 +566,14 @@
 
 
         return data.job;
+
     }
 
 
     async function getJob(
         jobId
     ) {
+
         const response =
             await fetch(
                 `/api/uploads/${encodeURIComponent(jobId)}`,
@@ -741,64 +591,101 @@
 
 
         return data.job;
+
+    }
+
+
+    function isUnsafeRetryCode(
+        code
+    ) {
+
+        const value =
+            String(
+                code ||
+                ""
+            )
+                .toLowerCase();
+
+
+        return (
+            value.includes(
+                "pipeline_state_not_saved"
+            ) ||
+
+            value.includes(
+                "duplicate"
+            )
+        );
+
     }
 
 
     function humanError(
-        error
+        code
     ) {
-        const code =
-            error?.code ||
-            error?.message ||
-            "request_failed";
+
+        const value =
+            String(
+                code ||
+                "request_failed"
+            );
 
 
         const messages = {
+
             upload_rate_limited:
-                "上传频率达到安全上限，将稍后重试",
+                "上传频率达到安全上限，将自动等待后重试。",
 
             unsupported_media_type:
-                "不支持的媒体格式",
+                "不支持这种媒体格式。",
 
             media_too_large:
-                "文件超过大小限制",
+                "文件超过允许大小。",
 
             upload_permission_denied:
-                "没有此类型上传权限",
+                "当前账号没有这种媒体的上传权限。",
+
+            pipeline_state_not_saved:
+                "媒体处理可能已经完成，但 Pipeline 状态提交发生冲突。请先到媒体库确认，不要直接重试。",
+
+            pipeline_failed:
+                "GitHub 媒体流水线失败。",
 
             request_failed:
-                "请求失败"
+                "请求失败。"
+
         };
 
 
         if (
-            String(
-                code
-            )
+            value
                 .toLowerCase()
                 .includes(
                     "duplicate"
                 )
         ) {
-            return "检测到重复文件";
+
+            return "检测到重复媒体。请到媒体库搜索原文件，不要重复上传。";
+
         }
 
 
         return (
             messages[
-                code
+                value
             ] ||
-            String(
-                code
-            )
+            value
         );
+
     }
 
 
     function statusText(
         status
     ) {
+
         return {
+
             pending:
                 "等待",
 
@@ -809,10 +696,10 @@
                 "创建任务",
 
             staging:
-                "提交文件",
+                "临时上传",
 
             queued:
-                "等待发布",
+                "GitHub 排队",
 
             processing:
                 "发布中",
@@ -823,36 +710,90 @@
             failed:
                 "失败",
 
+            review:
+                "需确认",
+
             cancelled:
                 "已取消"
+
         }[
             status
         ] ||
         status;
+
     }
 
 
     function isSettled(
         task
     ) {
+
         return [
             "complete",
             "failed",
+            "review",
             "cancelled"
         ].includes(
             task.status
         );
+
+    }
+
+
+    function statusNote(
+        task
+    ) {
+
+        if (
+            task.status !==
+            "queued" ||
+            !task.queuedAt
+        ) {
+
+            return "";
+
+        }
+
+
+        const seconds =
+            Math.max(
+                0,
+                Math.floor(
+                    (
+                        Date.now() -
+                        task.queuedAt
+                    ) /
+                    1000
+                )
+            );
+
+
+        if (
+            seconds <
+            60
+        ) {
+
+            return `已排队 ${seconds} 秒`;
+
+        }
+
+
+        return `已排队 ${Math.floor(seconds / 60)} 分钟`;
+
     }
 
 
     function getPanel() {
+
         return document.getElementById(
             "batchV1Panel"
         );
+
     }
 
 
     function ensurePanel() {
+
         let panel =
             getPanel();
 
@@ -860,7 +801,9 @@
         if (
             panel
         ) {
+
             return panel;
+
         }
 
 
@@ -873,7 +816,9 @@
         if (
             !queueList
         ) {
+
             return null;
+
         }
 
 
@@ -888,17 +833,40 @@
             "batchV1Panel";
 
 
-        queueList.parentNode.insertBefore(
-            panel,
-            queueList
-        );
+        queueList
+            .parentNode
+            .insertBefore(
+                panel,
+                queueList
+            );
 
 
         return panel;
+
+    }
+
+
+    function refreshHistory() {
+
+        const button =
+            document.getElementById(
+                "refreshHistory"
+            );
+
+
+        if (
+            button
+        ) {
+
+            button.click();
+
+        }
+
     }
 
 
     function renderPanel() {
+
         const panel =
             ensurePanel();
 
@@ -907,7 +875,26 @@
             !panel ||
             !batch
         ) {
+
             return;
+
+        }
+
+
+        const queueEmpty =
+            document.getElementById(
+                "queueEmpty"
+            );
+
+
+        if (
+            queueEmpty
+        ) {
+
+            queueEmpty.classList.add(
+                "hidden"
+            );
+
         }
 
 
@@ -939,6 +926,14 @@
                 task =>
                     task.status ===
                     "failed"
+            ).length;
+
+
+        const review =
+            batch.tasks.filter(
+                task =>
+                    task.status ===
+                    "review"
             ).length;
 
 
@@ -975,6 +970,7 @@
                     batch.tasks.length
                 ) *
                 100
+
                 : 0;
 
 
@@ -1001,7 +997,7 @@
             createElement(
                 "p",
                 "",
-                `最多 ${MAX_FILES} 个文件 · 并发 ${CONCURRENCY} · 自动安全节流`
+                `最多 ${MAX_FILES} 个文件 · 同时跟踪 ${MAX_IN_FLIGHT} 个 · GitHub 发布严格串行`
             )
         );
 
@@ -1050,26 +1046,32 @@
         stats.append(
             createElement(
                 "span",
-                "",
+                "batch-v1-stat success",
                 `✓ 成功 ${complete}`
             ),
 
             createElement(
                 "span",
-                "",
+                "batch-v1-stat",
                 `● 处理中 ${active}`
             ),
 
             createElement(
                 "span",
-                "",
+                "batch-v1-stat",
                 `○ 等待 ${waiting}`
             ),
 
             createElement(
                 "span",
-                "",
+                "batch-v1-stat failed",
                 `! 失败 ${failed}`
+            ),
+
+            createElement(
+                "span",
+                "batch-v1-stat review",
+                `? 需确认 ${review}`
             )
         );
 
@@ -1086,14 +1088,13 @@
                 "button",
                 "primary",
                 paused
-                    ? "继续"
+                    ? "继续新任务"
                     : "暂停新任务"
             );
 
 
         pauseButton.type =
             "button";
-
 
         pauseButton.disabled =
             !batch.active;
@@ -1102,15 +1103,18 @@
         pauseButton.addEventListener(
             "click",
             () => {
+
                 paused =
                     !paused;
 
+
                 renderPanel();
+
             }
         );
 
 
-        const cancelWaiting =
+        const cancelButton =
             createElement(
                 "button",
                 "danger",
@@ -1118,21 +1122,23 @@
             );
 
 
-        cancelWaiting.type =
+        cancelButton.type =
             "button";
 
-        cancelWaiting.disabled =
+        cancelButton.disabled =
             waiting ===
             0;
 
 
-        cancelWaiting.addEventListener(
+        cancelButton.addEventListener(
             "click",
             () => {
+
                 for (
                     const task
                     of batch.tasks
                 ) {
+
                     if (
                         [
                             "pending",
@@ -1141,56 +1147,74 @@
                             task.status
                         )
                     ) {
+
                         task.status =
                             "cancelled";
+
                     }
+
                 }
 
 
                 renderPanel();
+
             }
         );
 
 
-        const retry =
-            createElement(
-                "button",
-                "",
-                "重试失败"
+        const retryable =
+            batch.tasks.filter(
+                task =>
+                    task.status ===
+                        "failed" &&
+                    task.retryable ===
+                        true
             );
 
 
-        retry.type =
+        const retryButton =
+            createElement(
+                "button",
+                "",
+                "重试安全失败"
+            );
+
+
+        retryButton.type =
             "button";
 
-        retry.disabled =
-            failed ===
+        retryButton.disabled =
+            retryable.length ===
             0;
 
 
-        retry.addEventListener(
+        retryButton.addEventListener(
             "click",
             () => {
+
                 for (
                     const task
-                    of batch.tasks
+                    of retryable
                 ) {
-                    if (
-                        task.status ===
-                        "failed"
-                    ) {
-                        task.status =
-                            "pending";
 
-                        task.error =
-                            "";
+                    task.status =
+                        "pending";
 
-                        task.jobId =
-                            null;
+                    task.error =
+                        "";
 
-                        task.cdnUrl =
-                            null;
-                    }
+                    task.errorCode =
+                        "";
+
+                    task.jobId =
+                        null;
+
+                    task.cdnUrl =
+                        null;
+
+                    task.queuedAt =
+                        null;
+
                 }
 
 
@@ -1203,15 +1227,17 @@
 
                 renderPanel();
 
+
                 runScheduler();
+
             }
         );
 
 
         actions.append(
             pauseButton,
-            cancelWaiting,
-            retry
+            cancelButton,
+            retryButton
         );
 
 
@@ -1226,6 +1252,7 @@
             const task
             of batch.tasks
         ) {
+
             const item =
                 createElement(
                     "div",
@@ -1273,6 +1300,27 @@
             );
 
 
+            const note =
+                statusNote(
+                    task
+                );
+
+
+            if (
+                note
+            ) {
+
+                meta.append(
+                    createElement(
+                        "span",
+                        "",
+                        note
+                    )
+                );
+
+            }
+
+
             file.append(
                 meta
             );
@@ -1301,6 +1349,7 @@
                     "complete" &&
                 task.cdnUrl
             ) {
+
                 const copy =
                     createElement(
                         "button",
@@ -1316,22 +1365,28 @@
                 copy.addEventListener(
                     "click",
                     async () => {
+
                         try {
+
                             await navigator
                                 .clipboard
                                 .writeText(
                                     task.cdnUrl
                                 );
 
+
                             showToast(
                                 "CDN 链接已复制"
                             );
 
                         } catch {
+
                             showToast(
                                 "复制失败"
                             );
+
                         }
+
                     }
                 );
 
@@ -1339,6 +1394,7 @@
                 right.append(
                     copy
                 );
+
             }
 
 
@@ -1351,19 +1407,25 @@
             if (
                 task.error
             ) {
+
                 item.append(
                     createElement(
                         "div",
-                        "batch-v1-error",
+                        task.status ===
+                            "review"
+                            ? "batch-v1-error review"
+                            : "batch-v1-error",
                         task.error
                     )
                 );
+
             }
 
 
             list.append(
                 item
             );
+
         }
 
 
@@ -1374,27 +1436,44 @@
             actions,
             list
         );
+
     }
 
 
     async function waitUntilResumed() {
+
         while (
             paused
         ) {
+
             await sleep(
                 300
             );
+
         }
+
     }
 
 
     async function waitForCreateSlot(
         task
     ) {
+
         while (
             true
         ) {
+
             await waitUntilResumed();
+
+
+            if (
+                task.status ===
+                "cancelled"
+            ) {
+
+                return false;
+
+            }
 
 
             const now =
@@ -1402,29 +1481,32 @@
 
 
             createTimestamps =
-                createTimestamps
-                    .filter(
-                        timestamp =>
-                            now -
-                            timestamp <
-                            CREATE_WINDOW_MS
-                    );
+                createTimestamps.filter(
+                    timestamp =>
+                        now -
+                        timestamp <
+                        CREATE_WINDOW_MS
+                );
 
 
             if (
                 createTimestamps.length <
                 CREATE_BURST
             ) {
+
                 createTimestamps.push(
                     now
                 );
 
-                return;
+
+                return true;
+
             }
 
 
             task.status =
                 "waiting_limit";
+
 
             renderPanel();
 
@@ -1432,6 +1514,7 @@
             const wait =
                 Math.max(
                     1000,
+
                     CREATE_WINDOW_MS -
                     (
                         now -
@@ -1444,13 +1527,147 @@
             await sleep(
                 wait
             );
+
         }
+
+    }
+
+
+    async function createWithRateRetry(
+        task
+    ) {
+
+        for (
+            let attempt = 1;
+            attempt <= 2;
+            attempt += 1
+        ) {
+
+            const slot =
+                await waitForCreateSlot(
+                    task
+                );
+
+
+            if (
+                !slot
+            ) {
+
+                return null;
+
+            }
+
+
+            task.status =
+                "creating";
+
+            task.error =
+                "";
+
+
+            renderPanel();
+
+
+            try {
+
+                return await createJob(
+                    task
+                );
+
+            } catch (
+                error
+            ) {
+
+                if (
+                    error.status !==
+                        429 ||
+                    attempt >=
+                        2
+                ) {
+
+                    throw error;
+
+                }
+
+
+                task.status =
+                    "waiting_limit";
+
+                task.error =
+                    "服务器上传创建频率达到安全上限，65 秒后自动重试。";
+
+
+                renderPanel();
+
+
+                await sleep(
+                    65000
+                );
+
+            }
+
+        }
+
+
+        return null;
+
+    }
+
+
+    function applyFailedJob(
+        task,
+        code
+    ) {
+
+        const normalized =
+            String(
+                code ||
+                "pipeline_failed"
+            );
+
+
+        task.errorCode =
+            normalized;
+
+
+        task.error =
+            humanError(
+                normalized
+            );
+
+
+        if (
+            isUnsafeRetryCode(
+                normalized
+            )
+        ) {
+
+            task.status =
+                "review";
+
+            task.retryable =
+                false;
+
+        } else {
+
+            task.status =
+                "failed";
+
+            task.retryable =
+                true;
+
+        }
+
+
+        renderPanel();
+
     }
 
 
     async function pollJob(
         task
     ) {
+
         const started =
             Date.now();
 
@@ -1458,12 +1675,11 @@
         while (
             Date.now() -
             started <
-            30 *
-            60 *
-            1000
+            TASK_TIMEOUT_MS
         ) {
+
             await sleep(
-                3000
+                POLL_INTERVAL_MS
             );
 
 
@@ -1477,6 +1693,7 @@
                 job.status ===
                 "complete"
             ) {
+
                 task.status =
                     "complete";
 
@@ -1487,23 +1704,21 @@
                 task.error =
                     "";
 
+                task.errorCode =
+                    "";
+
+                task.retryable =
+                    false;
+
+
                 renderPanel();
 
 
-                const refreshHistory =
-                    document.getElementById(
-                        "refreshHistory"
-                    );
-
-
-                if (
-                    refreshHistory
-                ) {
-                    refreshHistory.click();
-                }
+                refreshHistory();
 
 
                 return;
+
             }
 
 
@@ -1511,106 +1726,91 @@
                 job.status ===
                 "failed"
             ) {
-                task.status =
-                    "failed";
 
-                task.error =
-                    humanError(
-                        {
-                            message:
-                                job.error ||
-                                "发布失败"
-                        }
-                    );
+                applyFailedJob(
+                    task,
+                    job.error ||
+                    "pipeline_failed"
+                );
 
-                renderPanel();
+
+                refreshHistory();
+
 
                 return;
+
             }
 
 
-            task.status =
+            if (
                 job.status ===
-                    "processing"
-                    ? "processing"
-                    : "queued";
+                "processing"
+            ) {
+
+                task.status =
+                    "processing";
+
+            } else {
+
+                task.status =
+                    "queued";
+
+
+                if (
+                    !task.queuedAt
+                ) {
+
+                    task.queuedAt =
+                        Date.now();
+
+                }
+
+            }
 
 
             renderPanel();
+
         }
 
 
-        throw new Error(
-            "等待发布超时"
-        );
+        task.status =
+            "failed";
+
+        task.retryable =
+            true;
+
+        task.errorCode =
+            "upload_wait_timeout";
+
+        task.error =
+            "等待 GitHub 发布超过 40 分钟。请先刷新上传历史确认状态，再决定是否重试。";
+
+
+        renderPanel();
+
     }
 
 
     async function processTask(
         task
     ) {
+
         try {
-            await waitForCreateSlot(
-                task
-            );
+
+            const created =
+                await createWithRateRetry(
+                    task
+                );
 
 
             if (
+                !created ||
                 task.status ===
                 "cancelled"
             ) {
+
                 return;
-            }
 
-
-            task.status =
-                "creating";
-
-            renderPanel();
-
-
-            let created;
-
-
-            try {
-                created =
-                    await createJob(
-                        task
-                    );
-
-            } catch (
-                error
-            ) {
-                if (
-                    error.status ===
-                    429
-                ) {
-                    task.status =
-                        "waiting_limit";
-
-                    task.error =
-                        "服务器限流，65 秒后自动重试";
-
-                    renderPanel();
-
-
-                    await sleep(
-                        65000
-                    );
-
-
-                    task.error =
-                        "";
-
-
-                    created =
-                        await createJob(
-                            task
-                        );
-
-                } else {
-                    throw error;
-                }
             }
 
 
@@ -1620,6 +1820,10 @@
 
             task.status =
                 "staging";
+
+            task.error =
+                "";
+
 
             renderPanel();
 
@@ -1635,10 +1839,16 @@
                 queued.id;
 
 
+            task.queuedAt =
+                Date.now();
+
+
             task.status =
                 queued.status ===
                     "processing"
+
                     ? "processing"
+
                     : "queued";
 
 
@@ -1652,40 +1862,84 @@
         } catch (
             error
         ) {
-            task.status =
-                "failed";
+
+            const code =
+                error?.code ||
+                error?.message ||
+                "request_failed";
+
+
+            task.errorCode =
+                String(
+                    code
+                );
+
 
             task.error =
                 humanError(
-                    error
+                    code
                 );
 
+
+            if (
+                isUnsafeRetryCode(
+                    code
+                )
+            ) {
+
+                task.status =
+                    "review";
+
+                task.retryable =
+                    false;
+
+            } else {
+
+                task.status =
+                    "failed";
+
+                task.retryable =
+                    true;
+
+            }
+
+
             renderPanel();
+
         }
+
     }
 
 
     function nextPendingTask() {
+
         if (
             !batch
         ) {
+
             return null;
+
         }
 
 
-        return batch.tasks.find(
-            task =>
-                task.status ===
-                "pending"
-        ) ||
-        null;
+        return (
+            batch.tasks.find(
+                task =>
+                    task.status ===
+                    "pending"
+            ) ||
+            null
+        );
+
     }
 
 
     async function worker() {
+
         while (
             true
         ) {
+
             await waitUntilResumed();
 
 
@@ -1696,16 +1950,19 @@
             if (
                 !task
             ) {
+
                 return;
+
             }
 
 
             /*
-             * 先抢占任务，防止多个 worker
-             * 同时拿到同一个 pending task。
+             * 立即抢占任务，避免多个 Worker
+             * 拿到同一个 pending task。
              */
             task.status =
                 "waiting_limit";
+
 
             renderPanel();
 
@@ -1713,16 +1970,21 @@
             await processTask(
                 task
             );
+
         }
+
     }
 
 
     async function runScheduler() {
+
         if (
             schedulerRunning ||
             !batch
         ) {
+
             return;
+
         }
 
 
@@ -1734,9 +1996,10 @@
 
 
         try {
+
             await Promise.all(
                 new Array(
-                    CONCURRENCY
+                    MAX_IN_FLIGHT
                 )
                     .fill(
                         null
@@ -1748,6 +2011,7 @@
             );
 
         } finally {
+
             schedulerRunning =
                 false;
 
@@ -1778,6 +2042,7 @@
             if (
                 !remaining
             ) {
+
                 const success =
                     batch.tasks.filter(
                         task =>
@@ -1794,67 +2059,110 @@
                     ).length;
 
 
+                const review =
+                    batch.tasks.filter(
+                        task =>
+                            task.status ===
+                            "review"
+                    ).length;
+
+
                 showToast(
-                    `批量上传完成：${success} 成功，${failed} 失败`
+                    `批量任务结束：${success} 成功，${failed} 失败，${review} 需确认`
                 );
+
+
+                refreshHistory();
+
             }
+
         }
+
+    }
+
+
+    async function ensureUser() {
+
+        if (
+            currentUser
+        ) {
+
+            return true;
+
+        }
+
+
+        try {
+
+            const response =
+                await fetch(
+                    "/api/auth/me",
+                    {
+                        credentials:
+                            "same-origin"
+                    }
+                );
+
+
+            if (
+                !response.ok
+            ) {
+
+                return false;
+
+            }
+
+
+            const data =
+                await response.json();
+
+
+            currentUser =
+                data.user;
+
+
+            return Boolean(
+                currentUser
+            );
+
+        } catch {
+
+            return false;
+
+        }
+
     }
 
 
     async function startBatch(
         files
     ) {
+
         if (
             batch?.active
         ) {
+
             showToast(
-                "已有批量任务正在进行"
+                "已有一个批量任务正在运行。"
             );
 
+
             return;
+
         }
 
 
         if (
-            !currentUser
+            !await ensureUser()
         ) {
-            try {
-                const response =
-                    await fetch(
-                        "/api/auth/me",
-                        {
-                            credentials:
-                                "same-origin"
-                        }
-                    );
+
+            showToast(
+                "请先完成登录。"
+            );
 
 
-                if (
-                    !response.ok
-                ) {
-                    showToast(
-                        "请先登录"
-                    );
+            return;
 
-                    return;
-                }
-
-
-                const data =
-                    await response.json();
-
-
-                currentUser =
-                    data.user;
-
-            } catch {
-                showToast(
-                    "无法读取登录状态"
-                );
-
-                return;
-            }
         }
 
 
@@ -1865,14 +2173,27 @@
 
 
         if (
+            selected.length ===
+            0
+        ) {
+
+            return;
+
+        }
+
+
+        if (
             selected.length >
             MAX_FILES
         ) {
+
             showToast(
-                `一次最多选择 ${MAX_FILES} 个文件`
+                `一次最多选择 ${MAX_FILES} 个文件。`
             );
 
+
             return;
+
         }
 
 
@@ -1884,7 +2205,9 @@
             const file
             of selected
         ) {
+
             try {
+
                 const validation =
                     validateFile(
                         file
@@ -1892,6 +2215,7 @@
 
 
                 tasks.push({
+
                     file,
 
                     type:
@@ -1903,17 +2227,29 @@
                     error:
                         "",
 
+                    errorCode:
+                        "",
+
+                    retryable:
+                        true,
+
                     jobId:
                         null,
 
                     cdnUrl:
+                        null,
+
+                    queuedAt:
                         null
+
                 });
 
             } catch (
                 error
             ) {
+
                 tasks.push({
+
                     file,
 
                     type:
@@ -1925,17 +2261,34 @@
                     error:
                         error.message,
 
+                    errorCode:
+                        "local_validation_failed",
+
+                    /*
+                     * 文件本身不合法时，
+                     * 点重试也不会变合法。
+                     */
+                    retryable:
+                        false,
+
                     jobId:
                         null,
 
                     cdnUrl:
+                        null,
+
+                    queuedAt:
                         null
+
                 });
+
             }
+
         }
 
 
         batch = {
+
             tasks,
 
             active:
@@ -1943,6 +2296,7 @@
 
             createdAt:
                 Date.now()
+
         };
 
 
@@ -1952,15 +2306,19 @@
 
         renderPanel();
 
+
         runScheduler();
+
     }
 
 
     function installInterceptors() {
+
         const fileInput =
             document.getElementById(
                 "fileInput"
             );
+
 
         const dropZone =
             document.getElementById(
@@ -1971,9 +2329,11 @@
         if (
             fileInput
         ) {
+
             fileInput.addEventListener(
                 "change",
                 event => {
+
                     const files =
                         Array.from(
                             event.target.files ||
@@ -1984,30 +2344,38 @@
                     if (
                         batch?.active
                     ) {
+
                         event.preventDefault();
 
                         event.stopImmediatePropagation();
 
+
                         fileInput.value =
                             "";
 
+
                         showToast(
-                            "请先等待当前批次完成"
+                            "请先等待当前批次结束。"
                         );
 
+
                         return;
+
                     }
 
 
                     /*
-                     * 只有多文件才由 Batch V1 接管。
-                     * 单文件仍走原来的稳定上传逻辑。
+                     * 一个文件继续走原来的稳定单文件逻辑。
+                     *
+                     * 两个以上才由 Batch V1 接管。
                      */
                     if (
                         files.length <=
                         1
                     ) {
+
                         return;
+
                     }
 
 
@@ -2023,18 +2391,22 @@
                     startBatch(
                         files
                     );
+
                 },
                 true
             );
+
         }
 
 
         if (
             dropZone
         ) {
+
             dropZone.addEventListener(
                 "drop",
                 event => {
+
                     const files =
                         Array.from(
                             event.dataTransfer
@@ -2044,11 +2416,31 @@
 
 
                     if (
-                        files.length <=
-                        1 &&
-                        !batch?.active
+                        batch?.active
                     ) {
+
+                        event.preventDefault();
+
+                        event.stopImmediatePropagation();
+
+
+                        showToast(
+                            "请先等待当前批次结束。"
+                        );
+
+
                         return;
+
+                    }
+
+
+                    if (
+                        files.length <=
+                        1
+                    ) {
+
+                        return;
+
                     }
 
 
@@ -2062,62 +2454,29 @@
                     );
 
 
-                    if (
-                        batch?.active
-                    ) {
-                        showToast(
-                            "请先等待当前批次完成"
-                        );
-
-                        return;
-                    }
-
-
                     startBatch(
                         files
                     );
+
                 },
                 true
             );
+
         }
+
     }
 
 
     async function init() {
-        injectStyles();
 
         ensurePanel();
 
 
-        try {
-            const response =
-                await fetch(
-                    "/api/auth/me",
-                    {
-                        credentials:
-                            "same-origin"
-                    }
-                );
-
-
-            if (
-                response.ok
-            ) {
-                const data =
-                    await response.json();
-
-
-                currentUser =
-                    data.user;
-            }
-
-        } catch {
-            currentUser =
-                null;
-        }
+        await ensureUser();
 
 
         installInterceptors();
+
     }
 
 
@@ -2125,4 +2484,5 @@
         "load",
         init
     );
+
 })();
