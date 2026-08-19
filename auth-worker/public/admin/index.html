@@ -40,20 +40,20 @@ href="/audit-v2.css">
 
 <link
 rel="stylesheet"
-href="/app-shell.css?v=20260819-shell-v1">
+href="/app-shell.css?v=20260820-shell-v3">
 
 <script
-src="/app-shell.js?v=20260819-shell-v1"
+src="/app-shell.js?v=20260820-shell-v3"
 defer>
 </script>
 
 <script
-src="/admin-v2.js"
+src="/admin-v2.js?v=20260820-admin-v3"
 defer>
 </script>
 
 <script
-src="/audit-v2.js"
+src="/audit-v2.js?v=20260820-audit-v3"
 defer>
 </script>
 
@@ -148,12 +148,26 @@ OWNER CONTROL
 </h1>
 
 <p>
-用户、邀请码、权限、登录设备和重要安全操作集中管理。
-普通上传流水默认隐藏，需要时仍可查看。
+用户、邀请码、权限、登录设备与系统状态集中管理。
+日常只展示重要信息，需要时再展开详细内容。
 </p>
 
 </div>
 
+
+<div class="admin-hero-actions">
+
+<a
+href="/admin/system-health"
+class="button secondary">
+系统状态
+</a>
+
+<a
+href="/admin/incidents"
+class="button secondary">
+反馈收件箱
+</a>
 
 <button
 type="button"
@@ -161,6 +175,8 @@ class="button secondary"
 id="refreshAdmin">
 刷新数据
 </button>
+
+</div>
 
 </section>
 
