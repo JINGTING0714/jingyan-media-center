@@ -177,38 +177,61 @@
       "/api/*",
 
 
-      "/owner-login",
+      "/",
 
+
+      "/login",
+      "/login/",
+
+
+      "/activate",
+      "/activate/",
+
+
+      "/device",
+      "/device/",
+
+
+      "/recover",
+      "/recover/",
+
+
+      "/owner-recover",
+      "/owner-recover/",
+
+
+      "/owner-login",
       "/owner-login/",
 
 
       "/passkeys",
-
       "/passkeys/",
+      "/passkeys/*",
+
+
+      "/account",
+      "/account/",
+      "/account/*",
+
+
+      "/profile",
+      "/profile/",
+      "/profile/*",
 
 
       "/feedback",
-
       "/feedback/",
+      "/feedback/*",
 
 
       "/admin",
-
       "/admin/",
-
-      "/admin/index.html",
-
-
-      "/admin/incidents",
-
-      "/admin/incidents/",
+      "/admin/*",
 
 
       "/library",
-
       "/library/",
-
-      "/library/index.html"
+      "/library/*"
 
     ],
 
