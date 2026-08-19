@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+name="viewport"
+content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
+<meta
+name="color-scheme"
+content="light">
+
+<title>
+账户与安全 · Jingyan Media Center
+</title>
+
+<meta
+name="description"
+content="Jingyan Media Center 账户、登录设备与安全设置">
+
+<link
+rel="stylesheet"
+href="/style.css">
+
+<link
+rel="stylesheet"
+href="/app-shell.css?v=20260819-shell-v1">
+
+<link
+rel="stylesheet"
+href="/account.css?v=20260819-account-v1">
+
+<script
+src="/app-shell.js?v=20260819-shell-v1"
+defer>
+</script>
+
+<script
+src="/account.js?v=20260819-account-v1"
+defer>
+</script>
+
+</head>
+
+
+<body>
+
+
+<div class="site-shell">
+
+
+<main class="account-page">
+
+
+<section class="account-hero">
+
+<div class="account-hero-copy">
+
+<span class="section-kicker">
+ACCOUNT & SECURITY
+</span>
+
+<h1>
+账户与安全
+</h1>
+
+<p>
+管理当前账户、Passkey、登录设备与设备配对。
+安全功能保持集中，但页面尽量短，不再把大量设备记录一次性铺满。
+</p>
+
+</div>
+
+
+<div class="account-person">
+
+<div
+class="account-avatar"
+id="accountAvatar">
+J
+</div>
+
+<div class="account-person-copy">
+
+<strong id="accountName">
+正在读取…
+</strong>
+
+<div class="account-person-meta">
+
+<span
+class="account-role"
+id="accountRole">
+—
+</span>
+
+<span
+class="account-state">
+● 已登录
+</span>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+
+
+<section class="account-actions-grid">
+
+
+<a
+href="/profile/"
+class="account-action-card">
+
+<span class="account-action-icon">
+⌂
+</span>
+
+<div>
+
+<strong>
+我的主页
+</strong>
+
+<small>
+图库、歌单、影集与收藏
+</small>
+
+</div>
+
+<span class="account-action-arrow">
+›
+</span>
+
+</a>
+
+
+<a
+href="/passkeys"
+class="account-action-card">
+
+<span class="account-action-icon mint">
+⌘
+</span>
+
+<div>
+
+<strong>
+Passkey
+</strong>
+
+<small>
+管理快捷登录凭据
+</small>
+
+</div>
+
+<span class="account-action-arrow">
+›
+</span>
+
+</a>
+
+
+<button
+type="button"
+class="account-action-card"
+id="createPairButton">
+
+<span class="account-action-icon sky">
+＋
+</span>
+
+<div>
+
+<strong>
+新设备配对
+</strong>
+
+<small>
+生成一次性 6 位配对码
+</small>
+
+</div>
+
+<span class="account-action-arrow">
+›
+</span>
+
+</button>
+
+
+<a
+href="/admin"
+class="account-action-card hidden"
+id="ownerAdminLink">
+
+<span class="account-action-icon owner">
+◇
+</span>
+
+<div>
+
+<strong>
+Owner 管理后台
+</strong>
+
+<small>
+用户、邀请与系统管理
+</small>
+
+</div>
+
+<span class="account-action-arrow">
+›
+</span>
+
+</a>
+
+
+</section>
+
+
+
+<section
+class="pair-panel hidden"
+id="pairPanel">
+
+<div class="pair-panel-copy">
+
+<span class="section-kicker">
+DEVICE PAIRING
+</span>
+
+<h2>
+新设备配对码
+</h2>
+
+<p>
+在新手机或新浏览器的「新设备配对」页面输入下方代码。
+代码只用于一次设备登录。
+</p>
+
+</div>
+
+
+<div class="pair-code-wrap">
+
+<code id="pairCode">
+------
+</code>
+
+<button
+type="button"
+class="account-button primary"
+id="copyPairButton">
+复制代码
+</button>
+
+</div>
+
+
+<div class="pair-expiry">
+
+<span>
+有效期
+</span>
+
+<strong id="pairExpiry">
+—
+</strong>
+
+</div>
+
+
+<button
+type="button"
+class="pair-close"
+id="closePairButton">
+收起
+</button>
+
+</section>
+
+
+
+<section class="account-card">
+
+<div class="account-section-head">
+
+<div>
+
+<span class="section-kicker">
+DEVICES
+</span>
+
+<h2>
+登录设备
+</h2>
+
+<p>
+只显示仍然有效的设备。每页最多 4 个，历史撤销记录放在折叠区域。
+</p>
+
+</div>
+
+
+<button
+type="button"
+class="account-button secondary"
+id="refreshSessions">
+刷新
+</button>
+
+</div>
+
+
+<div
+class="account-loading"
+id="sessionsLoading">
+正在读取登录设备…
+</div>
+
+
+<div
+class="account-empty hidden"
+id="sessionsEmpty">
+当前没有有效登录设备。
+</div>
+
+
+<div
+class="session-list hidden"
+id="sessionList">
+</div>
+
+
+<nav
+class="account-pagination hidden"
+id="sessionPagination"
+aria-label="登录设备分页">
+
+<button
+type="button"
+id="previousSessionPage">
+‹ 上一页
+</button>
+
+<span id="sessionPageText">
+1 / 1
+</span>
+
+<button
+type="button"
+id="nextSessionPage">
+下一页 ›
+</button>
+
+</nav>
+
+
+
+<details
+class="revoked-details"
+id="revokedDetails">
+
+<summary>
+
+<span>
+已撤销 / 历史设备
+</span>
+
+<strong id="revokedCount">
+0
+</strong>
+
+</summary>
+
+
+<div class="revoked-note">
+为了保持页面简洁，这里最多显示最近 6 条历史记录。
+</div>
+
+
+<div
+class="revoked-list"
+id="revokedList">
+</div>
+
+</details>
+
+</section>
+
+
+
+<section class="account-card account-security-card">
+
+<div>
+
+<span class="section-kicker">
+SESSION
+</span>
+
+<h2>
+退出登录
+</h2>
+
+<p>
+退出当前设备只会结束这里的登录。退出全部设备会撤销当前账户的所有 Session。
+</p>
+
+</div>
+
+
+<div class="account-security-actions">
+
+<button
+type="button"
+class="account-button secondary"
+id="logoutButton">
+退出当前设备
+</button>
+
+<button
+type="button"
+class="account-button danger"
+id="logoutAllButton">
+退出全部设备
+</button>
+
+</div>
+
+</section>
+
+
+</main>
+
+
+
+<footer>
+
+<span>
+Jingyan Media Center
+</span>
+
+<span>
+Account · Devices · Passkeys
+</span>
+
+</footer>
+
+
+</div>
+
+
+
+<div
+class="toast"
+id="accountToast"
+role="status">
+</div>
+
+
+</body>
+
+</html>
