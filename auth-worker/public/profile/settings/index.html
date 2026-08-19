@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+name="viewport"
+content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
+<meta
+name="color-scheme"
+content="light">
+
+<title>
+编辑个人资料 · Jingyan Media Center
+</title>
+
+<meta
+name="description"
+content="编辑 Jingyan Media Center 个人资料">
+
+<link
+rel="stylesheet"
+href="/style.css">
+
+<link
+rel="stylesheet"
+href="/app-shell.css?v=20260819-shell-v2">
+
+<link
+rel="stylesheet"
+href="/profile-settings.css?v=20260819-profile-settings-v1">
+
+<script
+src="/app-shell.js?v=20260819-shell-v2"
+defer>
+</script>
+
+<script
+src="/profile-settings.js?v=20260819-profile-settings-v1"
+defer>
+</script>
+
+</head>
+
+
+<body>
+
+
+<div class="site-shell">
+
+
+<main class="profile-settings-page">
+
+
+<section class="settings-hero">
+
+<div>
+
+<span class="section-kicker">
+PROFILE SETTINGS
+</span>
+
+<h1>
+编辑个人资料
+</h1>
+
+<p>
+修改其他成员看到的显示名称、个人简介和头像。
+账户角色、权限和 User ID 不会在这里改变。
+</p>
+
+</div>
+
+
+<a
+href="/profile/"
+class="settings-back">
+← 返回我的主页
+</a>
+
+</section>
+
+
+
+<div class="settings-layout">
+
+
+<section class="settings-main">
+
+
+<form
+class="settings-card"
+id="profileSettingsForm">
+
+
+<div class="settings-section-head">
+
+<div>
+
+<span class="section-kicker">
+IDENTITY
+</span>
+
+<h2>
+基本资料
+</h2>
+
+<p>
+显示名称可以修改，但你的内部 User ID 永远保持不变。
+</p>
+
+</div>
+
+</div>
+
+
+
+<label class="settings-field">
+
+<span>
+显示名称
+</span>
+
+<input
+type="text"
+id="displayNameInput"
+maxlength="40"
+autocomplete="nickname"
+required
+placeholder="例如：Ling.">
+
+<small>
+最多 40 个字符。
+</small>
+
+</label>
+
+
+
+<label class="settings-field">
+
+<span>
+个人简介
+</span>
+
+<textarea
+id="bioInput"
+maxlength="160"
+rows="4"
+placeholder="写一句关于自己的介绍……"></textarea>
+
+<div class="field-footer">
+
+<small>
+会显示在个人主页。
+</small>
+
+<span id="bioCounter">
+0 / 160
+</span>
+
+</div>
+
+</label>
+
+
+
+<div class="settings-divider">
+</div>
+
+
+
+<div class="settings-section-head">
+
+<div>
+
+<span class="section-kicker">
+AVATAR
+</span>
+
+<h2>
+头像
+</h2>
+
+<p>
+第一版不另外建立头像上传系统。可以使用名称首字、Emoji，或直接选择自己已经上传的图片。
+</p>
+
+</div>
+
+</div>
+
+
+
+<div class="avatar-mode-grid">
+
+
+<label class="avatar-mode-card">
+
+<input
+type="radio"
+name="avatarMode"
+value="initial"
+checked>
+
+<span class="avatar-mode-icon">
+L
+</span>
+
+<span>
+
+<strong>
+名称首字
+</strong>
+
+<small>
+跟随显示名称
+</small>
+
+</span>
+
+</label>
+
+
+
+<label class="avatar-mode-card">
+
+<input
+type="radio"
+name="avatarMode"
+value="emoji">
+
+<span class="avatar-mode-icon emoji">
+🌙
+</span>
+
+<span>
+
+<strong>
+Emoji
+</strong>
+
+<small>
+选择喜欢的符号
+</small>
+
+</span>
+
+</label>
+
+
+
+<label class="avatar-mode-card">
+
+<input
+type="radio"
+name="avatarMode"
+value="media">
+
+<span class="avatar-mode-icon image">
+▧
+</span>
+
+<span>
+
+<strong>
+我的图片
+</strong>
+
+<small>
+从已上传图片选择
+</small>
+
+</span>
+
+</label>
+
+
+</div>
+
+
+
+<div
+class="avatar-option-panel hidden"
+id="emojiPanel">
+
+<label class="settings-field">
+
+<span>
+Emoji
+</span>
+
+<input
+type="text"
+id="emojiInput"
+maxlength="24"
+inputmode="text"
+placeholder="例如：🌙">
+
+</label>
+
+
+<div
+class="emoji-presets"
+id="emojiPresets">
+
+<button
+type="button"
+data-emoji="🌙">
+🌙
+</button>
+
+<button
+type="button"
+data-emoji="💜">
+💜
+</button>
+
+<button
+type="button"
+data-emoji="🪻">
+🪻
+</button>
+
+<button
+type="button"
+data-emoji="🦋">
+🦋
+</button>
+
+<button
+type="button"
+data-emoji="☁️">
+☁️
+</button>
+
+<button
+type="button"
+data-emoji="✨">
+✨
+</button>
+
+<button
+type="button"
+data-emoji="🌌">
+🌌
+</button>
+
+<button
+type="button"
+data-emoji="🐈">
+🐈
+</button>
+
+</div>
+
+</div>
+
+
+
+<div
+class="avatar-option-panel hidden"
+id="mediaPanel">
+
+<div class="media-avatar-heading">
+
+<div>
+
+<strong>
+从我的图片选择
+</strong>
+
+<span>
+显示最近上传的图片，最多 18 张。
+</span>
+
+</div>
+
+<a href="/">
+上传新图片
+</a>
+
+</div>
+
+
+<div
+class="avatar-images-loading"
+id="avatarImagesLoading">
+正在读取图片…
+</div>
+
+
+<div
+class="avatar-images-empty hidden"
+id="avatarImagesEmpty">
+你还没有可以作为头像的已发布图片。
+</div>
+
+
+<div
+class="avatar-image-grid hidden"
+id="avatarImageGrid">
+</div>
+
+</div>
+
+
+
+<div class="settings-submit-row">
+
+<button
+type="submit"
+class="settings-primary"
+id="saveProfileButton">
+保存更改
+</button>
+
+<a
+href="/profile/"
+class="settings-secondary">
+取消
+</a>
+
+</div>
+
+
+</form>
+
+
+</section>
+
+
+
+<aside class="settings-side">
+
+
+<section class="profile-preview-card">
+
+<span class="section-kicker">
+PREVIEW
+</span>
+
+<h2>
+预览
+</h2>
+
+
+<div class="profile-preview-person">
+
+<div
+class="profile-preview-avatar"
+id="profilePreviewAvatar">
+L
+</div>
+
+
+<div>
+
+<strong id="profilePreviewName">
+—
+</strong>
+
+<span id="profilePreviewRole">
+—
+</span>
+
+</div>
+
+</div>
+
+
+<p
+class="profile-preview-bio"
+id="profilePreviewBio">
+还没有个人简介。
+</p>
+
+</section>
+
+
+
+<section class="security-note-card">
+
+<span class="section-kicker">
+ACCOUNT
+</span>
+
+<h2>
+账户身份
+</h2>
+
+
+<div class="security-row">
+
+<span>
+User ID
+</span>
+
+<strong id="userIdValue">
+—
+</strong>
+
+</div>
+
+
+<div class="security-row">
+
+<span>
+角色
+</span>
+
+<strong id="roleValue">
+—
+</strong>
+
+</div>
+
+
+<div class="security-row">
+
+<span>
+Owner 权限
+</span>
+
+<strong
+class="permanent"
+id="ownerPermissionValue">
+—
+</strong>
+
+</div>
+
+
+<div class="security-session-note">
+
+<strong>
+关于“到期时间”
+</strong>
+
+<p>
+账户页显示的是设备登录 Session 的有效期，不是 Owner 权限期限。活跃使用时 Session 会自动续期。
+</p>
+
+</div>
+
+</section>
+
+
+</aside>
+
+
+</div>
+
+
+</main>
+
+
+
+<footer>
+
+<span>
+Jingyan Media Center
+</span>
+
+<span>
+Profile · Identity · Avatar
+</span>
+
+</footer>
+
+
+</div>
+
+
+
+<div
+class="toast"
+id="profileSettingsToast"
+role="status">
+</div>
+
+
+</body>
+
+</html>
