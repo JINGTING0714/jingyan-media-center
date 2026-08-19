@@ -1,8 +1,12 @@
 {
   "name": "jingyan-media-app",
-  "main": "src/app.mjs",
+
+  "main": "src/app-v2.mjs",
+
   "compatibility_date": "2026-08-17",
+
   "workers_dev": true,
+
 
   "secrets": {
     "required": [
@@ -12,93 +16,204 @@
     ]
   },
 
+
   "vars": {
+
     "COOKIE_NAME": "jy_session",
+
     "SESSION_TTL_DAYS": "180",
+
     "SESSION_REFRESH_HOURS": "24",
 
+
     "INVITE_DEFAULT_TTL_DAYS": "30",
+
     "PAIRING_TTL_MINUTES": "10",
+
     "RECOVERY_TTL_MINUTES": "30",
 
+
     "TURNSTILE_REQUIRED": "true",
+
     "TURNSTILE_REQUIRE_ACTION": "true",
-    "TURNSTILE_EXPECTED_HOSTNAME": "jingyan-media-app.jingyancdn.workers.dev",
-    "TURNSTILE_SITE_KEY": "0x4AAAAAAESbkU04OZtwVxyX",
 
-    "PASSKEY_RP_NAME": "Jingyan Media Center",
-    "PASSKEY_RP_ID": "jingyan-media-app.jingyancdn.workers.dev",
-    "PASSKEY_ORIGIN": "https://jingyan-media-app.jingyancdn.workers.dev",
-    "PASSKEY_CHALLENGE_TTL_SECONDS": "300",
+    "TURNSTILE_EXPECTED_HOSTNAME":
+      "jingyan-media-app.jingyancdn.workers.dev",
 
-    "GITHUB_OWNER": "JINGTING0714",
-    "GITHUB_REPO": "jingyan-media-center",
-    "GITHUB_UPLOAD_WORKFLOW": "upload.yml",
-    "GITHUB_MEDIA_SYNC_WORKFLOW": "media-index-sync.yml",
-    "GITHUB_UPLOAD_REF": "main",
+    "TURNSTILE_SITE_KEY":
+      "0x4AAAAAAESbkU04OZtwVxyX",
 
-    "MEDIA_CDN_WORKER": "jingyan-media-cdn",
-    "MEDIA_CDN_BASE_URL": "https://jingyan-media-cdn.jingyancdn.workers.dev",
 
-    "UPLOAD_STAGING_TTL_SECONDS": "21600"
+    "PASSKEY_RP_NAME":
+      "Jingyan Media Center",
+
+    "PASSKEY_RP_ID":
+      "jingyan-media-app.jingyancdn.workers.dev",
+
+    "PASSKEY_ORIGIN":
+      "https://jingyan-media-app.jingyancdn.workers.dev",
+
+    "PASSKEY_CHALLENGE_TTL_SECONDS":
+      "300",
+
+
+    "GITHUB_OWNER":
+      "JINGTING0714",
+
+    "GITHUB_REPO":
+      "jingyan-media-center",
+
+    "GITHUB_UPLOAD_WORKFLOW":
+      "upload.yml",
+
+    "GITHUB_MEDIA_SYNC_WORKFLOW":
+      "media-index-sync.yml",
+
+    "GITHUB_UPLOAD_REF":
+      "main",
+
+
+    "MEDIA_CDN_WORKER":
+      "jingyan-media-cdn",
+
+    "MEDIA_CDN_BASE_URL":
+      "https://jingyan-media-cdn.jingyancdn.workers.dev",
+
+
+    "UPLOAD_STAGING_TTL_SECONDS":
+      "21600"
+
   },
 
+
   "d1_databases": [
+
     {
-      "binding": "AUTH_DB",
-      "database_name": "jingyan-media-auth",
-      "database_id": "b622c541-ebdb-4740-be12-ac356fbb62c7",
-      "migrations_dir": "migrations"
+
+      "binding":
+        "AUTH_DB",
+
+      "database_name":
+        "jingyan-media-auth",
+
+      "database_id":
+        "b622c541-ebdb-4740-be12-ac356fbb62c7",
+
+      "migrations_dir":
+        "migrations"
+
     },
+
     {
-      "binding": "MEDIA_DB",
-      "database_name": "jingyan-media-index",
-      "database_id": "16a1ee2e-f5db-4827-bf19-e264c7b98ef3",
-      "migrations_dir": "media-migrations"
+
+      "binding":
+        "MEDIA_DB",
+
+      "database_name":
+        "jingyan-media-index",
+
+      "database_id":
+        "16a1ee2e-f5db-4827-bf19-e264c7b98ef3",
+
+      "migrations_dir":
+        "media-migrations"
+
     }
+
   ],
+
 
   "kv_namespaces": [
+
     {
-      "binding": "UPLOAD_STAGING",
-      "id": "bb5f5e8bd8364a7bb4d4fe8227a3e32b"
+
+      "binding":
+        "UPLOAD_STAGING",
+
+      "id":
+        "bb5f5e8bd8364a7bb4d4fe8227a3e32b"
+
     }
+
   ],
+
 
   "ratelimits": [
+
     {
-      "name": "AUTH_RATE_LIMITER",
-      "namespace_id": "71401",
+
+      "name":
+        "AUTH_RATE_LIMITER",
+
+      "namespace_id":
+        "71401",
+
       "simple": {
-        "limit": 10,
-        "period": 60
+
+        "limit":
+          10,
+
+        "period":
+          60
+
       }
+
     }
+
   ],
 
+
   "assets": {
-    "directory": "./public",
-    "binding": "ASSETS",
+
+    "directory":
+      "./public",
+
+    "binding":
+      "ASSETS",
+
 
     "run_worker_first": [
+
       "/api/*",
 
+
       "/owner-login",
+
       "/owner-login/",
 
+
       "/passkeys",
+
       "/passkeys/",
 
+
+      "/feedback",
+
+      "/feedback/",
+
+
       "/admin",
+
       "/admin/",
+
       "/admin/index.html",
 
+
       "/library",
+
       "/library/",
+
       "/library/index.html"
+
     ],
 
-    "html_handling": "auto-trailing-slash",
-    "not_found_handling": "none"
+
+    "html_handling":
+      "auto-trailing-slash",
+
+    "not_found_handling":
+      "none"
+
   }
+
 }
