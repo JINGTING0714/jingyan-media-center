@@ -23,16 +23,20 @@ const TYPES =
 function assertActiveUser(
   auth
 ) {
+
   if (
     !auth?.user ||
     auth.user.status !==
       "active"
   ) {
+
     throw new HttpError(
       403,
       "active_account_required"
     );
+
   }
+
 }
 
 
@@ -42,18 +46,23 @@ function integerParam(
   min,
   max
 ) {
+
   const number =
     Number(
       value
     );
+
 
   if (
     !Number.isFinite(
       number
     )
   ) {
+
     return fallback;
+
   }
+
 
   return Math.min(
     max,
@@ -64,16 +73,19 @@ function integerParam(
       )
     )
   );
+
 }
 
 
 function toIso(
   seconds
 ) {
+
   const value =
     Number(
       seconds
     );
+
 
   if (
     !Number.isFinite(
@@ -82,24 +94,30 @@ function toIso(
     value <=
       0
   ) {
+
     return null;
+
   }
+
 
   return new Date(
     value *
     1000
   ).toISOString();
+
 }
 
 
 function normalizeMediaId(
   input
 ) {
+
   const value =
     String(
       input ||
       ""
     ).trim();
+
 
   if (
     !value ||
@@ -110,13 +128,85 @@ function normalizeMediaId(
         value
       )
   ) {
+
     throw new HttpError(
       400,
       "invalid_media_id"
     );
+
   }
 
+
   return value;
+
+}
+
+
+function readListQuery(
+  request
+) {
+
+  const url =
+    new URL(
+      request.url
+    );
+
+
+  const type =
+    String(
+      url.searchParams.get(
+        "type"
+      ) ||
+      "all"
+    )
+      .trim()
+      .toLowerCase();
+
+
+  if (
+    type !==
+      "all" &&
+    !TYPES.has(
+      type
+    )
+  ) {
+
+    throw new HttpError(
+      400,
+      "invalid_media_type_filter"
+    );
+
+  }
+
+
+  const page =
+    integerParam(
+      url.searchParams.get(
+        "page"
+      ),
+      1,
+      1,
+      100000
+    );
+
+
+  const pageSize =
+    integerParam(
+      url.searchParams.get(
+        "pageSize"
+      ),
+      12,
+      1,
+      48
+    );
+
+
+  return {
+    type,
+    page,
+    pageSize
+  };
+
 }
 
 
@@ -124,6 +214,7 @@ function serializeMedia(
   row,
   uploaderMap
 ) {
+
   return {
     mediaId:
       row.id,
@@ -189,6 +280,7 @@ function serializeMedia(
         row.favorite_created_at
       )
   };
+
 }
 
 
@@ -196,6 +288,7 @@ async function getUploaderMap(
   env,
   rows
 ) {
+
   const ids =
     [
       ...new Set(
@@ -210,15 +303,20 @@ async function getUploaderMap(
       )
     ];
 
+
   const map =
     new Map();
 
+
   if (
     ids.length ===
-      0
+    0
   ) {
+
     return map;
+
   }
+
 
   for (
     let offset = 0;
@@ -227,12 +325,14 @@ async function getUploaderMap(
     offset +=
       80
   ) {
+
     const group =
       ids.slice(
         offset,
         offset +
           80
       );
+
 
     const placeholders =
       group
@@ -243,6 +343,7 @@ async function getUploaderMap(
         .join(
           ","
         );
+
 
     const result =
       await env.AUTH_DB
@@ -262,6 +363,7 @@ async function getUploaderMap(
         )
         .all();
 
+
     for (
       const user
       of (
@@ -269,14 +371,19 @@ async function getUploaderMap(
         []
       )
     ) {
+
       map.set(
         user.id,
         user.display_name
       );
+
     }
+
   }
 
+
   return map;
+
 }
 
 
@@ -288,6 +395,7 @@ async function addMediaEvent(
     action
   }
 ) {
+
   await env.MEDIA_DB
     .prepare(`
       INSERT INTO media_events (
@@ -322,6 +430,7 @@ async function addMediaEvent(
       nowSeconds()
     )
     .run();
+
 }
 
 
@@ -330,6 +439,7 @@ async function getMediaRow(
   userId,
   mediaId
 ) {
+
   return env.MEDIA_DB
     .prepare(`
       SELECT
@@ -377,6 +487,7 @@ async function getMediaRow(
       mediaId
     )
     .first();
+
 }
 
 
@@ -385,9 +496,11 @@ async function getOverview(
   env,
   auth
 ) {
+
   assertActiveUser(
     auth
   );
+
 
   const userId =
     auth.user.id;
@@ -492,7 +605,7 @@ async function getOverview(
 
           m.id DESC
 
-        LIMIT 6
+        LIMIT 10
       `)
       .bind(
         userId,
@@ -542,7 +655,7 @@ async function getOverview(
           mf.created_at DESC,
           m.id DESC
 
-        LIMIT 6
+        LIMIT 10
       `)
       .bind(
         userId
@@ -553,6 +666,7 @@ async function getOverview(
   const recentRows =
     recentResult.results ||
     [];
+
 
   const favoriteRows =
     favoriteResult.results ||
@@ -570,7 +684,12 @@ async function getOverview(
 
 
   return jsonResponse({
+
+    view:
+      "summary",
+
     recentUploads: {
+
       total:
         Number(
           recentCountRow
@@ -586,9 +705,11 @@ async function getOverview(
               uploaderMap
             )
         )
+
     },
 
     favorites: {
+
       total:
         Number(
           favoriteCountRow
@@ -604,8 +725,223 @@ async function getOverview(
               uploaderMap
             )
         )
+
     }
+
   });
+
+}
+
+
+async function listUploads(
+  request,
+  env,
+  auth
+) {
+
+  assertActiveUser(
+    auth
+  );
+
+
+  const {
+    type,
+    page,
+    pageSize
+  } =
+    readListQuery(
+      request
+    );
+
+
+  const where = [
+    "m.uploader_user_id = ?",
+    "m.status = 'published'"
+  ];
+
+
+  const bindings = [
+    auth.user.id
+  ];
+
+
+  if (
+    type !==
+    "all"
+  ) {
+
+    where.push(
+      "m.type = ?"
+    );
+
+
+    bindings.push(
+      type
+    );
+
+  }
+
+
+  const whereSql =
+    where.join(
+      "\nAND\n"
+    );
+
+
+  const countRow =
+    await env.MEDIA_DB
+      .prepare(`
+        SELECT
+          COUNT(*) AS count
+
+        FROM media m
+
+        WHERE
+          ${whereSql}
+      `)
+      .bind(
+        ...bindings
+      )
+      .first();
+
+
+  const total =
+    Number(
+      countRow
+        ?.count ||
+      0
+    );
+
+
+  const totalPages =
+    Math.max(
+      1,
+      Math.ceil(
+        total /
+        pageSize
+      )
+    );
+
+
+  const safePage =
+    Math.min(
+      page,
+      totalPages
+    );
+
+
+  const offset =
+    (
+      safePage -
+      1
+    ) *
+    pageSize;
+
+
+  const result =
+    await env.MEDIA_DB
+      .prepare(`
+        SELECT
+          m.id,
+          m.type,
+          m.filename,
+          m.original_name,
+          m.display_title,
+          m.cdn_url,
+          m.size_bytes,
+          m.uploader_user_id,
+          m.status,
+          m.added_at,
+          m.published_at,
+
+          CASE
+            WHEN mf.media_id IS NULL
+            THEN 0
+            ELSE 1
+          END
+          AS is_favorite,
+
+          mf.created_at
+          AS favorite_created_at
+
+        FROM media m
+
+        LEFT JOIN media_favorites mf
+          ON
+            mf.media_id =
+              m.id
+
+          AND
+            mf.user_id =
+              ?
+
+        WHERE
+          ${whereSql}
+
+        ORDER BY
+          COALESCE(
+            m.published_at,
+            m.added_at,
+            m.created_at
+          ) DESC,
+
+          m.id DESC
+
+        LIMIT ?
+        OFFSET ?
+      `)
+      .bind(
+        auth.user.id,
+        ...bindings,
+        pageSize,
+        offset
+      )
+      .all();
+
+
+  const rows =
+    result.results ||
+    [];
+
+
+  const uploaderMap =
+    await getUploaderMap(
+      env,
+      rows
+    );
+
+
+  return jsonResponse({
+
+    view:
+      "uploads",
+
+    query: {
+
+      type,
+
+      page:
+        safePage,
+
+      pageSize,
+
+      total,
+
+      totalPages
+
+    },
+
+    items:
+      rows.map(
+        row =>
+          serializeMedia(
+            row,
+            uploaderMap
+          )
+      )
+
+  });
+
 }
 
 
@@ -614,86 +950,47 @@ async function listFavorites(
   env,
   auth
 ) {
+
   assertActiveUser(
     auth
   );
 
-  const url =
-    new URL(
-      request.url
+
+  const {
+    type,
+    page,
+    pageSize
+  } =
+    readListQuery(
+      request
     );
 
 
-  const type =
-    String(
-      url.searchParams.get(
-        "type"
-      ) ||
-      "all"
-    )
-      .trim()
-      .toLowerCase();
+  const where = [
+    "mf.user_id = ?",
+    "m.status = 'published'"
+  ];
+
+
+  const bindings = [
+    auth.user.id
+  ];
 
 
   if (
     type !==
-      "all" &&
-    !TYPES.has(
-      type
-    )
+    "all"
   ) {
-    throw new HttpError(
-      400,
-      "invalid_media_type_filter"
-    );
-  }
 
-
-  const page =
-    integerParam(
-      url.searchParams.get(
-        "page"
-      ),
-      1,
-      1,
-      100000
-    );
-
-
-  const pageSize =
-    integerParam(
-      url.searchParams.get(
-        "pageSize"
-      ),
-      12,
-      1,
-      48
-    );
-
-
-  const where =
-    [
-      "mf.user_id = ?",
-      "m.status = 'published'"
-    ];
-
-  const bindings =
-    [
-      auth.user.id
-    ];
-
-
-  if (
-    type !==
-      "all"
-  ) {
     where.push(
       "m.type = ?"
     );
 
+
     bindings.push(
       type
     );
+
   }
 
 
@@ -818,13 +1115,23 @@ async function listFavorites(
 
 
   return jsonResponse({
+
+    view:
+      "favorites",
+
     query: {
+
       type,
+
       page:
         safePage,
+
       pageSize,
+
       total,
+
       totalPages
+
     },
 
     items:
@@ -835,7 +1142,9 @@ async function listFavorites(
             uploaderMap
           )
       )
+
   });
+
 }
 
 
@@ -845,9 +1154,11 @@ async function addFavorite(
   auth,
   mediaId
 ) {
+
   assertActiveUser(
     auth
   );
+
 
   requireSameOrigin(
     request
@@ -873,10 +1184,12 @@ async function addFavorite(
     media.status !==
       "published"
   ) {
+
     throw new HttpError(
       404,
       "media_not_found"
     );
+
   }
 
 
@@ -917,6 +1230,7 @@ async function addFavorite(
   if (
     added
   ) {
+
     await addMediaEvent(
       env,
       {
@@ -930,6 +1244,7 @@ async function addFavorite(
           "favorite.added"
       }
     );
+
   }
 
 
@@ -946,10 +1261,12 @@ async function addFavorite(
       mediaId:
         normalizedMediaId
     },
+
     added
       ? 201
       : 200
   );
+
 }
 
 
@@ -959,9 +1276,11 @@ async function removeFavorite(
   auth,
   mediaId
 ) {
+
   assertActiveUser(
     auth
   );
+
 
   requireSameOrigin(
     request
@@ -1006,6 +1325,7 @@ async function removeFavorite(
   if (
     removed
   ) {
+
     await addMediaEvent(
       env,
       {
@@ -1019,10 +1339,12 @@ async function removeFavorite(
           "favorite.removed"
       }
     );
+
   }
 
 
   return jsonResponse({
+
     ok:
       true,
 
@@ -1033,7 +1355,9 @@ async function removeFavorite(
 
     mediaId:
       normalizedMediaId
+
   });
+
 }
 
 
@@ -1042,13 +1366,16 @@ export async function handleProfileRequest(
   env,
   auth
 ) {
+
   const url =
     new URL(
       request.url
     );
 
+
   const pathname =
     url.pathname;
+
 
   const method =
     request.method
@@ -1059,20 +1386,77 @@ export async function handleProfileRequest(
     pathname ===
       "/api/profile/overview"
   ) {
+
     if (
       method !==
-        "GET"
+      "GET"
     ) {
+
       return methodNotAllowed([
         "GET"
       ]);
+
     }
 
-    return getOverview(
-      request,
-      env,
-      auth
+
+    const view =
+      String(
+        url.searchParams.get(
+          "view"
+        ) ||
+        "summary"
+      )
+        .trim()
+        .toLowerCase();
+
+
+    if (
+      view ===
+      "summary"
+    ) {
+
+      return getOverview(
+        request,
+        env,
+        auth
+      );
+
+    }
+
+
+    if (
+      view ===
+      "uploads"
+    ) {
+
+      return listUploads(
+        request,
+        env,
+        auth
+      );
+
+    }
+
+
+    if (
+      view ===
+      "favorites"
+    ) {
+
+      return listFavorites(
+        request,
+        env,
+        auth
+      );
+
+    }
+
+
+    throw new HttpError(
+      400,
+      "invalid_profile_view"
     );
+
   }
 
 
@@ -1080,20 +1464,25 @@ export async function handleProfileRequest(
     pathname ===
       "/api/favorites"
   ) {
+
     if (
       method !==
-        "GET"
+      "GET"
     ) {
+
       return methodNotAllowed([
         "GET"
       ]);
+
     }
+
 
     return listFavorites(
       request,
       env,
       auth
     );
+
   }
 
 
@@ -1106,6 +1495,7 @@ export async function handleProfileRequest(
   if (
     match
   ) {
+
     const mediaId =
       decodeURIComponent(
         match[1]
@@ -1114,27 +1504,31 @@ export async function handleProfileRequest(
 
     if (
       method ===
-        "POST"
+      "POST"
     ) {
+
       return addFavorite(
         request,
         env,
         auth,
         mediaId
       );
+
     }
 
 
     if (
       method ===
-        "DELETE"
+      "DELETE"
     ) {
+
       return removeFavorite(
         request,
         env,
         auth,
         mediaId
       );
+
     }
 
 
@@ -1142,8 +1536,10 @@ export async function handleProfileRequest(
       "POST",
       "DELETE"
     ]);
+
   }
 
 
   return notFound();
+
 }
