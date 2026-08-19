@@ -13,6 +13,11 @@ const {
 } = require("./cdn");
 
 
+
+/* =========================================================
+ * Config
+ * ======================================================= */
+
 function loadConfig() {
 
     return JSON.parse(
@@ -36,6 +41,11 @@ function getManifestFile() {
 
 }
 
+
+
+/* =========================================================
+ * Manifest
+ * ======================================================= */
 
 function createEmptyManifest() {
 
@@ -92,14 +102,11 @@ function ensureManifestFile() {
     ) {
 
         fs.mkdirSync(
-
             directory,
-
             {
                 recursive:
                     true
             }
-
         );
 
     }
@@ -112,15 +119,12 @@ function ensureManifestFile() {
     ) {
 
         fs.writeFileSync(
-
             file,
-
             JSON.stringify(
                 createEmptyManifest(),
                 null,
                 2
             ) + "\n"
-
         );
 
     }
@@ -183,19 +187,21 @@ function writeManifest(
 
 
     fs.writeFileSync(
-
         getManifestFile(),
-
         JSON.stringify(
             manifest,
             null,
             2
         ) + "\n"
-
     );
 
 }
 
+
+
+/* =========================================================
+ * Hashing
+ * ======================================================= */
 
 function computeSHA256(
     buffer
@@ -232,12 +238,10 @@ function computeCloudflareAssetHash(
             "sha256"
         )
         .update(
-
             buffer.toString(
                 "base64"
             ) +
             extension
-
         )
         .digest(
             "hex"
@@ -249,6 +253,11 @@ function computeCloudflareAssetHash(
 
 }
 
+
+
+/* =========================================================
+ * Asset validation
+ * ======================================================= */
 
 function getMaxAssetBytes() {
 
@@ -286,6 +295,11 @@ function validateAssetSize(
 
 }
 
+
+
+/* =========================================================
+ * GitHub source download
+ * ======================================================= */
 
 function encodeContentPath(
     filePath
@@ -357,11 +371,8 @@ async function downloadSourceBuffer(
 
     const response =
         await fetch(
-
             url,
-
             {
-
                 headers: {
 
                     "Authorization":
@@ -377,9 +388,7 @@ async function downloadSourceBuffer(
                         "jingyan-media-center"
 
                 }
-
             }
-
         );
 
 
@@ -398,6 +407,11 @@ async function downloadSourceBuffer(
 
 }
 
+
+
+/* =========================================================
+ * Asset records
+ * ======================================================= */
 
 function buildAssetObject({
 
@@ -611,6 +625,11 @@ function getManifestAsset(
 }
 
 
+
+/* =========================================================
+ * Legacy / Registry normalization
+ * ======================================================= */
+
 function getRepositoryFullName(
     record,
     repository
@@ -661,14 +680,13 @@ function getRepositoryFullName(
 
 function getRecordFilename(
     record,
-    sourcePath =
-        null
+    sourcePath = null
 ) {
 
     if (
         record &&
         typeof record.filename ===
-        "string"
+            "string"
     ) {
 
         return record.filename;
@@ -679,7 +697,7 @@ function getRecordFilename(
     if (
         record &&
         typeof record.file ===
-        "string"
+            "string"
     ) {
 
         return path.posix.basename(
@@ -821,6 +839,11 @@ function shouldPublishRecord(
 }
 
 
+
+/* =========================================================
+ * Manifest reconciliation
+ * ======================================================= */
+
 async function reconcileManifestFromDatabases() {
 
     const config =
@@ -846,7 +869,9 @@ async function reconcileManifestFromDatabases() {
 
         const repositories =
             config.storage
-                .repositories[type] ||
+                .repositories[
+                    type
+                ] ||
             [];
 
 
@@ -928,21 +953,15 @@ async function reconcileManifestFromDatabases() {
 
                 const sourcePath =
                     getRecordSourcePath(
-
                         record,
-
                         repository
-
                     );
 
 
                 const filename =
                     getRecordFilename(
-
                         record,
-
                         sourcePath
-
                     );
 
 
@@ -1058,6 +1077,11 @@ async function reconcileManifestFromDatabases() {
 }
 
 
+
+/* =========================================================
+ * Cloudflare manifest
+ * ======================================================= */
+
 function buildCloudflareManifest(
     manifest
 ) {
@@ -1142,6 +1166,11 @@ function validateManifestLimits(
 }
 
 
+
+/* =========================================================
+ * Cloudflare SDK
+ * ======================================================= */
+
 async function getCloudflareClient() {
 
     const apiToken =
@@ -1175,6 +1204,11 @@ async function getCloudflareClient() {
 
 }
 
+
+
+/* =========================================================
+ * Asset upload
+ * ======================================================= */
 
 async function getBufferForHash(
     manifest,
@@ -1235,17 +1269,14 @@ async function getBufferForHash(
 
     const calculatedHash =
         computeCloudflareAssetHash(
-
             buffer,
-
             assetPath
-
         );
 
 
     if (
         calculatedHash !==
-            hash
+        hash
     ) {
 
         throw new Error(
@@ -1280,12 +1311,15 @@ async function uploadMissingAssets({
 
     for (
         let index = 0;
-        index < buckets.length;
+        index <
+        buckets.length;
         index++
     ) {
 
         const bucket =
-            buckets[index];
+            buckets[
+                index
+            ];
 
 
         const payload = {};
@@ -1298,11 +1332,8 @@ async function uploadMissingAssets({
 
             const buffer =
                 await getBufferForHash(
-
                     manifest,
-
                     hash
-
                 );
 
 
@@ -1327,9 +1358,7 @@ async function uploadMissingAssets({
                 .assets
                 .upload
                 .create(
-
                     {
-
                         account_id:
                             accountId,
 
@@ -1338,20 +1367,13 @@ async function uploadMissingAssets({
 
                         body:
                             payload
-
                     },
-
                     {
-
                         headers: {
-
                             Authorization:
                                 `Bearer ${uploadJwt}`
-
                         }
-
                     }
-
                 );
 
 
@@ -1384,29 +1406,579 @@ async function uploadMissingAssets({
 }
 
 
+
+/* =========================================================
+ * CDN Worker
+ *
+ * Important:
+ *
+ * Images stay on Cloudflare's normal static-asset path.
+ *
+ * /music/* and /video/* are routed through this Worker so
+ * Range requests can always return proper 206 responses.
+ *
+ * Cloudflare Static Assets currently limit an individual
+ * asset to 25 MiB, so the temporary in-memory slicing used
+ * here remains comfortably below the Worker memory limit.
+ * ======================================================= */
+
 function createWorkerScript() {
 
     return `
-export default {
-  async fetch(request, env) {
-    const url = new URL(request.url);
+const MEDIA_PATH_PREFIXES = [
+    "/music/",
+    "/video/"
+];
 
-    if (url.pathname === "/") {
-      return new Response("Jingyan Media CDN", {
-        status: 200,
-        headers: {
-          "Content-Type": "text/plain; charset=utf-8"
-        }
-      });
+
+function isMediaPath(pathname) {
+
+    return MEDIA_PATH_PREFIXES.some(
+        prefix =>
+            pathname.startsWith(
+                prefix
+            )
+    );
+
+}
+
+
+function addSharedHeaders(
+    headers
+) {
+
+    headers.set(
+        "Accept-Ranges",
+        "bytes"
+    );
+
+    headers.set(
+        "Access-Control-Allow-Origin",
+        "*"
+    );
+
+    headers.set(
+        "Access-Control-Expose-Headers",
+        [
+            "Accept-Ranges",
+            "Content-Length",
+            "Content-Range",
+            "Content-Type",
+            "ETag",
+            "Last-Modified"
+        ].join(", ")
+    );
+
+    return headers;
+
+}
+
+
+function parseRange(
+    rangeHeader,
+    totalSize
+) {
+
+    if (
+        !rangeHeader ||
+        typeof rangeHeader !==
+            "string"
+    ) {
+
+        return null;
+
     }
 
-    return env.ASSETS.fetch(request);
-  }
+
+    const match =
+        rangeHeader
+            .trim()
+            .match(
+                /^bytes=(\\d*)-(\\d*)$/i
+            );
+
+
+    if (!match) {
+
+        return {
+            valid:
+                false
+        };
+
+    }
+
+
+    const startText =
+        match[1];
+
+    const endText =
+        match[2];
+
+
+    if (
+        !startText &&
+        !endText
+    ) {
+
+        return {
+            valid:
+                false
+        };
+
+    }
+
+
+    let start;
+    let end;
+
+
+    if (!startText) {
+
+        const suffixLength =
+            Number(
+                endText
+            );
+
+
+        if (
+            !Number.isSafeInteger(
+                suffixLength
+            ) ||
+            suffixLength <=
+                0
+        ) {
+
+            return {
+                valid:
+                    false
+            };
+
+        }
+
+
+        const actualLength =
+            Math.min(
+                suffixLength,
+                totalSize
+            );
+
+
+        start =
+            totalSize -
+            actualLength;
+
+        end =
+            totalSize -
+            1;
+
+    } else {
+
+        start =
+            Number(
+                startText
+            );
+
+
+        if (
+            !Number.isSafeInteger(
+                start
+            ) ||
+            start <
+                0 ||
+            start >=
+                totalSize
+        ) {
+
+            return {
+                valid:
+                    false
+            };
+
+        }
+
+
+        if (!endText) {
+
+            end =
+                totalSize -
+                1;
+
+        } else {
+
+            end =
+                Number(
+                    endText
+                );
+
+
+            if (
+                !Number.isSafeInteger(
+                    end
+                ) ||
+                end <
+                    start
+            ) {
+
+                return {
+                    valid:
+                        false
+                };
+
+            }
+
+
+            end =
+                Math.min(
+                    end,
+                    totalSize -
+                    1
+                );
+
+        }
+
+    }
+
+
+    return {
+
+        valid:
+            true,
+
+        start,
+
+        end,
+
+        length:
+            end -
+            start +
+            1
+
+    };
+
+}
+
+
+async function fetchFullAsset(
+    request,
+    env
+) {
+
+    const headers =
+        new Headers(
+            request.headers
+        );
+
+
+    /*
+     * Do not forward the client's Range header to ASSETS.
+     * We want the complete source object and then create a
+     * deterministic 206 response ourselves.
+     */
+    headers.delete(
+        "Range"
+    );
+
+
+    headers.delete(
+        "If-Range"
+    );
+
+
+    const assetRequest =
+        new Request(
+            request.url,
+            {
+                method:
+                    "GET",
+
+                headers
+            }
+        );
+
+
+    return env.ASSETS.fetch(
+        assetRequest
+    );
+
+}
+
+
+async function serveMedia(
+    request,
+    env
+) {
+
+    const method =
+        request.method
+            .toUpperCase();
+
+
+    if (
+        method !==
+            "GET" &&
+        method !==
+            "HEAD"
+    ) {
+
+        return new Response(
+            "Method Not Allowed",
+            {
+                status:
+                    405,
+
+                headers: {
+                    "Allow":
+                        "GET, HEAD"
+                }
+            }
+        );
+
+    }
+
+
+    const assetResponse =
+        await fetchFullAsset(
+            request,
+            env
+        );
+
+
+    if (
+        !assetResponse.ok
+    ) {
+
+        return assetResponse;
+
+    }
+
+
+    const responseHeaders =
+        addSharedHeaders(
+            new Headers(
+                assetResponse.headers
+            )
+        );
+
+
+    /*
+     * Filenames in Jingyan Media Center are immutable once
+     * published. Long-lived public caching is therefore safe.
+     */
+    responseHeaders.set(
+        "Cache-Control",
+        "public, max-age=31536000, immutable"
+    );
+
+
+    const buffer =
+        await assetResponse
+            .arrayBuffer();
+
+
+    const totalSize =
+        buffer.byteLength;
+
+
+    responseHeaders.set(
+        "Content-Length",
+        String(
+            totalSize
+        )
+    );
+
+
+    if (
+        method ===
+            "HEAD"
+    ) {
+
+        return new Response(
+            null,
+            {
+                status:
+                    200,
+
+                headers:
+                    responseHeaders
+            }
+        );
+
+    }
+
+
+    const rangeHeader =
+        request.headers.get(
+            "Range"
+        );
+
+
+    if (!rangeHeader) {
+
+        return new Response(
+            buffer,
+            {
+                status:
+                    200,
+
+                headers:
+                    responseHeaders
+            }
+        );
+
+    }
+
+
+    const range =
+        parseRange(
+            rangeHeader,
+            totalSize
+        );
+
+
+    if (
+        !range ||
+        !range.valid
+    ) {
+
+        const headers =
+            new Headers(
+                responseHeaders
+            );
+
+
+        headers.set(
+            "Content-Range",
+            \`bytes */\${totalSize}\`
+        );
+
+
+        headers.set(
+            "Content-Length",
+            "0"
+        );
+
+
+        return new Response(
+            null,
+            {
+                status:
+                    416,
+
+                headers
+            }
+        );
+
+    }
+
+
+    const chunk =
+        buffer.slice(
+            range.start,
+            range.end +
+            1
+        );
+
+
+    const headers =
+        new Headers(
+            responseHeaders
+        );
+
+
+    headers.set(
+        "Content-Range",
+        \`bytes \${range.start}-\${range.end}/\${totalSize}\`
+    );
+
+
+    headers.set(
+        "Content-Length",
+        String(
+            range.length
+        )
+    );
+
+
+    return new Response(
+        chunk,
+        {
+            status:
+                206,
+
+            headers
+        }
+    );
+
+}
+
+
+export default {
+
+    async fetch(
+        request,
+        env
+    ) {
+
+        const url =
+            new URL(
+                request.url
+            );
+
+
+        if (
+            url.pathname ===
+                "/"
+        ) {
+
+            return new Response(
+                "Jingyan Media CDN",
+                {
+                    status:
+                        200,
+
+                    headers: {
+                        "Content-Type":
+                            "text/plain; charset=utf-8",
+
+                        "Cache-Control":
+                            "no-store"
+                    }
+                }
+            );
+
+        }
+
+
+        if (
+            isMediaPath(
+                url.pathname
+            )
+        ) {
+
+            return serveMedia(
+                request,
+                env
+            );
+
+        }
+
+
+        return env.ASSETS.fetch(
+            request
+        );
+
+    }
+
 };
 `.trim();
 
 }
 
+
+
+/* =========================================================
+ * Publish
+ * ======================================================= */
 
 async function publishCDN() {
 
@@ -1458,7 +2030,7 @@ async function publishCDN() {
 
     if (
         assetCount ===
-            0
+        0
     ) {
 
         throw new Error(
@@ -1482,14 +2054,11 @@ async function publishCDN() {
             .beta
             .workers
             .get(
-
                 workerName,
-
                 {
                     account_id:
                         accountId
                 }
-
             );
 
 
@@ -1517,11 +2086,8 @@ async function publishCDN() {
             .assets
             .upload
             .create(
-
                 workerName,
-
                 {
-
                     account_id:
                         accountId,
 
@@ -1529,9 +2095,7 @@ async function publishCDN() {
                         buildCloudflareManifest(
                             manifest
                         )
-
                 }
-
             );
 
 
@@ -1559,7 +2123,7 @@ async function publishCDN() {
 
     if (
         buckets.length ===
-            0
+        0
     ) {
 
         console.log(
@@ -1602,11 +2166,8 @@ async function publishCDN() {
             .workers
             .versions
             .create(
-
                 worker.id,
-
                 {
-
                     account_id:
                         accountId,
 
@@ -1619,13 +2180,11 @@ async function publishCDN() {
 
                     bindings: [
                         {
-
                             type:
                                 "assets",
 
                             name:
                                 "ASSETS"
-
                         }
                     ],
 
@@ -1642,8 +2201,16 @@ async function publishCDN() {
                             not_found_handling:
                                 "none",
 
-                            run_worker_first:
-                                false
+                            /*
+                             * Only audio/video go through the
+                             * Worker first.
+                             *
+                             * Images remain direct static assets.
+                             */
+                            run_worker_first: [
+                                "/music/*",
+                                "/video/*"
+                            ]
 
                         }
 
@@ -1651,7 +2218,6 @@ async function publishCDN() {
 
                     modules: [
                         {
-
                             name:
                                 "jingyan-media-cdn.mjs",
 
@@ -1667,12 +2233,9 @@ async function publishCDN() {
                                     .toString(
                                         "base64"
                                     )
-
                         }
                     ]
-
                 }
-
             );
 
 
@@ -1694,11 +2257,8 @@ async function publishCDN() {
             .scripts
             .deployments
             .create(
-
                 workerName,
-
                 {
-
                     account_id:
                         accountId,
 
@@ -1707,18 +2267,14 @@ async function publishCDN() {
 
                     versions: [
                         {
-
                             percentage:
                                 100,
 
                             version_id:
                                 version.id
-
                         }
                     ]
-
                 }
-
             );
 
 
@@ -1757,6 +2313,11 @@ async function publishCDN() {
     );
 
 
+    console.log(
+        "Range / Seek support enabled for /music/* and /video/*"
+    );
+
+
     return {
 
         assetCount,
@@ -1775,8 +2336,14 @@ async function publishCDN() {
 }
 
 
+
+/* =========================================================
+ * CLI
+ * ======================================================= */
+
 if (
-    require.main === module
+    require.main ===
+    module
 ) {
 
     const command =
@@ -1789,7 +2356,7 @@ if (
 
     if (
         command ===
-            "publish"
+        "publish"
     ) {
 
         task =
@@ -1797,7 +2364,7 @@ if (
 
     } else if (
         command ===
-            "reconcile"
+        "reconcile"
     ) {
 
         task =
@@ -1848,6 +2415,11 @@ if (
 
 }
 
+
+
+/* =========================================================
+ * Exports
+ * ======================================================= */
 
 module.exports = {
 
