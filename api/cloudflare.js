@@ -32,11 +32,8 @@ function loadConfig() {
 
 function getManifestFile() {
 
-    const config =
-        loadConfig();
-
-
-    return config.cdn
+    return loadConfig()
+        .cdn
         .manifestFile;
 
 }
@@ -298,7 +295,7 @@ function validateAssetSize(
 
 
 /* =========================================================
- * Source Download
+ * GitHub source
  * ======================================================= */
 
 function encodeContentPath(
@@ -410,7 +407,7 @@ async function downloadSourceBuffer(
 
 
 /* =========================================================
- * Asset object
+ * CDN Asset
  * ======================================================= */
 
 function buildAssetObject({
@@ -627,7 +624,7 @@ function getManifestAsset(
 
 
 /* =========================================================
- * Storage record compatibility
+ * Storage compatibility
  * ======================================================= */
 
 function getRepositoryFullName(
@@ -841,7 +838,7 @@ function shouldPublishRecord(
 
 
 /* =========================================================
- * Reconcile media databases -> CDN manifest
+ * Reconcile databases -> CDN
  * ======================================================= */
 
 async function reconcileManifestFromDatabases() {
@@ -1079,7 +1076,7 @@ async function reconcileManifestFromDatabases() {
 
 
 /* =========================================================
- * Cloudflare asset manifest
+ * Cloudflare Manifest
  * ======================================================= */
 
 function buildCloudflareManifest(
@@ -1168,7 +1165,7 @@ function validateManifestLimits(
 
 
 /* =========================================================
- * Cloudflare client
+ * Cloudflare SDK
  * ======================================================= */
 
 async function getCloudflareClient() {
@@ -1207,7 +1204,7 @@ async function getCloudflareClient() {
 
 
 /* =========================================================
- * Fetch buffer by hash
+ * Asset upload
  * ======================================================= */
 
 async function getBufferForHash(
@@ -1290,11 +1287,6 @@ async function getBufferForHash(
 
 }
 
-
-
-/* =========================================================
- * Upload missing Cloudflare assets
- * ======================================================= */
 
 async function uploadMissingAssets({
 
@@ -1413,26 +1405,25 @@ async function uploadMissingAssets({
 
 
 /* =========================================================
- * CDN Worker Script
+ * CDN Worker
  *
- * MOBILE-FIRST MEDIA DELIVERY
+ * Direct link:
  *
- * Important:
+ * Browser navigation
+ *     -> lightweight media player page
  *
- * 1. /audio/* is the current audio CDN route.
- * 2. /music/* remains supported for old URLs.
- * 3. /video/* handles videos.
- * 4. Do NOT manually generate byte-range 206 responses.
- * 5. Return proper full asset responses and let Cloudflare
- *    handle byte-range delivery at the edge.
- * 6. Force browser-safe Content-Type.
- * 7. Force Content-Disposition: inline so mobile browsers
- *    display/play media instead of downloading it.
+ * <audio>, <video>, Range, API
+ *     -> original raw media stream
+ *
+ * Therefore the same CDN URL works both as:
+ *
+ * 1. a shareable direct browser link
+ * 2. a real audio/video source URL
  * ======================================================= */
 
 function createWorkerScript() {
 
-    return `
+    return String.raw`
 const MEDIA_PREFIXES = [
     "/audio/",
     "/music/",
@@ -1482,14 +1473,20 @@ function isMediaPath(
     pathname
 ) {
 
+    const lower =
+        String(
+            pathname ||
+            ""
+        )
+        .toLowerCase();
+
+
     return MEDIA_PREFIXES
         .some(
             prefix =>
-                pathname
-                    .toLowerCase()
-                    .startsWith(
-                        prefix
-                    )
+                lower.startsWith(
+                    prefix
+                )
         );
 
 }
@@ -1499,31 +1496,24 @@ function getExtension(
     pathname
 ) {
 
-    const cleanPath =
+    const filename =
         String(
             pathname ||
             ""
         )
-            .split("?")[0]
-            .split("#")[0];
+        .split("/")
+        .pop() ||
+        "";
 
 
-    const fileName =
-        cleanPath
-            .substring(
-                cleanPath
-                    .lastIndexOf("/") +
-                1
-            );
-
-
-    const dotIndex =
-        fileName
-            .lastIndexOf(".");
+    const dot =
+        filename.lastIndexOf(
+            "."
+        );
 
 
     if (
-        dotIndex <
+        dot <
         0
     ) {
 
@@ -1532,9 +1522,9 @@ function getExtension(
     }
 
 
-    return fileName
+    return filename
         .substring(
-            dotIndex
+            dot
         )
         .toLowerCase();
 
@@ -1545,15 +1535,11 @@ function getMimeType(
     pathname
 ) {
 
-    const extension =
-        getExtension(
-            pathname
-        );
-
-
     return (
         MIME_TYPES[
-            extension
+            getExtension(
+                pathname
+            )
         ] ||
         "application/octet-stream"
     );
@@ -1561,7 +1547,558 @@ function getMimeType(
 }
 
 
-function buildCorsHeaders() {
+function getMediaKind(
+    pathname
+) {
+
+    const mime =
+        getMimeType(
+            pathname
+        );
+
+
+    if (
+        mime.startsWith(
+            "video/"
+        )
+    ) {
+
+        return "video";
+
+    }
+
+
+    if (
+        mime.startsWith(
+            "audio/"
+        )
+    ) {
+
+        return "audio";
+
+    }
+
+
+    return "file";
+
+}
+
+
+function getFilename(
+    pathname
+) {
+
+    const raw =
+        String(
+            pathname ||
+            ""
+        )
+        .split("/")
+        .pop() ||
+        "media";
+
+
+    try {
+
+        return decodeURIComponent(
+            raw
+        );
+
+    } catch {
+
+        return raw;
+
+    }
+
+}
+
+
+function escapeHtml(
+    value
+) {
+
+    return String(
+        value ||
+        ""
+    )
+    .replace(
+        /&/g,
+        "&amp;"
+    )
+    .replace(
+        /</g,
+        "&lt;"
+    )
+    .replace(
+        />/g,
+        "&gt;"
+    )
+    .replace(
+        /"/g,
+        "&quot;"
+    )
+    .replace(
+        /'/g,
+        "&#39;"
+    );
+
+}
+
+
+function shouldRenderPlayer(
+    request,
+    url
+) {
+
+    if (
+        request.method !==
+        "GET"
+    ) {
+
+        return false;
+
+    }
+
+
+    if (
+        url.searchParams.get(
+            "raw"
+        ) ===
+        "1"
+    ) {
+
+        return false;
+
+    }
+
+
+    const fetchMode =
+        request.headers.get(
+            "Sec-Fetch-Mode"
+        ) ||
+        "";
+
+
+    const fetchDest =
+        request.headers.get(
+            "Sec-Fetch-Dest"
+        ) ||
+        "";
+
+
+    const accept =
+        request.headers.get(
+            "Accept"
+        ) ||
+        "";
+
+
+    return (
+        fetchMode ===
+            "navigate" ||
+
+        fetchDest ===
+            "document" ||
+
+        accept.includes(
+            "text/html"
+        )
+    );
+
+}
+
+
+function buildRawMediaUrl(
+    request
+) {
+
+    const rawUrl =
+        new URL(
+            request.url
+        );
+
+
+    rawUrl.searchParams.set(
+        "raw",
+        "1"
+    );
+
+
+    return (
+        rawUrl.pathname +
+        rawUrl.search
+    );
+
+}
+
+
+function buildPlayerHtml(
+    request,
+    url
+) {
+
+    const kind =
+        getMediaKind(
+            url.pathname
+        );
+
+
+    const mime =
+        getMimeType(
+            url.pathname
+        );
+
+
+    const filename =
+        getFilename(
+            url.pathname
+        );
+
+
+    const mediaSource =
+        buildRawMediaUrl(
+            request
+        );
+
+
+    const safeFilename =
+        escapeHtml(
+            filename
+        );
+
+
+    const safeSource =
+        escapeHtml(
+            mediaSource
+        );
+
+
+    const safeMime =
+        escapeHtml(
+            mime
+        );
+
+
+    let player;
+
+
+    if (
+        kind ===
+        "video"
+    ) {
+
+        player =
+            '<video class="media video" controls playsinline preload="metadata">' +
+                '<source src="' +
+                    safeSource +
+                    '" type="' +
+                    safeMime +
+                    '">' +
+                '当前浏览器无法播放这个视频。' +
+            '</video>';
+
+    } else {
+
+        player =
+            '<div class="audio-art">' +
+                '<span>♫</span>' +
+            '</div>' +
+
+            '<audio class="media audio" controls preload="metadata">' +
+                '<source src="' +
+                    safeSource +
+                    '" type="' +
+                    safeMime +
+                    '">' +
+                '当前浏览器无法播放这个音频。' +
+            '</audio>';
+
+    }
+
+
+    return [
+        '<!doctype html>',
+
+        '<html lang="zh-CN">',
+
+        '<head>',
+
+        '<meta charset="utf-8">',
+
+        '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">',
+
+        '<meta name="color-scheme" content="light">',
+
+        '<title>',
+        safeFilename,
+        ' · Jingyan Media',
+        '</title>',
+
+        '<style>',
+
+        ':root{',
+            'color-scheme:light;',
+            '--bg:#f8f7fb;',
+            '--surface:rgba(255,255,255,.92);',
+            '--text:#2c1c4d;',
+            '--muted:#887d9c;',
+            '--purple:#8058e8;',
+            '--purple-soft:#eee8ff;',
+            '--mint:#43b88c;',
+            '--sky:#58a7e8;',
+            '--line:rgba(91,65,129,.12);',
+        '}',
+
+        '*{box-sizing:border-box}',
+
+        'html,body{',
+            'margin:0;',
+            'min-height:100%;',
+        '}',
+
+        'body{',
+            'min-height:100svh;',
+            'display:grid;',
+            'place-items:center;',
+            'padding:clamp(16px,4vw,40px);',
+            'font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;',
+            'color:var(--text);',
+            'background:',
+                'radial-gradient(circle at 10% 5%,rgba(128,88,232,.11),transparent 30%),',
+                'radial-gradient(circle at 90% 18%,rgba(88,167,232,.07),transparent 26%),',
+                'radial-gradient(circle at 82% 90%,rgba(67,184,140,.05),transparent 24%),',
+                'var(--bg);',
+        '}',
+
+        '.shell{',
+            'width:min(980px,100%);',
+        '}',
+
+        '.brand{',
+            'margin:0 0 14px;',
+            'display:flex;',
+            'align-items:center;',
+            'gap:10px;',
+            'color:var(--muted);',
+            'font-size:12px;',
+        '}',
+
+        '.mark{',
+            'width:32px;',
+            'height:32px;',
+            'display:grid;',
+            'place-items:center;',
+            'border-radius:10px;',
+            'color:#fff;',
+            'font-weight:800;',
+            'background:linear-gradient(145deg,#956df0,#7045df);',
+            'box-shadow:0 8px 20px rgba(112,69,223,.18);',
+        '}',
+
+        '.card{',
+            'padding:clamp(14px,2.4vw,24px);',
+            'border:1px solid var(--line);',
+            'border-radius:24px;',
+            'background:var(--surface);',
+            'box-shadow:0 24px 70px rgba(62,40,94,.09);',
+            'backdrop-filter:blur(16px);',
+        '}',
+
+        '.video{',
+            'width:100%;',
+            'max-height:78svh;',
+            'display:block;',
+            'border-radius:18px;',
+            'background:#09070c;',
+        '}',
+
+        '.audio-art{',
+            'height:min(260px,42svh);',
+            'margin-bottom:18px;',
+            'display:grid;',
+            'place-items:center;',
+            'border-radius:18px;',
+            'background:',
+                'radial-gradient(circle at 30% 25%,rgba(255,255,255,.55),transparent 28%),',
+                'linear-gradient(145deg,#eee8ff,#edf7ff 60%,#edf9f4);',
+        '}',
+
+        '.audio-art span{',
+            'width:78px;',
+            'height:78px;',
+            'display:grid;',
+            'place-items:center;',
+            'border-radius:24px;',
+            'color:#fff;',
+            'font-size:32px;',
+            'background:linear-gradient(145deg,#956df0,#7045df);',
+            'box-shadow:0 18px 35px rgba(112,69,223,.22);',
+        '}',
+
+        '.audio{',
+            'width:100%;',
+            'display:block;',
+        '}',
+
+        '.info{',
+            'margin-top:16px;',
+            'display:flex;',
+            'align-items:center;',
+            'justify-content:space-between;',
+            'gap:14px;',
+        '}',
+
+        '.copy{min-width:0}',
+
+        '.name{',
+            'margin:0;',
+            'overflow:hidden;',
+            'font-size:14px;',
+            'font-weight:700;',
+            'text-overflow:ellipsis;',
+            'white-space:nowrap;',
+        '}',
+
+        '.meta{',
+            'margin:5px 0 0;',
+            'color:var(--muted);',
+            'font-size:10px;',
+        '}',
+
+        '.badge{',
+            'flex:0 0 auto;',
+            'padding:6px 9px;',
+            'border-radius:999px;',
+            'color:var(--purple);',
+            'background:var(--purple-soft);',
+            'font-size:9px;',
+            'font-weight:800;',
+        '}',
+
+        '@media(max-width:600px){',
+            'body{',
+                'padding:12px;',
+                'place-items:center;',
+            '}',
+
+            '.card{',
+                'padding:12px;',
+                'border-radius:20px;',
+            '}',
+
+            '.video{',
+                'max-height:72svh;',
+                'border-radius:14px;',
+            '}',
+
+            '.audio-art{',
+                'height:34svh;',
+                'min-height:180px;',
+                'border-radius:14px;',
+            '}',
+
+            '.brand{',
+                'margin-left:4px;',
+            '}',
+        '}',
+
+        '</style>',
+
+        '</head>',
+
+        '<body>',
+
+        '<main class="shell">',
+
+        '<div class="brand">',
+            '<span class="mark">J</span>',
+            '<span>Jingyan Media CDN</span>',
+        '</div>',
+
+        '<section class="card">',
+
+        player,
+
+        '<div class="info">',
+
+        '<div class="copy">',
+            '<p class="name">',
+                safeFilename,
+            '</p>',
+            '<p class="meta">',
+                kind === "video"
+                    ? "视频直链 · 支持拖动进度"
+                    : "音频直链 · 支持拖动进度",
+            '</p>',
+        '</div>',
+
+        '<span class="badge">',
+            kind === "video"
+                ? "VIDEO"
+                : "AUDIO",
+        '</span>',
+
+        '</div>',
+
+        '</section>',
+
+        '</main>',
+
+        '</body>',
+
+        '</html>'
+
+    ].join("");
+
+}
+
+
+function playerResponse(
+    request,
+    url
+) {
+
+    const html =
+        buildPlayerHtml(
+            request,
+            url
+        );
+
+
+    return new Response(
+        html,
+        {
+            status:
+                200,
+
+            headers: {
+
+                "Content-Type":
+                    "text/html; charset=utf-8",
+
+                "Cache-Control":
+                    "no-store",
+
+                "Content-Security-Policy":
+                    "default-src 'none'; style-src 'unsafe-inline'; media-src 'self'; base-uri 'none'; frame-ancestors 'none'",
+
+                "Referrer-Policy":
+                    "no-referrer",
+
+                "X-Content-Type-Options":
+                    "nosniff",
+
+                "X-Frame-Options":
+                    "DENY"
+
+            }
+        }
+    );
+
+}
+
+
+function corsHeaders() {
 
     return {
 
@@ -1582,8 +2119,7 @@ function buildCorsHeaders() {
                 "Content-Type",
                 "Content-Disposition",
                 "ETag",
-                "Last-Modified",
-                "CF-Cache-Status"
+                "Last-Modified"
             ].join(", ")
 
     };
@@ -1591,7 +2127,7 @@ function buildCorsHeaders() {
 }
 
 
-function applyMediaHeaders(
+function applyRawMediaHeaders(
     originalHeaders,
     pathname
 ) {
@@ -1602,37 +2138,20 @@ function applyMediaHeaders(
         );
 
 
-    const mimeType =
-        getMimeType(
-            pathname
-        );
-
-
-    /*
-     * Critical for mobile Safari / Chrome / Edge.
-     *
-     * The static asset direct-upload API may not have
-     * attached a useful MIME type, so force it here.
-     */
     headers.set(
         "Content-Type",
-        mimeType
+        getMimeType(
+            pathname
+        )
     );
 
 
-    /*
-     * The resource is media intended for browser playback,
-     * not a downloadable attachment.
-     */
     headers.set(
         "Content-Disposition",
         "inline"
     );
 
 
-    /*
-     * Tell browsers explicitly that byte seeking is allowed.
-     */
     headers.set(
         "Accept-Ranges",
         "bytes"
@@ -1640,12 +2159,15 @@ function applyMediaHeaders(
 
 
     /*
-     * Media filenames are immutable after publishing in the
-     * Jingyan media pipeline.
+     * While the site is still being completed, do not keep
+     * final media response headers frozen in browser cache
+     * for one year.
+     *
+     * After V1 stabilizes we can increase this safely.
      */
     headers.set(
         "Cache-Control",
-        "public, max-age=31536000, immutable"
+        "public, max-age=3600, must-revalidate"
     );
 
 
@@ -1676,26 +2198,17 @@ function applyMediaHeaders(
             "Content-Type",
             "Content-Disposition",
             "ETag",
-            "Last-Modified",
-            "CF-Cache-Status"
+            "Last-Modified"
         ].join(", ")
     );
 
 
-    /*
-     * Allows media to be used by the main app and future
-     * share pages without CORP blocking.
-     */
     headers.set(
         "Cross-Origin-Resource-Policy",
         "cross-origin"
     );
 
 
-    /*
-     * Because we explicitly provide the correct MIME type,
-     * browsers no longer need to MIME-sniff the resource.
-     */
     headers.set(
         "X-Content-Type-Options",
         "nosniff"
@@ -1703,6 +2216,78 @@ function applyMediaHeaders(
 
 
     return headers;
+
+}
+
+
+async function rawMediaResponse(
+    request,
+    env,
+    url
+) {
+
+    const assetUrl =
+        new URL(
+            request.url
+        );
+
+
+    /*
+     * raw=1 exists only to prevent the player shell from
+     * recursively loading itself.
+     *
+     * The actual static asset does not need this parameter.
+     */
+    assetUrl.searchParams.delete(
+        "raw"
+    );
+
+
+    const assetRequest =
+        new Request(
+            assetUrl.toString(),
+            request
+        );
+
+
+    const response =
+        await env.ASSETS.fetch(
+            assetRequest
+        );
+
+
+    if (
+        response.status ===
+        404
+    ) {
+
+        return response;
+
+    }
+
+
+    const headers =
+        applyRawMediaHeaders(
+            response.headers,
+            url.pathname
+        );
+
+
+    return new Response(
+        request.method ===
+            "HEAD"
+            ? null
+            : response.body,
+        {
+            status:
+                response.status,
+
+            statusText:
+                response.statusText,
+
+            headers
+        }
+    );
 
 }
 
@@ -1730,7 +2315,7 @@ async function serveMedia(
                     204,
 
                 headers:
-                    buildCorsHeaders()
+                    corsHeaders()
             }
         );
 
@@ -1751,7 +2336,7 @@ async function serveMedia(
                     405,
 
                 headers: {
-                    ...buildCorsHeaders(),
+                    ...corsHeaders(),
 
                     "Allow":
                         "GET, HEAD, OPTIONS"
@@ -1763,78 +2348,34 @@ async function serveMedia(
 
 
     /*
-     * IMPORTANT:
+     * Someone actually opens the direct CDN URL in a browser.
      *
-     * Pass the ORIGINAL request to Cloudflare Assets.
-     *
-     * Do not strip Range.
-     * Do not manually slice ArrayBuffers.
-     * Do not manually generate a 206.
-     *
-     * Cloudflare's asset/cache layer handles byte ranges
-     * much more efficiently and consistently across mobile
-     * browsers.
+     * Give that person a player instead of leaving the
+     * browser free to decide whether the MP4 should download.
      */
-    const assetResponse =
-        await env.ASSETS.fetch(
-            request
-        );
-
-
     if (
-        assetResponse.status ===
-            404
+        shouldRenderPlayer(
+            request,
+            url
+        )
     ) {
 
-        return new Response(
-            assetResponse.body,
-            {
-                status:
-                    404,
-
-                headers:
-                    applyMediaHeaders(
-                        assetResponse.headers,
-                        url.pathname
-                    )
-            }
+        return playerResponse(
+            request,
+            url
         );
 
     }
 
 
-    const headers =
-        applyMediaHeaders(
-            assetResponse.headers,
-            url.pathname
-        );
-
-
     /*
-     * Preserve Cloudflare's own status.
-     *
-     * This may be:
-     *
-     * 200 OK
-     * 206 Partial Content
-     * 304 Not Modified
-     *
-     * depending on how the edge processed the request.
+     * <audio>, <video>, Range requests, external players,
+     * API clients and raw=1 all receive the real file.
      */
-    return new Response(
-        method ===
-            "HEAD"
-            ? null
-            : assetResponse.body,
-        {
-            status:
-                assetResponse.status,
-
-            statusText:
-                assetResponse.statusText,
-
-            headers
-        }
+    return rawMediaResponse(
+        request,
+        env,
+        url
     );
 
 }
@@ -1854,35 +2395,6 @@ export default {
 
 
         if (
-            url.pathname ===
-            "/"
-        ) {
-
-            return new Response(
-                "Jingyan Media CDN",
-                {
-                    status:
-                        200,
-
-                    headers: {
-
-                        "Content-Type":
-                            "text/plain; charset=utf-8",
-
-                        "Cache-Control":
-                            "no-store"
-
-                    }
-                }
-            );
-
-        }
-
-
-        /*
-         * Mobile-first media delivery.
-         */
-        if (
             isMediaPath(
                 url.pathname
             )
@@ -1897,10 +2409,6 @@ export default {
         }
 
 
-        /*
-         * Images and every other asset stay on the normal
-         * Cloudflare Static Assets path.
-         */
         return env.ASSETS.fetch(
             request
         );
@@ -1915,7 +2423,7 @@ export default {
 
 
 /* =========================================================
- * Publish CDN
+ * Publish
  * ======================================================= */
 
 async function publishCDN() {
@@ -2064,13 +2572,13 @@ async function publishCDN() {
         0
     ) {
 
-        console.log(
-            "Cloudflare already has all required asset hashes"
-        );
-
-
         completionJwt =
             uploadSession.jwt;
+
+
+        console.log(
+            "Cloudflare already has all required assets"
+        );
 
     } else {
 
@@ -2116,15 +2624,17 @@ async function publishCDN() {
                         config.cdn
                             .compatibilityDate,
 
+                    compatibility_flags: [
+                        "assets_navigation_has_no_effect"
+                    ],
+
                     bindings: [
                         {
-
                             type:
                                 "assets",
 
                             name:
                                 "ASSETS"
-
                         }
                     ],
 
@@ -2141,18 +2651,6 @@ async function publishCDN() {
                             not_found_handling:
                                 "none",
 
-                            /*
-                             * IMPORTANT:
-                             *
-                             * Current audio CDN:
-                             * /audio/*
-                             *
-                             * Legacy compatibility:
-                             * /music/*
-                             *
-                             * Video:
-                             * /video/*
-                             */
                             run_worker_first: [
 
                                 "/audio/*",
@@ -2169,7 +2667,6 @@ async function publishCDN() {
 
                     modules: [
                         {
-
                             name:
                                 "jingyan-media-cdn.mjs",
 
@@ -2185,7 +2682,6 @@ async function publishCDN() {
                                     .toString(
                                         "base64"
                                     )
-
                         }
                     ]
                 }
@@ -2267,27 +2763,17 @@ async function publishCDN() {
 
 
     console.log(
-        "Mobile media delivery enabled."
+        "Direct media navigation player: enabled"
     );
 
 
     console.log(
-        "Audio: /audio/* + legacy /music/*"
+        "Raw audio/video Range delivery: enabled"
     );
 
 
     console.log(
-        "Video: /video/*"
-    );
-
-
-    console.log(
-        "Content-Disposition: inline"
-    );
-
-
-    console.log(
-        "Range handling delegated to Cloudflare edge."
+        "Desktop + Mobile media routing: enabled"
     );
 
 
