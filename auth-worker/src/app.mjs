@@ -44,6 +44,10 @@ import {
 } from "./profile-api.mjs";
 
 import {
+  handleProfileSettingsRequest
+} from "./profile-settings-api.mjs";
+
+import {
   handlePasskeyApiRequest,
   isPublicPasskeyApiPath
 } from "./passkeys.mjs";
@@ -126,6 +130,21 @@ const PROTECTED_ACTIVE_ASSETS =
     [
       "/profile/index.html",
       "/profile/"
+    ],
+
+    [
+      "/profile/settings",
+      "/profile/settings/"
+    ],
+
+    [
+      "/profile/settings/",
+      "/profile/settings/"
+    ],
+
+    [
+      "/profile/settings/index.html",
+      "/profile/settings/"
     ]
 
   ]);
@@ -521,10 +540,6 @@ async function serveProtectedAsset(
     );
 
 
-  /*
-   * HTML shell pages should not stay stuck
-   * behind a stale browser / edge cache.
-   */
   headers.set(
     "Cache-Control",
     "no-store, max-age=0"
@@ -564,10 +579,11 @@ async function serveProtectedAsset(
 }
 
 
-async function handleProtectedAdminMediaApi(
+async function authenticatedRequest(
   request,
   env,
-  ctx
+  ctx,
+  handler
 ) {
 
   const authentication =
@@ -589,10 +605,64 @@ async function handleProtectedAdminMediaApi(
 
 
   if (
-    !hasOwnerControlAccess(
+    !hasActiveAccount(
       authentication
         .auth
         .user
+    )
+  ) {
+
+    return jsonResponse(
+      {
+        error:
+          "active_account_required"
+      },
+      403
+    );
+
+  }
+
+
+  const response =
+    await handler(
+      authentication.auth
+    );
+
+
+  return cloneWithCookie(
+    response,
+    authentication.cookie
+  );
+
+}
+
+
+async function handleProtectedAdminMediaApi(
+  request,
+  env,
+  ctx
+) {
+
+  const authentication =
+    await authenticateThroughExistingWorker(
+      request,
+      env,
+      ctx
+    );
+
+
+  if (
+    !authentication.ok
+  ) {
+
+    return authentication.response;
+
+  }
+
+
+  if (
+    !hasOwnerControlAccess(
+      authentication.auth.user
     )
   ) {
 
@@ -641,17 +711,14 @@ async function handleProtectedAdminUserLifecycleApi(
     !authentication.ok
   ) {
 
-    return authentication
-      .response;
+    return authentication.response;
 
   }
 
 
   if (
     !hasOwnerControlAccess(
-      authentication
-        .auth
-        .user
+      authentication.auth.user
     )
   ) {
 
@@ -709,54 +776,16 @@ async function handlePasskeyApi(
   }
 
 
-  const authentication =
-    await authenticateThroughExistingWorker(
-      request,
-      env,
-      ctx
-    );
-
-
-  if (
-    !authentication.ok
-  ) {
-
-    return authentication
-      .response;
-
-  }
-
-
-  if (
-    !hasActiveAccount(
-      authentication
-        .auth
-        .user
-    )
-  ) {
-
-    return jsonResponse(
-      {
-        error:
-          "active_account_required"
-      },
-      403
-    );
-
-  }
-
-
-  const response =
-    await handlePasskeyApiRequest(
-      request,
-      env,
-      authentication.auth
-    );
-
-
-  return cloneWithCookie(
-    response,
-    authentication.cookie
+  return authenticatedRequest(
+    request,
+    env,
+    ctx,
+    auth =>
+      handlePasskeyApiRequest(
+        request,
+        env,
+        auth
+      )
   );
 
 }
@@ -848,17 +877,14 @@ async function servePasskeyManagerPage(
     }
 
 
-    return authentication
-      .response;
+    return authentication.response;
 
   }
 
 
   if (
     !hasActiveAccount(
-      authentication
-        .auth
-        .user
+      authentication.auth.user
     )
   ) {
 
@@ -873,9 +899,7 @@ async function servePasskeyManagerPage(
 
   const response =
     renderPasskeyManagerPage(
-      authentication
-        .auth
-        .user
+      authentication.auth.user
     );
 
 
@@ -948,7 +972,6 @@ async function reconcileUserUploadRequest(
   await reconcileUploadJob(
     env,
     auth,
-
     decodeURIComponent(
       jobMatch[1]
     )
@@ -963,76 +986,36 @@ async function handleAuthenticatedBatchApi(
   ctx
 ) {
 
-  const authentication =
-    await authenticateThroughExistingWorker(
-      request,
-      env,
-      ctx
-    );
+  return authenticatedRequest(
+    request,
+    env,
+    ctx,
+    async auth => {
+
+      if (
+        isUserUploadBatchStagePath(
+          new URL(
+            request.url
+          ).pathname
+        )
+      ) {
+
+        return handleUserUploadBatchStageRequest(
+          request,
+          env,
+          auth
+        );
+
+      }
 
 
-  if (
-    !authentication.ok
-  ) {
-
-    return authentication
-      .response;
-
-  }
-
-
-  if (
-    !hasActiveAccount(
-      authentication
-        .auth
-        .user
-    )
-  ) {
-
-    return jsonResponse(
-      {
-        error:
-          "active_account_required"
-      },
-      403
-    );
-
-  }
-
-
-  let response;
-
-
-  if (
-    isUserUploadBatchStagePath(
-      new URL(
-        request.url
-      ).pathname
-    )
-  ) {
-
-    response =
-      await handleUserUploadBatchStageRequest(
+      return handleUserUploadBatchRequest(
         request,
         env,
-        authentication.auth
+        auth
       );
 
-  } else {
-
-    response =
-      await handleUserUploadBatchRequest(
-        request,
-        env,
-        authentication.auth
-      );
-
-  }
-
-
-  return cloneWithCookie(
-    response,
-    authentication.cookie
+    }
   );
 
 }
@@ -1044,54 +1027,16 @@ async function handleAuthenticatedCollectionApi(
   ctx
 ) {
 
-  const authentication =
-    await authenticateThroughExistingWorker(
-      request,
-      env,
-      ctx
-    );
-
-
-  if (
-    !authentication.ok
-  ) {
-
-    return authentication
-      .response;
-
-  }
-
-
-  if (
-    !hasActiveAccount(
-      authentication
-        .auth
-        .user
-    )
-  ) {
-
-    return jsonResponse(
-      {
-        error:
-          "active_account_required"
-      },
-      403
-    );
-
-  }
-
-
-  const response =
-    await handleCollectionRequest(
-      request,
-      env,
-      authentication.auth
-    );
-
-
-  return cloneWithCookie(
-    response,
-    authentication.cookie
+  return authenticatedRequest(
+    request,
+    env,
+    ctx,
+    auth =>
+      handleCollectionRequest(
+        request,
+        env,
+        auth
+      )
   );
 
 }
@@ -1103,54 +1048,37 @@ async function handleAuthenticatedProfileApi(
   ctx
 ) {
 
-  const authentication =
-    await authenticateThroughExistingWorker(
-      request,
-      env,
-      ctx
-    );
+  return authenticatedRequest(
+    request,
+    env,
+    ctx,
+    auth =>
+      handleProfileRequest(
+        request,
+        env,
+        auth
+      )
+  );
+
+}
 
 
-  if (
-    !authentication.ok
-  ) {
+async function handleAuthenticatedProfileSettingsApi(
+  request,
+  env,
+  ctx
+) {
 
-    return authentication
-      .response;
-
-  }
-
-
-  if (
-    !hasActiveAccount(
-      authentication
-        .auth
-        .user
-    )
-  ) {
-
-    return jsonResponse(
-      {
-        error:
-          "active_account_required"
-      },
-      403
-    );
-
-  }
-
-
-  const response =
-    await handleProfileRequest(
-      request,
-      env,
-      authentication.auth
-    );
-
-
-  return cloneWithCookie(
-    response,
-    authentication.cookie
+  return authenticatedRequest(
+    request,
+    env,
+    ctx,
+    auth =>
+      handleProfileSettingsRequest(
+        request,
+        env,
+        auth
+      )
   );
 
 }
@@ -1209,19 +1137,13 @@ export default {
 
     try {
 
-      /*
-       * Login
-       */
       if (
         url.pathname ===
           "/login" ||
-
         url.pathname ===
           "/login/" ||
-
         url.pathname ===
           "/owner-login" ||
-
         url.pathname ===
           "/owner-login/"
       ) {
@@ -1233,19 +1155,13 @@ export default {
       }
 
 
-      /*
-       * Passkey Manager
-       */
       if (
         url.pathname ===
           "/passkeys" ||
-
         url.pathname ===
           "/passkeys/" ||
-
         url.pathname ===
           "/security/passkeys" ||
-
         url.pathname ===
           "/security/passkeys/"
       ) {
@@ -1259,13 +1175,9 @@ export default {
       }
 
 
-      /*
-       * Passkey API
-       */
       if (
         url.pathname ===
           "/api/passkeys" ||
-
         url.pathname.startsWith(
           "/api/passkeys/"
         )
@@ -1280,22 +1192,16 @@ export default {
       }
 
 
-      /*
-       * User Lifecycle
-       */
       if (
         isAdminUserLifecyclePath(
           url.pathname
         ) &&
-
         (
           request.method
             .toUpperCase() ===
             "DELETE" ||
-
           url.pathname ===
             "/api/admin/deleted-users" ||
-
           url.pathname.startsWith(
             "/api/admin/deleted-users/"
           )
@@ -1311,9 +1217,6 @@ export default {
       }
 
 
-      /*
-       * Internal Media Sync
-       */
       if (
         url.pathname.startsWith(
           "/api/internal/media-sync/"
@@ -1328,9 +1231,6 @@ export default {
       }
 
 
-      /*
-       * Internal Batch Upload
-       */
       if (
         url.pathname.startsWith(
           "/api/internal/upload-batches/"
@@ -1345,9 +1245,6 @@ export default {
       }
 
 
-      /*
-       * Internal Single Upload
-       */
       if (
         url.pathname.startsWith(
           "/api/internal/uploads/"
@@ -1362,16 +1259,28 @@ export default {
       }
 
 
-      /*
-       * Profile + Favorites
-       */
+      if (
+        url.pathname ===
+          "/api/profile/settings" ||
+        url.pathname.startsWith(
+          "/api/profile/settings/"
+        )
+      ) {
+
+        return await handleAuthenticatedProfileSettingsApi(
+          request,
+          env,
+          ctx
+        );
+
+      }
+
+
       if (
         url.pathname ===
           "/api/profile/overview" ||
-
         url.pathname ===
           "/api/favorites" ||
-
         url.pathname.startsWith(
           "/api/favorites/"
         )
@@ -1386,13 +1295,9 @@ export default {
       }
 
 
-      /*
-       * Collections Core
-       */
       if (
         url.pathname ===
           "/api/collections" ||
-
         url.pathname.startsWith(
           "/api/collections/"
         )
@@ -1407,13 +1312,9 @@ export default {
       }
 
 
-      /*
-       * Batch Upload V2
-       */
       if (
         url.pathname ===
           "/api/upload-batches" ||
-
         url.pathname.startsWith(
           "/api/upload-batches/"
         )
@@ -1428,13 +1329,9 @@ export default {
       }
 
 
-      /*
-       * Upload API
-       */
       if (
         url.pathname ===
           "/api/uploads" ||
-
         url.pathname.startsWith(
           "/api/uploads/"
         )
@@ -1452,8 +1349,7 @@ export default {
           !authentication.ok
         ) {
 
-          return authentication
-            .response;
+          return authentication.response;
 
         }
 
@@ -1494,9 +1390,6 @@ export default {
       }
 
 
-      /*
-       * Owner Media API
-       */
       if (
         url.pathname ===
           "/api/admin/media"
@@ -1511,14 +1404,10 @@ export default {
       }
 
 
-      /*
-       * Owner-only pages.
-       */
       const ownerAsset =
-        PROTECTED_OWNER_ASSETS
-          .get(
-            url.pathname
-          );
+        PROTECTED_OWNER_ASSETS.get(
+          url.pathname
+        );
 
 
       if (
@@ -1536,14 +1425,10 @@ export default {
       }
 
 
-      /*
-       * Any active member may use these pages.
-       */
       const activeAsset =
-        PROTECTED_ACTIVE_ASSETS
-          .get(
-            url.pathname
-          );
+        PROTECTED_ACTIVE_ASSETS.get(
+          url.pathname
+        );
 
 
       if (
@@ -1561,10 +1446,6 @@ export default {
       }
 
 
-      /*
-       * Everything else continues through
-       * the original auth worker.
-       */
       return await authWorker.fetch(
         request,
         env,
