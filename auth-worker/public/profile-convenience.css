@@ -1,0 +1,324 @@
+/*
+ * Jingyan Media Center
+ * Profile Convenience Layer
+ *
+ * 目标：
+ * 1. Collection 内直接复制 CDN
+ * 2. 最近上传固定短摘要
+ * 3. 收藏默认折叠
+ * 4. 不改变底层 Collection / Media 数据结构
+ */
+
+
+/* =========================
+   Collection media actions
+   ========================= */
+
+.drawer-media-item .drawer-actions {
+    display:
+        flex;
+
+    flex-wrap:
+        wrap;
+
+    align-items:
+        center;
+
+    gap:
+        8px;
+}
+
+
+.jy-copy-cdn {
+    color:
+        #5638b7;
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(245, 241, 255, .96),
+            rgba(238, 246, 255, .92)
+        );
+
+    border:
+        1px solid
+        rgba(111, 76, 221, .14);
+
+    box-shadow:
+        none;
+}
+
+
+.jy-copy-cdn:hover {
+    background:
+        linear-gradient(
+            135deg,
+            rgba(239, 233, 255, 1),
+            rgba(231, 243, 255, 1)
+        );
+}
+
+
+.jy-copy-cdn:disabled {
+    opacity:
+        .62;
+
+    cursor:
+        default;
+}
+
+
+/* =========================
+   Homepage summary
+   ========================= */
+
+.jy-compact-overview {
+    margin-top:
+        46px;
+}
+
+
+.jy-compact-overview
+.profile-overview-heading {
+    align-items:
+        flex-end;
+
+    margin-bottom:
+        18px;
+}
+
+
+.jy-compact-overview
+.profile-overview-heading h2 {
+    font-size:
+        clamp(
+            28px,
+            4vw,
+            40px
+        );
+
+    letter-spacing:
+        -.035em;
+}
+
+
+.jy-compact-overview
+.profile-overview-heading p {
+    max-width:
+        680px;
+
+    color:
+        #857a9d;
+
+    line-height:
+        1.65;
+}
+
+
+.jy-compact-overview
+.profile-overview-card {
+    box-shadow:
+        0 14px 38px
+        rgba(
+            72,
+            48,
+            120,
+            .055
+        );
+}
+
+
+.profile-overview-card-head {
+    gap:
+        12px;
+}
+
+
+.jy-summary-toggle {
+    margin-left:
+        auto;
+
+    min-height:
+        38px;
+
+    padding:
+        8px 14px;
+
+    border:
+        1px solid
+        rgba(
+            104,
+            72,
+            190,
+            .12
+        );
+
+    border-radius:
+        999px;
+
+    color:
+        #6546c4;
+
+    background:
+        rgba(
+            245,
+            241,
+            255,
+            .86
+        );
+
+    font:
+        inherit;
+
+    font-size:
+        13px;
+
+    font-weight:
+        760;
+
+    cursor:
+        pointer;
+
+    -webkit-tap-highlight-color:
+        transparent;
+}
+
+
+.jy-summary-toggle:hover {
+    background:
+        rgba(
+            239,
+            233,
+            255,
+            1
+        );
+}
+
+
+.jy-summary-overflow {
+    display:
+        none !important;
+}
+
+
+.profile-overview-card.jy-overview-collapsed
+.profile-media-list,
+
+.profile-overview-card.jy-overview-collapsed
+.profile-overview-empty {
+    display:
+        none !important;
+}
+
+
+.profile-overview-card.jy-overview-collapsed {
+    padding-bottom:
+        22px;
+}
+
+
+/* =========================
+   Mobile
+   ========================= */
+
+@media (
+    max-width:
+        760px
+) {
+
+    .jy-compact-overview {
+        margin-top:
+            34px;
+    }
+
+
+    .jy-compact-overview
+    .profile-overview-heading {
+        align-items:
+            stretch;
+    }
+
+
+    .jy-compact-overview
+    .profile-overview-heading h2 {
+        font-size:
+            30px;
+    }
+
+
+    .jy-compact-overview
+    .profile-overview-heading p {
+        font-size:
+            14px;
+    }
+
+
+    .drawer-media-item
+    .drawer-actions {
+        width:
+            100%;
+    }
+
+
+    .drawer-media-item
+    .drawer-actions
+    button {
+        min-height:
+            44px;
+    }
+
+
+    .jy-copy-cdn {
+        flex:
+            1 1
+            120px;
+    }
+
+
+    .jy-summary-toggle {
+        min-width:
+            64px;
+
+        min-height:
+            42px;
+    }
+
+}
+
+
+/* =========================
+   Very small mobile
+   ========================= */
+
+@media (
+    max-width:
+        430px
+) {
+
+    .profile-overview-card-head {
+        align-items:
+            center;
+    }
+
+
+    .profile-overview-note {
+        display:
+            none;
+    }
+
+
+    .jy-summary-toggle {
+        margin-left:
+            auto;
+    }
+
+
+    .drawer-media-item
+    .drawer-actions
+    button {
+        flex:
+            1 1
+            calc(50% - 4px);
+    }
+
+}
