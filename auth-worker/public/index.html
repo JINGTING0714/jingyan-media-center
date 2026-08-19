@@ -8,19 +8,19 @@
 
 <meta
 name="viewport"
-content="width=device-width, initial-scale=1.0">
+content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 
 <meta
 name="color-scheme"
 content="light">
 
 <title>
-Jingyan Media Center
+我的主页 · Jingyan Media Center
 </title>
 
 <meta
 name="description"
-content="Jingyan Media Center 媒体上传与统一 CDN 管理中心">
+content="Jingyan Media Center 个人媒体主页">
 
 <link
 rel="stylesheet"
@@ -28,24 +28,28 @@ href="/style.css">
 
 <link
 rel="stylesheet"
-href="/batch-v1.css?v=20260818-batch-v2-1">
+href="/profile.css?v=20260819-profile-v2">
 
 <link
 rel="stylesheet"
-href="/app-shell.css?v=20260819-shell-v1">
+href="/profile-overview.css?v=20260819-profile-overview-v2">
+
+<link
+rel="stylesheet"
+href="/app-shell.css?v=20260819-shell-v2">
 
 <script
-src="/app-shell.js?v=20260819-shell-v1"
+src="/app-shell.js?v=20260819-shell-v2"
 defer>
 </script>
 
 <script
-src="/batch-v1.js?v=20260818-batch-v2-1"
+src="/profile.js?v=20260819-profile-v2"
 defer>
 </script>
 
 <script
-src="/app.js"
+src="/profile-overview.js?v=20260819-profile-overview-v2"
 defer>
 </script>
 
@@ -73,7 +77,7 @@ Jingyan Media Center
 </div>
 
 <div class="brand-subtitle">
-智能媒体上传与统一 CDN
+私人媒体中心
 </div>
 
 </div>
@@ -85,20 +89,19 @@ Jingyan Media Center
 
 <a
 href="/"
-class="nav-link active">
+class="nav-link">
 上传中心
 </a>
 
 <a
 href="/profile/"
-class="nav-link">
+class="nav-link active">
 我的主页
 </a>
 
 <a
 href="/account"
-class="nav-link"
-id="accountLink">
+class="nav-link">
 账户
 </a>
 
@@ -117,7 +120,7 @@ class="identity"
 id="identity">
 
 <span class="identity-status">
-正在检查登录状态…
+正在读取账户…
 </span>
 
 </div>
@@ -126,44 +129,224 @@ id="identity">
 
 
 
-<main>
+<main class="profile-main">
 
 
-<section class="hero">
+<section class="profile-hero card">
 
-<div>
+<div class="profile-person">
 
-<div class="eyebrow">
-JINGYAN MEDIA SYSTEM
+<div
+class="profile-avatar"
+id="profileAvatar">
+J
 </div>
 
-<h1>
-一个入口，
-<br>
-完成媒体发布。
+
+<div class="profile-person-copy">
+
+<div class="section-kicker">
+MY PROFILE
+</div>
+
+<h1 id="profileName">
+—
 </h1>
 
-<p>
-上传图片、音频与视频。
-系统自动完成命名、去重、GitHub 分仓、CDN 发布和统一链接生成。
-</p>
+<div class="profile-meta">
+
+<span
+class="profile-role"
+id="profileRole">
+—
+</span>
+
+<span id="profileSubtitle">
+我的私人媒体空间
+</span>
+
+</div>
+
+</div>
 
 </div>
 
 
-<div class="hero-status">
+<div class="profile-summary">
 
-<div class="status-dot"></div>
+<div class="profile-stat">
+
+<span>
+图库
+</span>
+
+<strong id="imageCount">
+0
+</strong>
+
+</div>
+
+
+<div class="profile-stat">
+
+<span>
+歌单
+</span>
+
+<strong id="audioCount">
+0
+</strong>
+
+</div>
+
+
+<div class="profile-stat">
+
+<span>
+影集
+</span>
+
+<strong id="videoCount">
+0
+</strong>
+
+</div>
+
+</div>
+
+</section>
+
+
+
+<section class="profile-intro">
 
 <div>
 
+<span class="section-kicker">
+COLLECTIONS
+</span>
+
+<h2>
+整理你的媒体。
+</h2>
+
+<p>
+图库、歌单和影集只是整理方式。
+媒体本身仍然只保存一份，不会因为加入多个分组而重复占用 GitHub 或 CDN 空间。
+</p>
+
+</div>
+
+</section>
+
+
+
+<div class="collection-stack">
+
+
+<section
+class="collection-panel"
+data-collection-type="image">
+
+<div class="collection-panel-head">
+
+<button
+type="button"
+class="collection-panel-toggle"
+data-toggle-type="image"
+aria-expanded="true">
+
+<div>
+
+<span class="collection-icon">
+▧
+</span>
+
+<span class="collection-panel-copy">
+
 <strong>
-GitHub + Cloudflare
+我的图库
+</strong>
+
+<small id="imageSummary">
+0 个图库
+</small>
+
+</span>
+
+</div>
+
+<span class="collection-toggle-text">
+收起
+</span>
+
+</button>
+
+</div>
+
+
+<div
+class="collection-body"
+id="imageBody">
+
+<div class="collection-toolbar">
+
+<p>
+图片可以同时属于多个图库。
+</p>
+
+<button
+type="button"
+class="collection-create"
+data-create-type="image">
+＋ 新建图库
+</button>
+
+</div>
+
+
+<div
+class="collection-empty hidden"
+id="imageEmpty">
+
+<strong>
+还没有图库
 </strong>
 
 <span>
-自动媒体流水线
+例如「2026 日本旅行 🌸」「UI 灵感」「手机壁纸」。
 </span>
+
+</div>
+
+
+<div
+class="collection-grid"
+id="imageList">
+</div>
+
+
+<div
+class="collection-pagination"
+id="imagePagination">
+
+<button
+type="button"
+data-page-action="prev"
+data-page-type="image">
+‹ 上一页
+</button>
+
+<span id="imagePageInfo">
+1 / 1
+</span>
+
+<button
+type="button"
+data-page-action="next"
+data-page-type="image">
+下一页 ›
+</button>
 
 </div>
 
@@ -174,48 +357,110 @@ GitHub + Cloudflare
 
 
 <section
-class="auth-gate card hidden"
-id="authGate">
+class="collection-panel"
+data-collection-type="audio">
 
-<div class="section-heading">
+<div class="collection-panel-head">
+
+<button
+type="button"
+class="collection-panel-toggle"
+data-toggle-type="audio"
+aria-expanded="false">
 
 <div>
 
-<span class="section-kicker">
-ACCESS
+<span class="collection-icon">
+♫
 </span>
 
-<h2>
-需要身份验证
-</h2>
+<span class="collection-panel-copy">
+
+<strong>
+我的歌单
+</strong>
+
+<small id="audioSummary">
+0 个歌单
+</small>
+
+</span>
 
 </div>
 
+<span class="collection-toggle-text">
+展开
+</span>
+
+</button>
+
 </div>
 
-<p class="gate-copy">
-如果这是第一次使用，请使用 Owner 发给你的一次性邀请码激活。已经激活过但更换了设备，可以使用设备配对或恢复码。
+
+<div
+class="collection-body hidden"
+id="audioBody">
+
+<div class="collection-toolbar">
+
+<p>
+按情绪、歌手或场景自由整理音乐。
 </p>
 
-<div class="action-row">
+<button
+type="button"
+class="collection-create"
+data-create-type="audio">
+＋ 新建歌单
+</button>
 
-<a
-class="button primary"
-href="/activate">
-使用邀请码激活
-</a>
+</div>
 
-<a
-class="button secondary"
-href="/device">
-新设备配对
-</a>
 
-<a
-class="button secondary"
-href="/recover">
-恢复登录
-</a>
+<div
+class="collection-empty hidden"
+id="audioEmpty">
+
+<strong>
+还没有歌单
+</strong>
+
+<span>
+例如「甜蜜」「凌晨三点」「开车的时候」「方大同」。
+</span>
+
+</div>
+
+
+<div
+class="collection-grid"
+id="audioList">
+</div>
+
+
+<div
+class="collection-pagination"
+id="audioPagination">
+
+<button
+type="button"
+data-page-action="prev"
+data-page-type="audio">
+‹ 上一页
+</button>
+
+<span id="audioPageInfo">
+1 / 1
+</span>
+
+<button
+type="button"
+data-page-action="next"
+data-page-type="audio">
+下一页 ›
+</button>
+
+</div>
 
 </div>
 
@@ -224,84 +469,206 @@ href="/recover">
 
 
 <section
-class="upload-layout hidden"
-id="authenticatedArea">
+class="collection-panel"
+data-collection-type="video">
+
+<div class="collection-panel-head">
+
+<button
+type="button"
+class="collection-panel-toggle"
+data-toggle-type="video"
+aria-expanded="false">
+
+<div>
+
+<span class="collection-icon">
+▶
+</span>
+
+<span class="collection-panel-copy">
+
+<strong>
+我的影集
+</strong>
+
+<small id="videoSummary">
+0 个影集
+</small>
+
+</span>
+
+</div>
+
+<span class="collection-toggle-text">
+展开
+</span>
+
+</button>
+
+</div>
 
 
-<div class="main-column">
+<div
+class="collection-body hidden"
+id="videoBody">
+
+<div class="collection-toolbar">
+
+<p>
+旅行、演唱会、收藏片段都可以独立整理。
+</p>
+
+<button
+type="button"
+class="collection-create"
+data-create-type="video">
+＋ 新建影集
+</button>
+
+</div>
 
 
-<section class="card upload-card">
+<div
+class="collection-empty hidden"
+id="videoEmpty">
 
-<div class="section-heading">
+<strong>
+还没有影集
+</strong>
+
+<span>
+例如「演唱会」「旅行录像」「好笑的」「以后再剪」。
+</span>
+
+</div>
+
+
+<div
+class="collection-grid"
+id="videoList">
+</div>
+
+
+<div
+class="collection-pagination"
+id="videoPagination">
+
+<button
+type="button"
+data-page-action="prev"
+data-page-type="video">
+‹ 上一页
+</button>
+
+<span id="videoPageInfo">
+1 / 1
+</span>
+
+<button
+type="button"
+data-page-action="next"
+data-page-type="video">
+下一页 ›
+</button>
+
+</div>
+
+</div>
+
+</section>
+
+
+</div>
+
+
+
+<section class="profile-overview-section">
+
+<div class="profile-overview-heading">
 
 <div>
 
 <span class="section-kicker">
-UPLOAD
+RECENT
 </span>
 
 <h2>
+最近上传与收藏
+</h2>
+
+<p>
+默认只展示 6 个。需要时可以展开到 10 个，更多内容进入分页列表，主页始终保持简短。
+</p>
+
+</div>
+
+
+<a
+href="/"
+class="profile-upload-link">
 上传媒体
-</h2>
+</a>
 
 </div>
 
-<div class="permission-pill">
-已通过权限验证
+
+<div class="profile-overview-grid">
+
+
+<section class="profile-overview-card">
+
+<div class="profile-overview-card-head">
+
+<div>
+
+<span>
+最近上传
+</span>
+
+<strong id="recentUploadCount">
+0
+</strong>
+
 </div>
+
+
+<span
+class="profile-overview-note"
+id="recentUploadNote">
+默认 6 个
+</span>
 
 </div>
 
 
 <div
-class="drop-zone"
-id="dropZone"
-tabindex="0"
-role="button"
-aria-label="选择媒体文件">
-
-<div class="drop-icon">
-＋
+class="profile-overview-empty"
+id="recentUploadEmpty">
+还没有上传记录。
 </div>
 
-<h3>
-拖拽文件到这里
-</h3>
 
-<p>
-或点击选择文件
-</p>
-
-<div class="type-list">
-
-<span>
-图片 ≤ 15 MiB
-</span>
-
-<span>
-音频 ≤ 24 MiB
-</span>
-
-<span>
-视频 ≤ 24 MiB
-</span>
-
+<div
+class="profile-media-list hidden"
+id="recentUploadList">
 </div>
+
+
+<div class="profile-overview-actions">
 
 <button
 type="button"
-class="button primary"
-id="selectButton">
-选择文件
+class="profile-overview-expand hidden"
+id="recentUploadExpand">
+展开到 10 个
 </button>
 
-<input
-id="fileInput"
-type="file"
-multiple
-hidden
-accept=".jpg,.jpeg,.png,.webp,.gif,.mp3,.wav,.flac,.aac,.mp4,.webm">
+<a
+href="/profile/?view=uploads"
+class="profile-overview-all">
+查看全部
+</a>
 
 </div>
 
@@ -309,257 +676,242 @@ accept=".jpg,.jpeg,.png,.webp,.gif,.mp3,.wav,.flac,.aac,.mp4,.webm">
 
 
 
-<section class="card">
+<section class="profile-overview-card">
 
-<div class="section-heading">
-
-<div>
-
-<span class="section-kicker">
-QUEUE
-</span>
-
-<h2>
-当前上传
-</h2>
-
-</div>
-
-</div>
-
-<div
-class="empty-state"
-id="queueEmpty">
-还没有正在处理的文件
-</div>
-
-<div
-class="job-list"
-id="queueList">
-</div>
-
-</section>
-
-
-
-<section class="card">
-
-<div class="section-heading">
+<div class="profile-overview-card-head">
 
 <div>
 
-<span class="section-kicker">
-HISTORY
+<span>
+我的收藏
 </span>
 
-<h2>
-最近记录
-</h2>
+<strong id="favoriteCount">
+0
+</strong>
 
 </div>
+
+
+<span
+class="profile-overview-note"
+id="favoriteNote">
+默认 6 个
+</span>
+
+</div>
+
+
+<div
+class="profile-overview-empty"
+id="favoriteEmpty">
+还没有收藏媒体。
+</div>
+
+
+<div
+class="profile-media-list hidden"
+id="favoriteList">
+</div>
+
+
+<div class="profile-overview-actions">
 
 <button
 type="button"
-class="text-button"
-id="refreshHistory">
-刷新
+class="profile-overview-expand hidden"
+id="favoriteExpand">
+展开到 10 个
+</button>
+
+<a
+href="/profile/?view=favorites"
+class="profile-overview-all">
+查看全部
+</a>
+
+</div>
+
+</section>
+
+
+</div>
+
+</section>
+
+
+
+<section
+class="profile-media-archive hidden"
+id="profileMediaArchive">
+
+
+<div class="profile-archive-head">
+
+<div>
+
+<a
+href="/profile/"
+class="profile-archive-back">
+← 返回我的主页
+</a>
+
+<span class="section-kicker">
+MY MEDIA
+</span>
+
+<h1 id="archiveTitle">
+我的上传
+</h1>
+
+<p id="archiveDescription">
+只显示你自己已经发布的媒体，并通过分页控制页面长度。
+</p>
+
+</div>
+
+
+<div class="profile-archive-total">
+
+<span>
+总计
+</span>
+
+<strong id="archiveTotal">
+0
+</strong>
+
+</div>
+
+</div>
+
+
+
+<div class="profile-archive-toolbar">
+
+
+<div class="profile-archive-tabs">
+
+<button
+type="button"
+class="active"
+data-archive-view="uploads">
+我的上传
+</button>
+
+<button
+type="button"
+data-archive-view="favorites">
+我的收藏
 </button>
 
 </div>
 
+
+<div class="profile-archive-controls">
+
+<label>
+
+<span>
+类型
+</span>
+
+<select id="archiveType">
+
+<option value="all">
+全部
+</option>
+
+<option value="image">
+图片
+</option>
+
+<option value="audio">
+音乐
+</option>
+
+<option value="video">
+视频
+</option>
+
+</select>
+
+</label>
+
+
+<label>
+
+<span>
+每页
+</span>
+
+<select id="archivePageSize">
+
+<option value="12">
+12
+</option>
+
+<option value="24">
+24
+</option>
+
+<option value="48">
+48
+</option>
+
+</select>
+
+</label>
+
+</div>
+
+
+</div>
+
+
+
 <div
-class="empty-state"
-id="historyEmpty">
-暂无上传记录
+class="profile-archive-loading hidden"
+id="archiveLoading">
+正在读取媒体…
 </div>
+
 
 <div
-class="job-list"
-id="historyList">
+class="profile-archive-empty hidden"
+id="archiveEmpty">
+这里还没有媒体。
 </div>
 
-</section>
-
-
-</div>
-
-
-
-<aside class="side-column">
-
-
-<section class="card compact-card">
-
-<span class="section-kicker">
-ACCOUNT
-</span>
-
-<h2 id="welcomeName">
-—
-</h2>
 
 <div
-class="role-badge"
-id="roleBadge">
-—
+class="profile-archive-list"
+id="archiveList">
 </div>
+
+
 
 <div
-class="permission-list"
-id="permissionList">
-</div>
+class="profile-archive-pagination"
+id="archivePagination">
 
-</section>
+<button
+type="button"
+id="archivePrev">
+‹ 上一页
+</button>
 
-
-
-<section class="card compact-card">
-
-<span class="section-kicker">
-PIPELINE
+<span id="archivePageInfo">
+第 1 / 1 页
 </span>
 
-<h2>
-自动处理流程
-</h2>
-
-<ol class="pipeline">
-
-<li>
-
-<span>
-01
-</span>
-
-<div>
-
-<strong>
-身份与权限
-</strong>
-
-<small>
-D1 Session
-</small>
+<button
+type="button"
+id="archiveNext">
+下一页 ›
+</button>
 
 </div>
-
-</li>
-
-<li>
-
-<span>
-02
-</span>
-
-<div>
-
-<strong>
-临时接收
-</strong>
-
-<small>
-Cloudflare KV
-</small>
-
-</div>
-
-</li>
-
-<li>
-
-<span>
-03
-</span>
-
-<div>
-
-<strong>
-自动处理
-</strong>
-
-<small>
-GitHub Actions
-</small>
-
-</div>
-
-</li>
-
-<li>
-
-<span>
-04
-</span>
-
-<div>
-
-<strong>
-源仓分发
-</strong>
-
-<small>
-GitHub Media Repositories
-</small>
-
-</div>
-
-</li>
-
-<li>
-
-<span>
-05
-</span>
-
-<div>
-
-<strong>
-统一 CDN
-</strong>
-
-<small>
-Cloudflare Static Assets
-</small>
-
-</div>
-
-</li>
-
-</ol>
-
-</section>
-
-
-
-<section class="card compact-card limits-card">
-
-<span class="section-kicker">
-FORMATS
-</span>
-
-<h2>
-支持格式
-</h2>
-
-<p>
-<strong>图片</strong>
-JPG · JPEG · PNG · WEBP · GIF
-</p>
-
-<p>
-<strong>音频</strong>
-MP3 · WAV · FLAC · AAC
-</p>
-
-<p>
-<strong>视频</strong>
-MP4 · WEBM
-</p>
-
-</section>
-
-
-</aside>
 
 
 </section>
@@ -576,13 +928,194 @@ Jingyan Media Center
 </span>
 
 <span>
-GitHub source · Cloudflare delivery
+Collections · Favorites · Personal Profile
 </span>
 
 </footer>
 
 
 </div>
+
+
+
+<div
+class="collection-drawer-backdrop hidden"
+id="drawerBackdrop">
+</div>
+
+
+<aside
+class="collection-drawer hidden"
+id="collectionDrawer"
+aria-hidden="true">
+
+<div class="drawer-handle">
+</div>
+
+
+<div class="drawer-head">
+
+<div>
+
+<span
+class="section-kicker"
+id="drawerKicker">
+COLLECTION
+</span>
+
+<h2 id="drawerTitle">
+新建图库
+</h2>
+
+</div>
+
+
+<button
+type="button"
+class="drawer-close"
+id="drawerClose"
+aria-label="关闭">
+×
+</button>
+
+</div>
+
+
+
+<form id="collectionForm">
+
+
+<label class="drawer-field">
+
+<span>
+名称
+</span>
+
+<input
+type="text"
+id="collectionName"
+maxlength="60"
+required
+placeholder="例如：2026 日本旅行 🌸">
+
+</label>
+
+
+<label class="drawer-field">
+
+<span>
+描述
+</span>
+
+<textarea
+id="collectionDescription"
+maxlength="500"
+rows="3"
+placeholder="可选">
+</textarea>
+
+</label>
+
+
+<label class="drawer-field">
+
+<span>
+可见范围
+</span>
+
+<select id="collectionVisibility">
+
+<option value="members">
+所有成员可见
+</option>
+
+<option value="private">
+仅自己可见
+</option>
+
+</select>
+
+</label>
+
+
+<label class="drawer-check">
+
+<input
+type="checkbox"
+id="collectionPinned">
+
+<span>
+
+<strong>
+置顶到个人主页
+</strong>
+
+<small>
+主页会优先展示置顶 Collection。
+</small>
+
+</span>
+
+</label>
+
+
+<div class="drawer-actions">
+
+<button
+type="submit"
+class="drawer-primary"
+id="collectionSave">
+保存
+</button>
+
+<button
+type="button"
+class="drawer-danger hidden"
+id="collectionDelete">
+删除这个分组
+</button>
+
+</div>
+
+</form>
+
+
+
+<section
+class="drawer-media-section hidden"
+id="drawerMediaSection">
+
+<div class="drawer-media-head">
+
+<div>
+
+<span class="section-kicker">
+MEDIA
+</span>
+
+<h3>
+分组内容
+</h3>
+
+</div>
+
+<span id="drawerItemCount">
+0
+</span>
+
+</div>
+
+
+<div
+class="drawer-media-list"
+id="drawerMediaList">
+</div>
+
+</section>
+
+
+</aside>
+
 
 
 <div
