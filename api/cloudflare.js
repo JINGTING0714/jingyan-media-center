@@ -200,7 +200,7 @@ function writeManifest(
 
 
 /* =========================================================
- * Hashing
+ * Hash
  * ======================================================= */
 
 function computeSHA256(
@@ -256,7 +256,7 @@ function computeCloudflareAssetHash(
 
 
 /* =========================================================
- * Asset validation
+ * Limits
  * ======================================================= */
 
 function getMaxAssetBytes() {
@@ -298,7 +298,7 @@ function validateAssetSize(
 
 
 /* =========================================================
- * GitHub source download
+ * Source Download
  * ======================================================= */
 
 function encodeContentPath(
@@ -410,7 +410,7 @@ async function downloadSourceBuffer(
 
 
 /* =========================================================
- * Asset records
+ * Asset object
  * ======================================================= */
 
 function buildAssetObject({
@@ -627,7 +627,7 @@ function getManifestAsset(
 
 
 /* =========================================================
- * Legacy / Registry normalization
+ * Storage record compatibility
  * ======================================================= */
 
 function getRepositoryFullName(
@@ -841,7 +841,7 @@ function shouldPublishRecord(
 
 
 /* =========================================================
- * Manifest reconciliation
+ * Reconcile media databases -> CDN manifest
  * ======================================================= */
 
 async function reconcileManifestFromDatabases() {
@@ -1079,7 +1079,7 @@ async function reconcileManifestFromDatabases() {
 
 
 /* =========================================================
- * Cloudflare manifest
+ * Cloudflare asset manifest
  * ======================================================= */
 
 function buildCloudflareManifest(
@@ -1168,7 +1168,7 @@ function validateManifestLimits(
 
 
 /* =========================================================
- * Cloudflare SDK
+ * Cloudflare client
  * ======================================================= */
 
 async function getCloudflareClient() {
@@ -1207,7 +1207,7 @@ async function getCloudflareClient() {
 
 
 /* =========================================================
- * Asset upload
+ * Fetch buffer by hash
  * ======================================================= */
 
 async function getBufferForHash(
@@ -1290,6 +1290,11 @@ async function getBufferForHash(
 
 }
 
+
+
+/* =========================================================
+ * Upload missing Cloudflare assets
+ * ======================================================= */
 
 async function uploadMissingAssets({
 
@@ -1408,54 +1413,259 @@ async function uploadMissingAssets({
 
 
 /* =========================================================
- * CDN Worker
+ * CDN Worker Script
+ *
+ * MOBILE-FIRST MEDIA DELIVERY
  *
  * Important:
  *
- * Images stay on Cloudflare's normal static-asset path.
- *
- * /music/* and /video/* are routed through this Worker so
- * Range requests can always return proper 206 responses.
- *
- * Cloudflare Static Assets currently limit an individual
- * asset to 25 MiB, so the temporary in-memory slicing used
- * here remains comfortably below the Worker memory limit.
+ * 1. /audio/* is the current audio CDN route.
+ * 2. /music/* remains supported for old URLs.
+ * 3. /video/* handles videos.
+ * 4. Do NOT manually generate byte-range 206 responses.
+ * 5. Return proper full asset responses and let Cloudflare
+ *    handle byte-range delivery at the edge.
+ * 6. Force browser-safe Content-Type.
+ * 7. Force Content-Disposition: inline so mobile browsers
+ *    display/play media instead of downloading it.
  * ======================================================= */
 
 function createWorkerScript() {
 
     return `
-const MEDIA_PATH_PREFIXES = [
+const MEDIA_PREFIXES = [
+    "/audio/",
     "/music/",
     "/video/"
 ];
 
 
-function isMediaPath(pathname) {
+const MIME_TYPES = {
 
-    return MEDIA_PATH_PREFIXES.some(
-        prefix =>
-            pathname.startsWith(
-                prefix
-            )
+    ".mp3":
+        "audio/mpeg",
+
+    ".wav":
+        "audio/wav",
+
+    ".flac":
+        "audio/flac",
+
+    ".aac":
+        "audio/aac",
+
+    ".m4a":
+        "audio/mp4",
+
+    ".ogg":
+        "audio/ogg",
+
+    ".oga":
+        "audio/ogg",
+
+    ".mp4":
+        "video/mp4",
+
+    ".m4v":
+        "video/mp4",
+
+    ".webm":
+        "video/webm",
+
+    ".mov":
+        "video/quicktime"
+
+};
+
+
+function isMediaPath(
+    pathname
+) {
+
+    return MEDIA_PREFIXES
+        .some(
+            prefix =>
+                pathname
+                    .toLowerCase()
+                    .startsWith(
+                        prefix
+                    )
+        );
+
+}
+
+
+function getExtension(
+    pathname
+) {
+
+    const cleanPath =
+        String(
+            pathname ||
+            ""
+        )
+            .split("?")[0]
+            .split("#")[0];
+
+
+    const fileName =
+        cleanPath
+            .substring(
+                cleanPath
+                    .lastIndexOf("/") +
+                1
+            );
+
+
+    const dotIndex =
+        fileName
+            .lastIndexOf(".");
+
+
+    if (
+        dotIndex <
+        0
+    ) {
+
+        return "";
+
+    }
+
+
+    return fileName
+        .substring(
+            dotIndex
+        )
+        .toLowerCase();
+
+}
+
+
+function getMimeType(
+    pathname
+) {
+
+    const extension =
+        getExtension(
+            pathname
+        );
+
+
+    return (
+        MIME_TYPES[
+            extension
+        ] ||
+        "application/octet-stream"
     );
 
 }
 
 
-function addSharedHeaders(
-    headers
+function buildCorsHeaders() {
+
+    return {
+
+        "Access-Control-Allow-Origin":
+            "*",
+
+        "Access-Control-Allow-Methods":
+            "GET, HEAD, OPTIONS",
+
+        "Access-Control-Allow-Headers":
+            "Range, If-Range, Content-Type",
+
+        "Access-Control-Expose-Headers":
+            [
+                "Accept-Ranges",
+                "Content-Length",
+                "Content-Range",
+                "Content-Type",
+                "Content-Disposition",
+                "ETag",
+                "Last-Modified",
+                "CF-Cache-Status"
+            ].join(", ")
+
+    };
+
+}
+
+
+function applyMediaHeaders(
+    originalHeaders,
+    pathname
 ) {
 
+    const headers =
+        new Headers(
+            originalHeaders
+        );
+
+
+    const mimeType =
+        getMimeType(
+            pathname
+        );
+
+
+    /*
+     * Critical for mobile Safari / Chrome / Edge.
+     *
+     * The static asset direct-upload API may not have
+     * attached a useful MIME type, so force it here.
+     */
+    headers.set(
+        "Content-Type",
+        mimeType
+    );
+
+
+    /*
+     * The resource is media intended for browser playback,
+     * not a downloadable attachment.
+     */
+    headers.set(
+        "Content-Disposition",
+        "inline"
+    );
+
+
+    /*
+     * Tell browsers explicitly that byte seeking is allowed.
+     */
     headers.set(
         "Accept-Ranges",
         "bytes"
     );
 
+
+    /*
+     * Media filenames are immutable after publishing in the
+     * Jingyan media pipeline.
+     */
+    headers.set(
+        "Cache-Control",
+        "public, max-age=31536000, immutable"
+    );
+
+
     headers.set(
         "Access-Control-Allow-Origin",
         "*"
     );
+
+
+    headers.set(
+        "Access-Control-Allow-Methods",
+        "GET, HEAD, OPTIONS"
+    );
+
+
+    headers.set(
+        "Access-Control-Allow-Headers",
+        "Range, If-Range, Content-Type"
+    );
+
 
     headers.set(
         "Access-Control-Expose-Headers",
@@ -1464,253 +1674,67 @@ function addSharedHeaders(
             "Content-Length",
             "Content-Range",
             "Content-Type",
+            "Content-Disposition",
             "ETag",
-            "Last-Modified"
+            "Last-Modified",
+            "CF-Cache-Status"
         ].join(", ")
     );
+
+
+    /*
+     * Allows media to be used by the main app and future
+     * share pages without CORP blocking.
+     */
+    headers.set(
+        "Cross-Origin-Resource-Policy",
+        "cross-origin"
+    );
+
+
+    /*
+     * Because we explicitly provide the correct MIME type,
+     * browsers no longer need to MIME-sniff the resource.
+     */
+    headers.set(
+        "X-Content-Type-Options",
+        "nosniff"
+    );
+
 
     return headers;
 
 }
 
 
-function parseRange(
-    rangeHeader,
-    totalSize
-) {
-
-    if (
-        !rangeHeader ||
-        typeof rangeHeader !==
-            "string"
-    ) {
-
-        return null;
-
-    }
-
-
-    const match =
-        rangeHeader
-            .trim()
-            .match(
-                /^bytes=(\\d*)-(\\d*)$/i
-            );
-
-
-    if (!match) {
-
-        return {
-            valid:
-                false
-        };
-
-    }
-
-
-    const startText =
-        match[1];
-
-    const endText =
-        match[2];
-
-
-    if (
-        !startText &&
-        !endText
-    ) {
-
-        return {
-            valid:
-                false
-        };
-
-    }
-
-
-    let start;
-    let end;
-
-
-    if (!startText) {
-
-        const suffixLength =
-            Number(
-                endText
-            );
-
-
-        if (
-            !Number.isSafeInteger(
-                suffixLength
-            ) ||
-            suffixLength <=
-                0
-        ) {
-
-            return {
-                valid:
-                    false
-            };
-
-        }
-
-
-        const actualLength =
-            Math.min(
-                suffixLength,
-                totalSize
-            );
-
-
-        start =
-            totalSize -
-            actualLength;
-
-        end =
-            totalSize -
-            1;
-
-    } else {
-
-        start =
-            Number(
-                startText
-            );
-
-
-        if (
-            !Number.isSafeInteger(
-                start
-            ) ||
-            start <
-                0 ||
-            start >=
-                totalSize
-        ) {
-
-            return {
-                valid:
-                    false
-            };
-
-        }
-
-
-        if (!endText) {
-
-            end =
-                totalSize -
-                1;
-
-        } else {
-
-            end =
-                Number(
-                    endText
-                );
-
-
-            if (
-                !Number.isSafeInteger(
-                    end
-                ) ||
-                end <
-                    start
-            ) {
-
-                return {
-                    valid:
-                        false
-                };
-
-            }
-
-
-            end =
-                Math.min(
-                    end,
-                    totalSize -
-                    1
-                );
-
-        }
-
-    }
-
-
-    return {
-
-        valid:
-            true,
-
-        start,
-
-        end,
-
-        length:
-            end -
-            start +
-            1
-
-    };
-
-}
-
-
-async function fetchFullAsset(
-    request,
-    env
-) {
-
-    const headers =
-        new Headers(
-            request.headers
-        );
-
-
-    /*
-     * Do not forward the client's Range header to ASSETS.
-     * We want the complete source object and then create a
-     * deterministic 206 response ourselves.
-     */
-    headers.delete(
-        "Range"
-    );
-
-
-    headers.delete(
-        "If-Range"
-    );
-
-
-    const assetRequest =
-        new Request(
-            request.url,
-            {
-                method:
-                    "GET",
-
-                headers
-            }
-        );
-
-
-    return env.ASSETS.fetch(
-        assetRequest
-    );
-
-}
-
-
 async function serveMedia(
     request,
-    env
+    env,
+    url
 ) {
 
     const method =
         request.method
             .toUpperCase();
+
+
+    if (
+        method ===
+        "OPTIONS"
+    ) {
+
+        return new Response(
+            null,
+            {
+                status:
+                    204,
+
+                headers:
+                    buildCorsHeaders()
+            }
+        );
+
+    }
 
 
     if (
@@ -1727,8 +1751,10 @@ async function serveMedia(
                     405,
 
                 headers: {
+                    ...buildCorsHeaders(),
+
                     "Allow":
-                        "GET, HEAD"
+                        "GET, HEAD, OPTIONS"
                 }
             }
         );
@@ -1736,174 +1762,76 @@ async function serveMedia(
     }
 
 
+    /*
+     * IMPORTANT:
+     *
+     * Pass the ORIGINAL request to Cloudflare Assets.
+     *
+     * Do not strip Range.
+     * Do not manually slice ArrayBuffers.
+     * Do not manually generate a 206.
+     *
+     * Cloudflare's asset/cache layer handles byte ranges
+     * much more efficiently and consistently across mobile
+     * browsers.
+     */
     const assetResponse =
-        await fetchFullAsset(
-            request,
-            env
+        await env.ASSETS.fetch(
+            request
         );
 
 
     if (
-        !assetResponse.ok
+        assetResponse.status ===
+            404
     ) {
 
-        return assetResponse;
+        return new Response(
+            assetResponse.body,
+            {
+                status:
+                    404,
+
+                headers:
+                    applyMediaHeaders(
+                        assetResponse.headers,
+                        url.pathname
+                    )
+            }
+        );
 
     }
 
 
-    const responseHeaders =
-        addSharedHeaders(
-            new Headers(
-                assetResponse.headers
-            )
+    const headers =
+        applyMediaHeaders(
+            assetResponse.headers,
+            url.pathname
         );
 
 
     /*
-     * Filenames in Jingyan Media Center are immutable once
-     * published. Long-lived public caching is therefore safe.
+     * Preserve Cloudflare's own status.
+     *
+     * This may be:
+     *
+     * 200 OK
+     * 206 Partial Content
+     * 304 Not Modified
+     *
+     * depending on how the edge processed the request.
      */
-    responseHeaders.set(
-        "Cache-Control",
-        "public, max-age=31536000, immutable"
-    );
-
-
-    const buffer =
-        await assetResponse
-            .arrayBuffer();
-
-
-    const totalSize =
-        buffer.byteLength;
-
-
-    responseHeaders.set(
-        "Content-Length",
-        String(
-            totalSize
-        )
-    );
-
-
-    if (
+    return new Response(
         method ===
             "HEAD"
-    ) {
-
-        return new Response(
-            null,
-            {
-                status:
-                    200,
-
-                headers:
-                    responseHeaders
-            }
-        );
-
-    }
-
-
-    const rangeHeader =
-        request.headers.get(
-            "Range"
-        );
-
-
-    if (!rangeHeader) {
-
-        return new Response(
-            buffer,
-            {
-                status:
-                    200,
-
-                headers:
-                    responseHeaders
-            }
-        );
-
-    }
-
-
-    const range =
-        parseRange(
-            rangeHeader,
-            totalSize
-        );
-
-
-    if (
-        !range ||
-        !range.valid
-    ) {
-
-        const headers =
-            new Headers(
-                responseHeaders
-            );
-
-
-        headers.set(
-            "Content-Range",
-            \`bytes */\${totalSize}\`
-        );
-
-
-        headers.set(
-            "Content-Length",
-            "0"
-        );
-
-
-        return new Response(
-            null,
-            {
-                status:
-                    416,
-
-                headers
-            }
-        );
-
-    }
-
-
-    const chunk =
-        buffer.slice(
-            range.start,
-            range.end +
-            1
-        );
-
-
-    const headers =
-        new Headers(
-            responseHeaders
-        );
-
-
-    headers.set(
-        "Content-Range",
-        \`bytes \${range.start}-\${range.end}/\${totalSize}\`
-    );
-
-
-    headers.set(
-        "Content-Length",
-        String(
-            range.length
-        )
-    );
-
-
-    return new Response(
-        chunk,
+            ? null
+            : assetResponse.body,
         {
             status:
-                206,
+                assetResponse.status,
+
+            statusText:
+                assetResponse.statusText,
 
             headers
         }
@@ -1927,7 +1855,7 @@ export default {
 
         if (
             url.pathname ===
-                "/"
+            "/"
         ) {
 
             return new Response(
@@ -1937,11 +1865,13 @@ export default {
                         200,
 
                     headers: {
+
                         "Content-Type":
                             "text/plain; charset=utf-8",
 
                         "Cache-Control":
                             "no-store"
+
                     }
                 }
             );
@@ -1949,6 +1879,9 @@ export default {
         }
 
 
+        /*
+         * Mobile-first media delivery.
+         */
         if (
             isMediaPath(
                 url.pathname
@@ -1957,12 +1890,17 @@ export default {
 
             return serveMedia(
                 request,
-                env
+                env,
+                url
             );
 
         }
 
 
+        /*
+         * Images and every other asset stay on the normal
+         * Cloudflare Static Assets path.
+         */
         return env.ASSETS.fetch(
             request
         );
@@ -1977,7 +1915,7 @@ export default {
 
 
 /* =========================================================
- * Publish
+ * Publish CDN
  * ======================================================= */
 
 async function publishCDN() {
@@ -2180,11 +2118,13 @@ async function publishCDN() {
 
                     bindings: [
                         {
+
                             type:
                                 "assets",
 
                             name:
                                 "ASSETS"
+
                         }
                     ],
 
@@ -2202,14 +2142,25 @@ async function publishCDN() {
                                 "none",
 
                             /*
-                             * Only audio/video go through the
-                             * Worker first.
+                             * IMPORTANT:
                              *
-                             * Images remain direct static assets.
+                             * Current audio CDN:
+                             * /audio/*
+                             *
+                             * Legacy compatibility:
+                             * /music/*
+                             *
+                             * Video:
+                             * /video/*
                              */
                             run_worker_first: [
+
+                                "/audio/*",
+
                                 "/music/*",
+
                                 "/video/*"
+
                             ]
 
                         }
@@ -2218,6 +2169,7 @@ async function publishCDN() {
 
                     modules: [
                         {
+
                             name:
                                 "jingyan-media-cdn.mjs",
 
@@ -2233,6 +2185,7 @@ async function publishCDN() {
                                     .toString(
                                         "base64"
                                     )
+
                         }
                     ]
                 }
@@ -2314,7 +2267,27 @@ async function publishCDN() {
 
 
     console.log(
-        "Range / Seek support enabled for /music/* and /video/*"
+        "Mobile media delivery enabled."
+    );
+
+
+    console.log(
+        "Audio: /audio/* + legacy /music/*"
+    );
+
+
+    console.log(
+        "Video: /video/*"
+    );
+
+
+    console.log(
+        "Content-Disposition: inline"
+    );
+
+
+    console.log(
+        "Range handling delegated to Cloudflare edge."
     );
 
 
