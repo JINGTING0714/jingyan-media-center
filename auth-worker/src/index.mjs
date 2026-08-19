@@ -3658,11 +3658,11 @@ async function handleRedeemRecovery(
 
 
   const session =
-    await createSessionValues(
-      request,
-      env,
-      "Owner recovery"
-    );
+  await createSessionValues(
+    request,
+    env,
+    "Account recovery"
+  );
 
 
   /*
