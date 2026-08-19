@@ -28,10 +28,19 @@ href="/style.css">
 
 <link
 rel="stylesheet"
-href="/profile.css?v=20260818-profile-v1">
+href="/profile.css?v=20260819-profile-v2">
+
+<link
+rel="stylesheet"
+href="/profile-overview.css?v=20260819-profile-overview-v1">
 
 <script
-src="/profile.js?v=20260818-profile-v1"
+src="/profile.js?v=20260819-profile-v2"
+defer>
+</script>
+
+<script
+src="/profile-overview.js?v=20260819-profile-overview-v1"
 defer>
 </script>
 
@@ -565,12 +574,14 @@ data-page-type="video">
 
 
 
-<section class="profile-footer-card card">
+<section class="profile-overview-section">
+
+<div class="profile-overview-heading">
 
 <div>
 
 <span class="section-kicker">
-NEXT
+RECENT
 </span>
 
 <h2>
@@ -578,16 +589,104 @@ NEXT
 </h2>
 
 <p>
-这里已经为下一阶段预留位置。之后会显示最近 6 个上传、我的收藏和最近活动，不会把主页重新变成无限长页面。
+这里只展示最近 6 个项目，完整媒体仍由媒体库和各个分组管理，主页不会重新变成无限长页面。
 </p>
 
 </div>
 
+
 <a
 href="/"
 class="profile-upload-link">
-去上传媒体
+上传媒体
 </a>
+
+</div>
+
+
+<div class="profile-overview-grid">
+
+
+<section class="profile-overview-card">
+
+<div class="profile-overview-card-head">
+
+<div>
+
+<span>
+最近上传
+</span>
+
+<strong id="recentUploadCount">
+0
+</strong>
+
+</div>
+
+
+<span class="profile-overview-note">
+最近 6 个
+</span>
+
+</div>
+
+
+<div
+class="profile-overview-empty"
+id="recentUploadEmpty">
+还没有上传记录。
+</div>
+
+
+<div
+class="profile-media-list hidden"
+id="recentUploadList">
+</div>
+
+</section>
+
+
+
+<section class="profile-overview-card">
+
+<div class="profile-overview-card-head">
+
+<div>
+
+<span>
+我的收藏
+</span>
+
+<strong id="favoriteCount">
+0
+</strong>
+
+</div>
+
+
+<span class="profile-overview-note">
+最近 6 个
+</span>
+
+</div>
+
+
+<div
+class="profile-overview-empty"
+id="favoriteEmpty">
+还没有收藏媒体。
+</div>
+
+
+<div
+class="profile-media-list hidden"
+id="favoriteList">
+</div>
+
+</section>
+
+
+</div>
 
 </section>
 
@@ -603,7 +702,7 @@ Jingyan Media Center
 </span>
 
 <span>
-Collections V1
+Collections · Favorites · Personal Profile
 </span>
 
 </footer>
@@ -726,7 +825,7 @@ id="collectionPinned">
 </strong>
 
 <small>
-之后主页会优先展示置顶 Collection。
+主页会优先展示置顶 Collection。
 </small>
 
 </span>
