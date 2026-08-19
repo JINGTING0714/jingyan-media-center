@@ -18,9 +18,14 @@ import {
   renderIncidentInboxPage
 } from "./incident-page.mjs";
 
+import {
+  handleOwnerSystemHealthRequest,
+  renderSystemHealthPage
+} from "./system-health.mjs";
+
 
 const FEEDBACK_ENTRY =
-  `<script src="/feedback-entry.js?v=20260819-feedback-v2" defer></script>`;
+  `<script src="/feedback-entry.js?v=20260820-feedback-v3" defer></script>`;
 
 
 function cloneWithCookie(
@@ -28,30 +33,23 @@ function cloneWithCookie(
   cookie
 ) {
 
-  if (
-    !cookie
-  ) {
-
+  if (!cookie) {
     return response;
   }
-
 
   const headers =
     new Headers(
       response.headers
     );
 
-
   headers.append(
     "Set-Cookie",
     cookie
   );
 
-
   return new Response(
     response.body,
     {
-
       status:
         response.status,
 
@@ -59,7 +57,6 @@ function cloneWithCookie(
         response.statusText,
 
       headers
-
     }
   );
 }
@@ -77,10 +74,8 @@ function redirect(
       request.url
     );
 
-
   const headers =
     new Headers({
-
       Location:
         url.toString(),
 
@@ -89,30 +84,22 @@ function redirect(
 
       Pragma:
         "no-cache"
-
     });
 
-
-  if (
-    cookie
-  ) {
-
+  if (cookie) {
     headers.append(
       "Set-Cookie",
       cookie
     );
   }
 
-
   return new Response(
     null,
     {
-
       status:
         302,
 
       headers
-
     }
   );
 }
@@ -129,40 +116,32 @@ async function authenticate(
       request.url
     );
 
-
   url.pathname =
     "/api/auth/me";
 
-
   url.search =
     "";
-
 
   const headers =
     new Headers(
       request.headers
     );
 
-
   headers.set(
     "Accept",
     "application/json"
   );
 
-
   const authRequest =
     new Request(
       url.toString(),
       {
-
         method:
           "GET",
 
         headers
-
       }
     );
-
 
   const response =
     await baseApp.fetch(
@@ -171,29 +150,22 @@ async function authenticate(
       ctx
     );
 
-
   const cookie =
     response.headers.get(
       "Set-Cookie"
     );
 
-
-  if (
-    !response.ok
-  ) {
+  if (!response.ok) {
 
     return {
-
       ok:
         false,
 
       response,
 
       cookie
-
     };
   }
-
 
   const data =
     await response
@@ -202,14 +174,12 @@ async function authenticate(
         () => ({})
       );
 
-
   if (
     !data?.authenticated ||
     !data?.user
   ) {
 
     return {
-
       ok:
         false,
 
@@ -223,29 +193,23 @@ async function authenticate(
         ),
 
       cookie
-
     };
   }
 
-
   return {
-
     ok:
       true,
 
     cookie,
 
     auth: {
-
       user:
         data.user,
 
       session:
         data.session ||
         null
-
     }
-
   };
 }
 
@@ -255,12 +219,9 @@ function activeUser(
 ) {
 
   return Boolean(
-
     auth?.user &&
-
     auth.user.status ===
       "active"
-
   );
 }
 
@@ -270,7 +231,6 @@ function ownerUser(
 ) {
 
   return Boolean(
-
     activeUser(
       auth
     ) &&
@@ -281,7 +241,6 @@ function ownerUser(
     auth.user.permissions
       ?.manageSystem ===
       true
-
   );
 }
 
@@ -294,19 +253,16 @@ function enhanceHtml(
   if (
     request.method
       .toUpperCase() !==
-      "GET"
+    "GET"
   ) {
 
     return response;
   }
 
-
   const contentType =
     response.headers.get(
       "Content-Type"
-    ) ||
-    "";
-
+    ) || "";
 
   if (
     !contentType
@@ -319,13 +275,11 @@ function enhanceHtml(
     return response;
   }
 
-
   return new HTMLRewriter()
 
     .on(
       "head",
       {
-
         element(
           element
         ) {
@@ -338,7 +292,6 @@ function enhanceHtml(
             }
           );
         }
-
       }
     )
 
@@ -363,7 +316,6 @@ async function authenticatedApi(
       ctx
     );
 
-
   if (
     !authentication.ok
   ) {
@@ -371,7 +323,6 @@ async function authenticatedApi(
     return authentication
       .response;
   }
-
 
   if (
     !activeUser(
@@ -387,7 +338,6 @@ async function authenticatedApi(
       403
     );
   }
-
 
   if (
     ownerOnly &&
@@ -405,17 +355,96 @@ async function authenticatedApi(
     );
   }
 
-
   const response =
     await handler(
       authentication.auth
     );
 
-
   return cloneWithCookie(
     response,
     authentication.cookie
   );
+}
+
+
+async function requirePageUser(
+  request,
+  env,
+  ctx,
+  {
+    ownerOnly = false
+  } = {}
+) {
+
+  const authentication =
+    await authenticate(
+      request,
+      env,
+      ctx
+    );
+
+  if (
+    !authentication.ok
+  ) {
+
+    return {
+      ok:
+        false,
+
+      response:
+        redirect(
+          request,
+          "/login",
+          authentication.cookie
+        )
+    };
+  }
+
+  if (
+    !activeUser(
+      authentication.auth
+    )
+  ) {
+
+    return {
+      ok:
+        false,
+
+      response:
+        redirect(
+          request,
+          "/login",
+          authentication.cookie
+        )
+    };
+  }
+
+  if (
+    ownerOnly &&
+    !ownerUser(
+      authentication.auth
+    )
+  ) {
+
+    return {
+      ok:
+        false,
+
+      response:
+        redirect(
+          request,
+          "/",
+          authentication.cookie
+        )
+    };
+  }
+
+  return {
+    ok:
+      true,
+
+    authentication
+  };
 }
 
 
@@ -429,7 +458,6 @@ async function serveProtectedHome(
     request.method
       .toUpperCase();
 
-
   if (
     ![
       "GET",
@@ -442,7 +470,6 @@ async function serveProtectedHome(
     return new Response(
       null,
       {
-
         status:
           405,
 
@@ -450,103 +477,68 @@ async function serveProtectedHome(
           Allow:
             "GET, HEAD"
         }
-
       }
     );
   }
 
-
-  const authentication =
-    await authenticate(
+  const gate =
+    await requirePageUser(
       request,
       env,
       ctx
     );
 
-
-  if (
-    !authentication.ok
-  ) {
-
-    return redirect(
-      request,
-      "/login",
-      authentication.cookie
-    );
+  if (!gate.ok) {
+    return gate.response;
   }
 
-
-  if (
-    !activeUser(
-      authentication.auth
-    )
-  ) {
-
-    return redirect(
-      request,
-      "/login",
-      authentication.cookie
-    );
-  }
-
+  const {
+    authentication
+  } = gate;
 
   const assetUrl =
     new URL(
       request.url
     );
 
-
   assetUrl.pathname =
     "/index.html";
 
-
   assetUrl.search =
     "";
-
-
-  const assetHeaders =
-    new Headers(
-      request.headers
-    );
-
 
   const assetRequest =
     new Request(
       assetUrl.toString(),
       {
-
         method,
 
         headers:
-          assetHeaders
-
+          new Headers(
+            request.headers
+          )
       }
     );
-
 
   const assetResponse =
     await env.ASSETS.fetch(
       assetRequest
     );
 
-
   const headers =
     new Headers(
       assetResponse.headers
     );
-
 
   headers.set(
     "Cache-Control",
     "no-store, max-age=0"
   );
 
-
   headers.set(
     "Pragma",
     "no-cache"
   );
-
 
   if (
     authentication.cookie
@@ -558,12 +550,10 @@ async function serveProtectedHome(
     );
   }
 
-
   let response =
     new Response(
       assetResponse.body,
       {
-
         status:
           assetResponse.status,
 
@@ -571,10 +561,8 @@ async function serveProtectedHome(
           assetResponse.statusText,
 
         headers
-
       }
     );
-
 
   if (
     method ===
@@ -587,7 +575,6 @@ async function serveProtectedHome(
         response
       );
   }
-
 
   return response;
 }
@@ -603,61 +590,55 @@ async function serveLoginOrRedirect(
     request.method
       .toUpperCase();
 
-
   if (
-    method ===
+    method !==
       "GET"
   ) {
 
-    const authentication =
-      await authenticate(
-        request,
-        env,
-        ctx
-      );
+    return baseApp.fetch(
+      request,
+      env,
+      ctx
+    );
+  }
 
+  const authentication =
+    await authenticate(
+      request,
+      env,
+      ctx
+    );
 
-    if (
-      authentication.ok &&
-      activeUser(
-        authentication.auth
-      )
-    ) {
+  if (
+    authentication.ok &&
+    activeUser(
+      authentication.auth
+    )
+  ) {
 
-      return redirect(
-        request,
-        "/",
-        authentication.cookie
-      );
-    }
-
-
-    let response =
-      await baseApp.fetch(
-        request,
-        env,
-        ctx
-      );
-
-
-    response =
-      enhanceHtml(
-        request,
-        response
-      );
-
-
-    return cloneWithCookie(
-      response,
+    return redirect(
+      request,
+      "/",
       authentication.cookie
     );
   }
 
+  let response =
+    await baseApp.fetch(
+      request,
+      env,
+      ctx
+    );
 
-  return baseApp.fetch(
-    request,
-    env,
-    ctx
+  response =
+    enhanceHtml(
+      request,
+      response
+    );
+
+  return cloneWithCookie(
+    response,
+    authentication.cookie
   );
 }
 
@@ -677,7 +658,6 @@ async function serveFeedbackPage(
     return new Response(
       null,
       {
-
         status:
           405,
 
@@ -685,49 +665,23 @@ async function serveFeedbackPage(
           Allow:
             "GET"
         }
-
       }
     );
   }
 
-
-  const authentication =
-    await authenticate(
+  const gate =
+    await requirePageUser(
       request,
       env,
       ctx
     );
 
-
-  if (
-    !authentication.ok
-  ) {
-
-    return redirect(
-      request,
-      "/login",
-      authentication.cookie
-    );
+  if (!gate.ok) {
+    return gate.response;
   }
-
-
-  if (
-    !activeUser(
-      authentication.auth
-    )
-  ) {
-
-    return redirect(
-      request,
-      "/login",
-      authentication.cookie
-    );
-  }
-
 
   let response =
     renderFeedbackPage();
-
 
   response =
     enhanceHtml(
@@ -735,10 +689,9 @@ async function serveFeedbackPage(
       response
     );
 
-
   return cloneWithCookie(
     response,
-    authentication.cookie
+    gate.authentication.cookie
   );
 }
 
@@ -758,7 +711,6 @@ async function serveIncidentInbox(
     return new Response(
       null,
       {
-
         status:
           405,
 
@@ -766,49 +718,27 @@ async function serveIncidentInbox(
           Allow:
             "GET"
         }
-
       }
     );
   }
 
-
-  const authentication =
-    await authenticate(
+  const gate =
+    await requirePageUser(
       request,
       env,
-      ctx
+      ctx,
+      {
+        ownerOnly:
+          true
+      }
     );
 
-
-  if (
-    !authentication.ok
-  ) {
-
-    return redirect(
-      request,
-      "/login",
-      authentication.cookie
-    );
+  if (!gate.ok) {
+    return gate.response;
   }
-
-
-  if (
-    !ownerUser(
-      authentication.auth
-    )
-  ) {
-
-    return redirect(
-      request,
-      "/",
-      authentication.cookie
-    );
-  }
-
 
   let response =
     renderIncidentInboxPage();
-
 
   response =
     enhanceHtml(
@@ -816,10 +746,66 @@ async function serveIncidentInbox(
       response
     );
 
+  return cloneWithCookie(
+    response,
+    gate.authentication.cookie
+  );
+}
+
+
+async function serveSystemHealthPage(
+  request,
+  env,
+  ctx
+) {
+
+  if (
+    request.method
+      .toUpperCase() !==
+      "GET"
+  ) {
+
+    return new Response(
+      null,
+      {
+        status:
+          405,
+
+        headers: {
+          Allow:
+            "GET"
+        }
+      }
+    );
+  }
+
+  const gate =
+    await requirePageUser(
+      request,
+      env,
+      ctx,
+      {
+        ownerOnly:
+          true
+      }
+    );
+
+  if (!gate.ok) {
+    return gate.response;
+  }
+
+  let response =
+    renderSystemHealthPage();
+
+  response =
+    enhanceHtml(
+      request,
+      response
+    );
 
   return cloneWithCookie(
     response,
-    authentication.cookie
+    gate.authentication.cookie
   );
 }
 
@@ -837,22 +823,15 @@ export default {
         request.url
       );
 
-
     const pathname =
       url.pathname;
-
 
     try {
 
       /*
-       * --------------------------------------------------
+       * -----------------------------------------------
        * FORMAL APP HOME
-       * --------------------------------------------------
-       *
-       * "/" is the real upload center.
-       *
-       * Never allow the legacy auth landing page to take
-       * this route again.
+       * -----------------------------------------------
        */
 
       if (
@@ -871,12 +850,9 @@ export default {
 
 
       /*
-       * --------------------------------------------------
+       * -----------------------------------------------
        * LOGIN
-       * --------------------------------------------------
-       *
-       * An already authenticated active user should never
-       * remain on the login page.
+       * -----------------------------------------------
        */
 
       if (
@@ -899,9 +875,9 @@ export default {
 
 
       /*
-       * --------------------------------------------------
-       * FEEDBACK PAGE
-       * --------------------------------------------------
+       * -----------------------------------------------
+       * FEEDBACK
+       * -----------------------------------------------
        */
 
       if (
@@ -920,9 +896,9 @@ export default {
 
 
       /*
-       * --------------------------------------------------
+       * -----------------------------------------------
        * OWNER INCIDENT INBOX
-       * --------------------------------------------------
+       * -----------------------------------------------
        */
 
       if (
@@ -941,9 +917,30 @@ export default {
 
 
       /*
-       * --------------------------------------------------
-       * FEEDBACK API
-       * --------------------------------------------------
+       * -----------------------------------------------
+       * OWNER SYSTEM HEALTH
+       * -----------------------------------------------
+       */
+
+      if (
+        pathname ===
+          "/admin/system-health" ||
+        pathname ===
+          "/admin/system-health/"
+      ) {
+
+        return await serveSystemHealthPage(
+          request,
+          env,
+          ctx
+        );
+      }
+
+
+      /*
+       * -----------------------------------------------
+       * USER FEEDBACK API
+       * -----------------------------------------------
        */
 
       if (
@@ -954,28 +951,23 @@ export default {
       ) {
 
         return await authenticatedApi(
-
           request,
-
           env,
-
           ctx,
-
           auth =>
             handleFeedbackRequest(
               request,
               env,
               auth
             )
-
         );
       }
 
 
       /*
-       * --------------------------------------------------
+       * -----------------------------------------------
        * OWNER INCIDENT API
-       * --------------------------------------------------
+       * -----------------------------------------------
        */
 
       if (
@@ -987,35 +979,66 @@ export default {
       ) {
 
         return await authenticatedApi(
-
           request,
-
           env,
-
           ctx,
-
           auth =>
             handleOwnerIncidentRequest(
               request,
               env,
               auth
             ),
-
           true
-
         );
       }
 
 
       /*
-       * --------------------------------------------------
+       * -----------------------------------------------
+       * OWNER SYSTEM HEALTH API
+       * -----------------------------------------------
+       */
+
+      if (
+        pathname ===
+          "/api/admin/health"
+      ) {
+
+        return await authenticatedApi(
+          request,
+          env,
+          ctx,
+          auth =>
+            handleOwnerSystemHealthRequest(
+              request,
+              env,
+              auth
+            ),
+          true
+        );
+      }
+
+
+      /*
+       * -----------------------------------------------
        * EXISTING APPLICATION
-       * --------------------------------------------------
+       * -----------------------------------------------
        *
-       * Account, profile, library, admin, upload APIs,
-       * collections, Passkeys, auth, device pairing,
-       * recovery and all existing functionality continue
-       * through baseApp.
+       * Account
+       * Profile
+       * Library
+       * Admin
+       * Upload APIs
+       * Batch V2
+       * Collections
+       * Favorites
+       * Passkeys
+       * Device pairing
+       * Recovery
+       * Authentication
+       * User lifecycle
+       *
+       * all continue through baseApp.
        */
 
       let response =
@@ -1025,13 +1048,11 @@ export default {
           ctx
         );
 
-
       response =
         enhanceHtml(
           request,
           response
         );
-
 
       return response;
 
@@ -1043,7 +1064,6 @@ export default {
         "App V2 error:",
         error
       );
-
 
       return jsonResponse(
         {
