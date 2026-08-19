@@ -20,707 +20,7 @@ import {
 
 
 const FEEDBACK_ENTRY =
-`<script>
-(() => {
-
-  "use strict";
-
-
-  const ICON =
-    '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">' +
-    '<path d="M6.5 5.5h11a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-5.2L8.5 19v-2.5h-2a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>' +
-    '<path d="M8 10h8M8 13h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>' +
-    '</svg>';
-
-
-  const STYLE_ID =
-    "jy-global-feedback-style";
-
-
-  function addStyle() {
-
-    if (
-      document.getElementById(
-        STYLE_ID
-      )
-    ) {
-
-      return;
-
-    }
-
-
-    const style =
-      document.createElement(
-        "style"
-      );
-
-
-    style.id =
-      STYLE_ID;
-
-
-    style.textContent =
-      ".jy-feedback-icon{" +
-      "width:22px;height:22px;" +
-      "display:inline-grid;place-items:center;" +
-      "flex:0 0 22px}" +
-
-      ".jy-feedback-icon svg{" +
-      "width:100%;height:100%}" +
-
-      ".jy-feedback-count{" +
-      "margin-left:auto;" +
-      "min-width:22px;height:22px;" +
-      "padding:0 7px;" +
-      "border-radius:999px;" +
-      "display:inline-flex;" +
-      "align-items:center;" +
-      "justify-content:center;" +
-      "background:rgba(117,80,234,.12);" +
-      "color:#7550ea;" +
-      "font-size:11px;" +
-      "font-weight:800}";
-
-
-    document.head.append(
-      style
-    );
-
-  }
-
-
-  function category() {
-
-    const path =
-      location.pathname;
-
-
-    if (
-      path === "/" ||
-      path.startsWith(
-        "/upload"
-      )
-    ) {
-
-      return "upload";
-
-    }
-
-
-    if (
-      path.startsWith(
-        "/library"
-      )
-    ) {
-
-      return "media";
-
-    }
-
-
-    if (
-      path.startsWith(
-        "/account"
-      ) ||
-      path.startsWith(
-        "/passkeys"
-      )
-    ) {
-
-      return "account";
-
-    }
-
-
-    if (
-      path.startsWith(
-        "/profile"
-      )
-    ) {
-
-      return "ui";
-
-    }
-
-
-    return "other";
-
-  }
-
-
-  function feedbackHref() {
-
-    const params =
-      new URLSearchParams();
-
-
-    params.set(
-      "category",
-      category()
-    );
-
-
-    params.set(
-      "page",
-      location.pathname +
-      location.search
-    );
-
-
-    return (
-      "/feedback/?" +
-      params.toString()
-    );
-
-  }
-
-
-  async function getUser() {
-
-    try {
-
-      const response =
-        await fetch(
-          "/api/auth/me",
-          {
-            credentials:
-              "same-origin",
-
-            cache:
-              "no-store",
-
-            headers: {
-              Accept:
-                "application/json"
-            }
-          }
-        );
-
-
-      if (!response.ok) {
-
-        return null;
-
-      }
-
-
-      const data =
-        await response.json();
-
-
-      if (
-        !data ||
-        !data.authenticated ||
-        !data.user ||
-        data.user.status !==
-          "active"
-      ) {
-
-        return null;
-
-      }
-
-
-      return data.user;
-
-    } catch {
-
-      return null;
-
-    }
-
-  }
-
-
-  async function openIncidentCount(
-    user
-  ) {
-
-    if (
-      !user ||
-      user.role !==
-        "owner"
-    ) {
-
-      return 0;
-
-    }
-
-
-    try {
-
-      const response =
-        await fetch(
-          "/api/admin/incidents?status=open&limit=100",
-          {
-            credentials:
-              "same-origin",
-
-            cache:
-              "no-store"
-          }
-        );
-
-
-      if (!response.ok) {
-
-        return 0;
-
-      }
-
-
-      const data =
-        await response.json();
-
-
-      return Array.isArray(
-        data.incidents
-      )
-        ? data.incidents.length
-        : 0;
-
-    } catch {
-
-      return 0;
-
-    }
-
-  }
-
-
-  function makeNavLink(
-    id,
-    href,
-    label
-  ) {
-
-    const link =
-      document.createElement(
-        "a"
-      );
-
-
-    link.id =
-      id;
-
-
-    link.href =
-      href;
-
-
-    link.className =
-      location.pathname.startsWith(
-        href.split("?")[0]
-      )
-
-        ? "jy-nav-link active"
-
-        : "jy-nav-link";
-
-
-    const icon =
-      document.createElement(
-        "span"
-      );
-
-
-    icon.className =
-      "jy-nav-icon jy-feedback-icon";
-
-
-    icon.innerHTML =
-      ICON;
-
-
-    const text =
-      document.createElement(
-        "span"
-      );
-
-
-    text.className =
-      "jy-nav-text";
-
-
-    text.textContent =
-      label;
-
-
-    link.append(
-      icon,
-      text
-    );
-
-
-    return link;
-
-  }
-
-
-  function addSidebar(
-    user
-  ) {
-
-    const nav =
-      document.querySelector(
-        ".jy-nav"
-      );
-
-
-    if (!nav) {
-
-      return;
-
-    }
-
-
-    if (
-      !document.getElementById(
-        "jy-feedback-nav"
-      )
-    ) {
-
-      nav.append(
-        makeNavLink(
-          "jy-feedback-nav",
-          feedbackHref(),
-          "反馈问题"
-        )
-      );
-
-    }
-
-
-    if (
-      user.role ===
-        "owner" &&
-      !document.getElementById(
-        "jy-incident-nav"
-      )
-    ) {
-
-      nav.append(
-        makeNavLink(
-          "jy-incident-nav",
-          "/admin/incidents/",
-          "反馈收件箱"
-        )
-      );
-
-    }
-
-  }
-
-
-  function menuLink(
-    href,
-    label,
-    meta,
-    count
-  ) {
-
-    const link =
-      document.createElement(
-        "a"
-      );
-
-
-    link.className =
-      "jy-menu-link";
-
-
-    link.href =
-      href;
-
-
-    const icon =
-      document.createElement(
-        "span"
-      );
-
-
-    icon.className =
-      "jy-feedback-icon";
-
-
-    icon.innerHTML =
-      ICON;
-
-
-    const text =
-      document.createElement(
-        "span"
-      );
-
-
-    text.textContent =
-      label;
-
-
-    link.append(
-      icon,
-      text
-    );
-
-
-    if (meta) {
-
-      const small =
-        document.createElement(
-          "small"
-        );
-
-
-      small.textContent =
-        meta;
-
-
-      link.append(
-        small
-      );
-
-    }
-
-
-    if (
-      Number(
-        count
-      ) >
-      0
-    ) {
-
-      const badge =
-        document.createElement(
-          "span"
-        );
-
-
-      badge.className =
-        "jy-feedback-count";
-
-
-      badge.textContent =
-        Number(
-          count
-        ) >
-        99
-
-          ? "99+"
-
-          : String(
-              count
-            );
-
-
-      link.append(
-        badge
-      );
-
-    }
-
-
-    return link;
-
-  }
-
-
-  function addMenu(
-    user,
-    count
-  ) {
-
-    if (
-      document.getElementById(
-        "jy-feedback-menu-marker"
-      )
-    ) {
-
-      return;
-
-    }
-
-
-    const labels =
-      Array.from(
-        document.querySelectorAll(
-          ".jy-menu-label"
-        )
-      );
-
-
-    if (!labels.length) {
-
-      return;
-
-    }
-
-
-    const panel =
-      labels[0]
-        .parentElement;
-
-
-    if (!panel) {
-
-      return;
-
-    }
-
-
-    const marker =
-      document.createElement(
-        "span"
-      );
-
-
-    marker.id =
-      "jy-feedback-menu-marker";
-
-
-    marker.hidden =
-      true;
-
-
-    const separator =
-      document.createElement(
-        "div"
-      );
-
-
-    separator.className =
-      "jy-menu-separator";
-
-
-    const help =
-      document.createElement(
-        "div"
-      );
-
-
-    help.className =
-      "jy-menu-label";
-
-
-    help.textContent =
-      "HELP";
-
-
-    panel.append(
-      marker,
-      separator,
-      help,
-      menuLink(
-        feedbackHref(),
-        "帮助与反馈",
-        "反馈当前页面的问题",
-        0
-      )
-    );
-
-
-    if (
-      user.role ===
-        "owner"
-    ) {
-
-      panel.append(
-        menuLink(
-          "/admin/incidents/",
-          "反馈收件箱",
-          "Owner",
-          count
-        )
-      );
-
-    }
-
-  }
-
-
-  async function start() {
-
-    const user =
-      await getUser();
-
-
-    if (!user) {
-
-      return;
-
-    }
-
-
-    addStyle();
-
-
-    const count =
-      await openIncidentCount(
-        user
-      );
-
-
-    const apply =
-      function () {
-
-        addSidebar(
-          user
-        );
-
-
-        addMenu(
-          user,
-          count
-        );
-
-      };
-
-
-    apply();
-
-
-    const observer =
-      new MutationObserver(
-        apply
-      );
-
-
-    observer.observe(
-      document.body,
-      {
-        childList:
-          true,
-
-        subtree:
-          true
-      }
-    );
-
-  }
-
-
-  if (
-    document.readyState ===
-      "loading"
-  ) {
-
-    document.addEventListener(
-      "DOMContentLoaded",
-      start,
-      {
-        once:
-          true
-      }
-    );
-
-  } else {
-
-    start();
-
-  }
-
-})();
-</script>`;
+  `<script src="/feedback-entry.js?v=20260819-feedback-v2" defer></script>`;
 
 
 function cloneWithCookie(
@@ -728,10 +28,11 @@ function cloneWithCookie(
   cookie
 ) {
 
-  if (!cookie) {
+  if (
+    !cookie
+  ) {
 
     return response;
-
   }
 
 
@@ -761,7 +62,6 @@ function cloneWithCookie(
 
     }
   );
-
 }
 
 
@@ -785,18 +85,22 @@ function redirect(
         url.toString(),
 
       "Cache-Control":
-        "no-store"
+        "no-store, max-age=0",
+
+      Pragma:
+        "no-cache"
 
     });
 
 
-  if (cookie) {
+  if (
+    cookie
+  ) {
 
     headers.append(
       "Set-Cookie",
       cookie
     );
-
   }
 
 
@@ -811,7 +115,6 @@ function redirect(
 
     }
   );
-
 }
 
 
@@ -835,6 +138,18 @@ async function authenticate(
     "";
 
 
+  const headers =
+    new Headers(
+      request.headers
+    );
+
+
+  headers.set(
+    "Accept",
+    "application/json"
+  );
+
+
   const authRequest =
     new Request(
       url.toString(),
@@ -843,10 +158,7 @@ async function authenticate(
         method:
           "GET",
 
-        headers:
-          new Headers(
-            request.headers
-          )
+        headers
 
       }
     );
@@ -866,7 +178,9 @@ async function authenticate(
     );
 
 
-  if (!response.ok) {
+  if (
+    !response.ok
+  ) {
 
     return {
 
@@ -878,7 +192,6 @@ async function authenticate(
       cookie
 
     };
-
   }
 
 
@@ -912,7 +225,6 @@ async function authenticate(
       cookie
 
     };
-
   }
 
 
@@ -935,7 +247,6 @@ async function authenticate(
     }
 
   };
-
 }
 
 
@@ -951,7 +262,6 @@ function activeUser(
       "active"
 
   );
-
 }
 
 
@@ -973,7 +283,6 @@ function ownerUser(
       true
 
   );
-
 }
 
 
@@ -989,7 +298,6 @@ function enhanceHtml(
   ) {
 
     return response;
-
   }
 
 
@@ -1009,14 +317,13 @@ function enhanceHtml(
   ) {
 
     return response;
-
   }
 
 
   return new HTMLRewriter()
 
     .on(
-      "body",
+      "head",
       {
 
         element(
@@ -1030,7 +337,6 @@ function enhanceHtml(
                 true
             }
           );
-
         }
 
       }
@@ -1039,7 +345,6 @@ function enhanceHtml(
     .transform(
       response
     );
-
 }
 
 
@@ -1065,7 +370,6 @@ async function authenticatedApi(
 
     return authentication
       .response;
-
   }
 
 
@@ -1082,7 +386,6 @@ async function authenticatedApi(
       },
       403
     );
-
   }
 
 
@@ -1100,7 +403,6 @@ async function authenticatedApi(
       },
       403
     );
-
   }
 
 
@@ -1114,7 +416,249 @@ async function authenticatedApi(
     response,
     authentication.cookie
   );
+}
 
+
+async function serveProtectedHome(
+  request,
+  env,
+  ctx
+) {
+
+  const method =
+    request.method
+      .toUpperCase();
+
+
+  if (
+    ![
+      "GET",
+      "HEAD"
+    ].includes(
+      method
+    )
+  ) {
+
+    return new Response(
+      null,
+      {
+
+        status:
+          405,
+
+        headers: {
+          Allow:
+            "GET, HEAD"
+        }
+
+      }
+    );
+  }
+
+
+  const authentication =
+    await authenticate(
+      request,
+      env,
+      ctx
+    );
+
+
+  if (
+    !authentication.ok
+  ) {
+
+    return redirect(
+      request,
+      "/login",
+      authentication.cookie
+    );
+  }
+
+
+  if (
+    !activeUser(
+      authentication.auth
+    )
+  ) {
+
+    return redirect(
+      request,
+      "/login",
+      authentication.cookie
+    );
+  }
+
+
+  const assetUrl =
+    new URL(
+      request.url
+    );
+
+
+  assetUrl.pathname =
+    "/index.html";
+
+
+  assetUrl.search =
+    "";
+
+
+  const assetHeaders =
+    new Headers(
+      request.headers
+    );
+
+
+  const assetRequest =
+    new Request(
+      assetUrl.toString(),
+      {
+
+        method,
+
+        headers:
+          assetHeaders
+
+      }
+    );
+
+
+  const assetResponse =
+    await env.ASSETS.fetch(
+      assetRequest
+    );
+
+
+  const headers =
+    new Headers(
+      assetResponse.headers
+    );
+
+
+  headers.set(
+    "Cache-Control",
+    "no-store, max-age=0"
+  );
+
+
+  headers.set(
+    "Pragma",
+    "no-cache"
+  );
+
+
+  if (
+    authentication.cookie
+  ) {
+
+    headers.append(
+      "Set-Cookie",
+      authentication.cookie
+    );
+  }
+
+
+  let response =
+    new Response(
+      assetResponse.body,
+      {
+
+        status:
+          assetResponse.status,
+
+        statusText:
+          assetResponse.statusText,
+
+        headers
+
+      }
+    );
+
+
+  if (
+    method ===
+      "GET"
+  ) {
+
+    response =
+      enhanceHtml(
+        request,
+        response
+      );
+  }
+
+
+  return response;
+}
+
+
+async function serveLoginOrRedirect(
+  request,
+  env,
+  ctx
+) {
+
+  const method =
+    request.method
+      .toUpperCase();
+
+
+  if (
+    method ===
+      "GET"
+  ) {
+
+    const authentication =
+      await authenticate(
+        request,
+        env,
+        ctx
+      );
+
+
+    if (
+      authentication.ok &&
+      activeUser(
+        authentication.auth
+      )
+    ) {
+
+      return redirect(
+        request,
+        "/",
+        authentication.cookie
+      );
+    }
+
+
+    let response =
+      await baseApp.fetch(
+        request,
+        env,
+        ctx
+      );
+
+
+    response =
+      enhanceHtml(
+        request,
+        response
+      );
+
+
+    return cloneWithCookie(
+      response,
+      authentication.cookie
+    );
+  }
+
+
+  return baseApp.fetch(
+    request,
+    env,
+    ctx
+  );
 }
 
 
@@ -1144,7 +688,6 @@ async function serveFeedbackPage(
 
       }
     );
-
   }
 
 
@@ -1165,7 +708,6 @@ async function serveFeedbackPage(
       "/login",
       authentication.cookie
     );
-
   }
 
 
@@ -1177,10 +719,9 @@ async function serveFeedbackPage(
 
     return redirect(
       request,
-      "/",
+      "/login",
       authentication.cookie
     );
-
   }
 
 
@@ -1199,7 +740,6 @@ async function serveFeedbackPage(
     response,
     authentication.cookie
   );
-
 }
 
 
@@ -1229,7 +769,6 @@ async function serveIncidentInbox(
 
       }
     );
-
   }
 
 
@@ -1250,7 +789,6 @@ async function serveIncidentInbox(
       "/login",
       authentication.cookie
     );
-
   }
 
 
@@ -1265,7 +803,6 @@ async function serveIncidentInbox(
       "/",
       authentication.cookie
     );
-
   }
 
 
@@ -1284,7 +821,6 @@ async function serveIncidentInbox(
     response,
     authentication.cookie
   );
-
 }
 
 
@@ -1308,6 +844,66 @@ export default {
 
     try {
 
+      /*
+       * --------------------------------------------------
+       * FORMAL APP HOME
+       * --------------------------------------------------
+       *
+       * "/" is the real upload center.
+       *
+       * Never allow the legacy auth landing page to take
+       * this route again.
+       */
+
+      if (
+        pathname ===
+          "/" ||
+        pathname ===
+          "/index.html"
+      ) {
+
+        return await serveProtectedHome(
+          request,
+          env,
+          ctx
+        );
+      }
+
+
+      /*
+       * --------------------------------------------------
+       * LOGIN
+       * --------------------------------------------------
+       *
+       * An already authenticated active user should never
+       * remain on the login page.
+       */
+
+      if (
+        pathname ===
+          "/login" ||
+        pathname ===
+          "/login/" ||
+        pathname ===
+          "/owner-login" ||
+        pathname ===
+          "/owner-login/"
+      ) {
+
+        return await serveLoginOrRedirect(
+          request,
+          env,
+          ctx
+        );
+      }
+
+
+      /*
+       * --------------------------------------------------
+       * FEEDBACK PAGE
+       * --------------------------------------------------
+       */
+
       if (
         pathname ===
           "/feedback" ||
@@ -1320,9 +916,14 @@ export default {
           env,
           ctx
         );
-
       }
 
+
+      /*
+       * --------------------------------------------------
+       * OWNER INCIDENT INBOX
+       * --------------------------------------------------
+       */
 
       if (
         pathname ===
@@ -1336,9 +937,14 @@ export default {
           env,
           ctx
         );
-
       }
 
+
+      /*
+       * --------------------------------------------------
+       * FEEDBACK API
+       * --------------------------------------------------
+       */
 
       if (
         pathname ===
@@ -1363,9 +969,14 @@ export default {
             )
 
         );
-
       }
 
+
+      /*
+       * --------------------------------------------------
+       * OWNER INCIDENT API
+       * --------------------------------------------------
+       */
 
       if (
         pathname ===
@@ -1393,9 +1004,19 @@ export default {
           true
 
         );
-
       }
 
+
+      /*
+       * --------------------------------------------------
+       * EXISTING APPLICATION
+       * --------------------------------------------------
+       *
+       * Account, profile, library, admin, upload APIs,
+       * collections, Passkeys, auth, device pairing,
+       * recovery and all existing functionality continue
+       * through baseApp.
+       */
 
       let response =
         await baseApp.fetch(
@@ -1435,9 +1056,7 @@ export default {
           500
         )
       );
-
     }
-
   }
 
 };
