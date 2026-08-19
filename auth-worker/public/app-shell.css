@@ -62,7 +62,9 @@ html {
 
 body {
     transition:
-        padding-left 220ms cubic-bezier(.2, .8, .2, 1);
+        padding-left
+        220ms
+        cubic-bezier(.2, .8, .2, 1);
 }
 
 
@@ -79,19 +81,16 @@ body.jy-shell-ready {
             rgba(132, 87, 232, 0.10),
             transparent 31rem
         ),
-
         radial-gradient(
             circle at 92% 15%,
             rgba(90, 169, 232, 0.055),
             transparent 25rem
         ),
-
         radial-gradient(
             circle at 83% 94%,
             rgba(72, 185, 144, 0.04),
             transparent 23rem
         ),
-
         var(--jy-page);
 }
 
@@ -142,7 +141,11 @@ body.jy-menu-open {
         var(--jy-line);
 
     background:
-        rgba(250, 249, 253, 0.91);
+        rgba(250, 249, 253, 0.93);
+
+    box-shadow:
+        10px 0 35px
+        rgba(63, 39, 96, 0.025);
 
     backdrop-filter:
         blur(24px);
@@ -151,7 +154,9 @@ body.jy-menu-open {
         blur(24px);
 
     transition:
-        width 220ms cubic-bezier(.2, .8, .2, 1);
+        width
+        220ms
+        cubic-bezier(.2, .8, .2, 1);
 }
 
 
@@ -386,7 +391,7 @@ body.jy-menu-open {
         var(--jy-purple-800);
 
     background:
-        rgba(255, 255, 255, 0.68);
+        rgba(255, 255, 255, 0.72);
 }
 
 
@@ -397,8 +402,8 @@ body.jy-menu-open {
     background:
         linear-gradient(
             90deg,
-            rgba(237, 230, 255, 0.95),
-            rgba(248, 245, 255, 0.74)
+            rgba(237, 230, 255, 0.98),
+            rgba(248, 245, 255, 0.77)
         );
 
     font-weight:
@@ -488,6 +493,10 @@ body.jy-menu-open {
 }
 
 
+/* =========================================================
+   Theme block
+   ========================================================= */
+
 .jy-sidebar-theme {
     margin:
         0 5px 10px;
@@ -506,7 +515,7 @@ body.jy-menu-open {
 
     border:
         1px solid
-        rgba(128, 88, 232, 0.10);
+        rgba(128, 88, 232, 0.11);
 
     border-radius:
         13px;
@@ -514,12 +523,18 @@ body.jy-menu-open {
     background:
         linear-gradient(
             135deg,
-            rgba(238, 232, 255, 0.70),
-            rgba(240, 248, 255, 0.65)
+            rgba(238, 232, 255, 0.74),
+            rgba(240, 248, 255, 0.72)
         );
 
     overflow:
         hidden;
+
+    transition:
+        opacity 160ms ease,
+        height 160ms ease,
+        margin 160ms ease,
+        padding 160ms ease;
 }
 
 
@@ -582,15 +597,25 @@ body.jy-menu-open {
 }
 
 
+/* =========================================================
+   Sidebar collapse button
+   ========================================================= */
+
 .jy-collapse {
+    width:
+        calc(100% - 10px);
+
     min-height:
-        39px;
+        42px;
 
     margin:
         0 5px;
 
     padding:
-        0 11px;
+        0 12px;
+
+    position:
+        relative;
 
     display:
         flex;
@@ -602,16 +627,21 @@ body.jy-menu-open {
         10px;
 
     border:
-        0;
+        1px solid
+        rgba(99, 71, 139, 0.09);
 
     border-radius:
-        12px;
+        13px;
 
     color:
-        var(--jy-muted);
+        #756685;
 
     background:
-        transparent;
+        rgba(255, 255, 255, 0.68);
+
+    box-shadow:
+        0 4px 15px
+        rgba(59, 36, 89, 0.025);
 
     cursor:
         pointer;
@@ -620,7 +650,14 @@ body.jy-menu-open {
         nowrap;
 
     overflow:
-        hidden;
+        visible;
+
+    transition:
+        color 150ms ease,
+        background 150ms ease,
+        border-color 150ms ease,
+        box-shadow 150ms ease,
+        transform 150ms ease;
 }
 
 
@@ -628,8 +665,25 @@ body.jy-menu-open {
     color:
         var(--jy-purple-700);
 
+    border-color:
+        rgba(128, 88, 232, 0.18);
+
     background:
-        rgba(255, 255, 255, 0.72);
+        rgba(246, 242, 255, 0.96);
+
+    box-shadow:
+        0 8px 24px
+        rgba(83, 50, 130, 0.08);
+}
+
+
+.jy-collapse:focus-visible {
+    outline:
+        3px solid
+        rgba(123, 80, 226, 0.16);
+
+    outline-offset:
+        2px;
 }
 
 
@@ -644,21 +698,36 @@ body.jy-menu-open {
         0 0 17px;
 
     transition:
-        transform 220ms cubic-bezier(.2, .8, .2, 1);
+        transform
+        220ms
+        cubic-bezier(.2, .8, .2, 1);
 }
 
 
 .jy-collapse span {
     font-size:
         10px;
+
+    font-weight:
+        650;
 }
 
 
-body.jy-sidebar-collapsed .jy-brand-copy,
-body.jy-sidebar-collapsed .jy-sidebar-label,
-body.jy-sidebar-collapsed .jy-nav-text,
-body.jy-sidebar-collapsed .jy-theme-copy,
-body.jy-sidebar-collapsed .jy-collapse span {
+/* =========================================================
+   Collapsed sidebar
+   ========================================================= */
+
+body.jy-sidebar-collapsed
+.jy-brand-copy,
+
+body.jy-sidebar-collapsed
+.jy-sidebar-label,
+
+body.jy-sidebar-collapsed
+.jy-nav-text,
+
+body.jy-sidebar-collapsed
+.jy-theme-copy {
     opacity:
         0;
 
@@ -667,10 +736,14 @@ body.jy-sidebar-collapsed .jy-collapse span {
 }
 
 
-body.jy-sidebar-collapsed .jy-sidebar-brand,
-body.jy-sidebar-collapsed .jy-nav-link,
-body.jy-sidebar-collapsed .jy-nav-button,
-body.jy-sidebar-collapsed .jy-collapse {
+body.jy-sidebar-collapsed
+.jy-sidebar-brand,
+
+body.jy-sidebar-collapsed
+.jy-nav-link,
+
+body.jy-sidebar-collapsed
+.jy-nav-button {
     justify-content:
         center;
 
@@ -682,21 +755,250 @@ body.jy-sidebar-collapsed .jy-collapse {
 }
 
 
-body.jy-sidebar-collapsed .jy-sidebar-theme {
-    justify-content:
-        center;
-
-    padding-left:
-        0;
-
-    padding-right:
+body.jy-sidebar-collapsed
+.jy-sidebar-brand {
+    gap:
         0;
 }
 
 
-body.jy-sidebar-collapsed .jy-collapse svg {
+body.jy-sidebar-collapsed
+.jy-nav-link.active::before {
+    left:
+        3px;
+}
+
+
+/*
+ * 收起以后不再留下一个看起来像按钮的
+ * 空白 Purple Aurora 方块。
+ */
+body.jy-sidebar-collapsed
+.jy-sidebar-theme {
+    height:
+        0;
+
+    min-height:
+        0;
+
+    margin:
+        0;
+
+    padding:
+        0;
+
+    visibility:
+        hidden;
+
+    border:
+        0;
+
+    opacity:
+        0;
+
+    overflow:
+        hidden;
+}
+
+
+/*
+ * 核心改动：
+ * 收起后把原来的按钮变成
+ * 永久可见的侧边展开把手。
+ */
+body.jy-sidebar-collapsed
+.jy-collapse {
+    width:
+        38px;
+
+    height:
+        58px;
+
+    min-height:
+        58px;
+
+    margin:
+        0;
+
+    padding:
+        0;
+
+    position:
+        fixed;
+
+    top:
+        50%;
+
+    left:
+        78px;
+
+    z-index:
+        58;
+
+    display:
+        grid;
+
+    place-items:
+        center;
+
+    border:
+        1px solid
+        rgba(113, 76, 170, 0.15);
+
+    border-left:
+        0;
+
+    border-radius:
+        0 15px 15px 0;
+
+    color:
+        var(--jy-purple-700);
+
+    background:
+        rgba(255, 255, 255, 0.97);
+
+    box-shadow:
+        8px 8px 26px
+        rgba(57, 35, 88, 0.12);
+
+    backdrop-filter:
+        blur(16px);
+
+    -webkit-backdrop-filter:
+        blur(16px);
+
+    overflow:
+        visible;
+
+    transform:
+        translateY(-50%);
+}
+
+
+body.jy-sidebar-collapsed
+.jy-collapse:hover {
+    width:
+        42px;
+
+    color:
+        #ffffff;
+
+    background:
+        linear-gradient(
+            145deg,
+            #946cef,
+            #7147df
+        );
+
+    box-shadow:
+        8px 12px 30px
+        rgba(95, 55, 157, 0.20);
+}
+
+
+body.jy-sidebar-collapsed
+.jy-collapse span {
+    display:
+        none;
+}
+
+
+body.jy-sidebar-collapsed
+.jy-collapse svg {
+    width:
+        20px;
+
+    height:
+        20px;
+
     transform:
         rotate(180deg);
+}
+
+
+/*
+ * Hover / keyboard 时显示文字提示。
+ */
+body.jy-sidebar-collapsed
+.jy-collapse::after {
+    padding:
+        8px 11px;
+
+    position:
+        absolute;
+
+    top:
+        50%;
+
+    left:
+        50px;
+
+    visibility:
+        hidden;
+
+    border:
+        1px solid
+        rgba(91, 64, 126, 0.10);
+
+    border-radius:
+        10px;
+
+    color:
+        #665675;
+
+    background:
+        rgba(255, 255, 255, 0.97);
+
+    box-shadow:
+        0 10px 28px
+        rgba(49, 30, 75, 0.12);
+
+    content:
+        "展开导航";
+
+    font-size:
+        9px;
+
+    font-weight:
+        700;
+
+    line-height:
+        1;
+
+    opacity:
+        0;
+
+    pointer-events:
+        none;
+
+    transform:
+        translateY(-50%)
+        translateX(-4px);
+
+    white-space:
+        nowrap;
+
+    transition:
+        opacity 140ms ease,
+        transform 140ms ease,
+        visibility 140ms ease;
+}
+
+
+body.jy-sidebar-collapsed
+.jy-collapse:hover::after,
+
+body.jy-sidebar-collapsed
+.jy-collapse:focus-visible::after {
+    visibility:
+        visible;
+
+    opacity:
+        1;
+
+    transform:
+        translateY(-50%)
+        translateX(0);
 }
 
 
@@ -743,7 +1045,7 @@ body.jy-sidebar-collapsed .jy-collapse svg {
         var(--jy-text);
 
     background:
-        rgba(255, 255, 255, 0.82);
+        rgba(255, 255, 255, 0.86);
 
     box-shadow:
         0 10px 30px
@@ -932,7 +1234,10 @@ body.jy-sidebar-collapsed .jy-collapse svg {
 
 .jy-account-panel {
     width:
-        min(320px, calc(100vw - 32px));
+        min(
+            320px,
+            calc(100vw - 32px)
+        );
 
     max-height:
         calc(100svh - 92px);
@@ -966,7 +1271,7 @@ body.jy-sidebar-collapsed .jy-collapse svg {
         20px;
 
     background:
-        rgba(255, 255, 255, 0.96);
+        rgba(255, 255, 255, 0.97);
 
     box-shadow:
         0 24px 70px
@@ -989,8 +1294,12 @@ body.jy-sidebar-collapsed .jy-collapse svg {
         top right;
 
     transition:
-        opacity 180ms cubic-bezier(.2, .8, .2, 1),
-        transform 180ms cubic-bezier(.2, .8, .2, 1),
+        opacity 180ms
+        cubic-bezier(.2, .8, .2, 1),
+
+        transform 180ms
+        cubic-bezier(.2, .8, .2, 1),
+
         visibility 180ms ease;
 }
 
@@ -1026,7 +1335,8 @@ body.jy-sidebar-collapsed .jy-collapse svg {
 }
 
 
-.jy-account-head .jy-account-avatar {
+.jy-account-head
+.jy-account-avatar {
     width:
         42px;
 
@@ -1282,7 +1592,8 @@ body.jy-sidebar-collapsed .jy-collapse svg {
     }
 
 
-    body.jy-shell-ready .site-shell {
+    body.jy-shell-ready
+    .site-shell {
         width:
             min(
                 1180px,
@@ -1335,7 +1646,7 @@ body.jy-sidebar-collapsed .jy-collapse svg {
             rgba(85, 62, 119, 0.08);
 
         background:
-            rgba(249, 248, 252, 0.88);
+            rgba(249, 248, 252, 0.90);
 
         backdrop-filter:
             blur(20px);
@@ -1360,7 +1671,8 @@ body.jy-sidebar-collapsed .jy-collapse svg {
     }
 
 
-    .jy-mobile-brand .jy-brand-mark {
+    .jy-mobile-brand
+    .jy-brand-mark {
         width:
             32px;
 
@@ -1420,7 +1732,8 @@ body.jy-sidebar-collapsed .jy-collapse svg {
     }
 
 
-    .jy-mobile-account .jy-account-avatar {
+    .jy-mobile-account
+    .jy-account-avatar {
         width:
             32px;
 
@@ -1434,7 +1747,8 @@ body.jy-sidebar-collapsed .jy-collapse svg {
             64px;
 
         padding:
-            7px max(
+            7px
+            max(
                 10px,
                 env(safe-area-inset-right)
             )
@@ -1467,7 +1781,10 @@ body.jy-sidebar-collapsed .jy-collapse svg {
 
         grid-template-columns:
             repeat(
-                var(--jy-mobile-nav-count, 4),
+                var(
+                    --jy-mobile-nav-count,
+                    4
+                ),
                 minmax(0, 1fr)
             );
 
@@ -1482,7 +1799,7 @@ body.jy-sidebar-collapsed .jy-collapse svg {
             20px;
 
         background:
-            rgba(255, 255, 255, 0.92);
+            rgba(255, 255, 255, 0.94);
 
         box-shadow:
             0 18px 55px
@@ -1677,7 +1994,8 @@ body.jy-sidebar-collapsed .jy-collapse svg {
         520px
 ) {
 
-    body.jy-shell-ready .site-shell {
+    body.jy-shell-ready
+    .site-shell {
         width:
             calc(100% - 18px);
     }
