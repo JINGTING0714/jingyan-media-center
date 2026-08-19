@@ -199,6 +199,11 @@
       "/admin/index.html",
 
 
+      "/admin/incidents",
+
+      "/admin/incidents/",
+
+
       "/library",
 
       "/library/",
