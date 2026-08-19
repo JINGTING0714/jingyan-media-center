@@ -2,10 +2,10 @@
   "version": 1,
   "worker": "jingyan-media-cdn",
   "baseURL": "https://jingyan-media-cdn.jingyancdn.workers.dev",
-  "updatedAt": "2026-08-18T13:28:00.916Z",
-  "lastPublishedAt": "2026-08-18T13:28:00.916Z",
-  "lastVersionId": "2ab2c9b6-0a5c-4cf4-81df-686a0f7fa863",
-  "lastDeploymentId": "939a1861-1d52-48ae-9ac8-11ea601546c4",
+  "updatedAt": "2026-08-19T04:02:56.074Z",
+  "lastPublishedAt": "2026-08-19T04:02:56.074Z",
+  "lastVersionId": "ffabcbda-3966-4c1c-bb4a-e7cdfaaff04b",
+  "lastDeploymentId": "1f33f50a-8b27-48f5-a4fd-f219237f692a",
   "assets": {
     "/audio/001-christmas.mp3": {
       "hash": "6c23ab88513bb99a558582c6f14cef89",
