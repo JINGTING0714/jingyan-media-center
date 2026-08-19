@@ -205,32 +205,26 @@
 
 
       "/passkeys",
-      "/passkeys/",
       "/passkeys/*",
 
 
       "/account",
-      "/account/",
       "/account/*",
 
 
       "/profile",
-      "/profile/",
       "/profile/*",
 
 
       "/feedback",
-      "/feedback/",
       "/feedback/*",
 
 
       "/admin",
-      "/admin/",
       "/admin/*",
 
 
       "/library",
-      "/library/",
       "/library/*"
 
     ],
