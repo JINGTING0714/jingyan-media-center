@@ -2,9 +2,18 @@ const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
 
-const { getFile } = require("./github");
-const { generateCDNPath } = require("./cdn");
+const {
+  getFile
+} = require("./github");
 
+const {
+  generateCDNPath
+} = require("./cdn");
+
+
+/* =========================================================
+ * Config
+ * ======================================================= */
 
 function loadConfig() {
   return JSON.parse(
@@ -23,12 +32,17 @@ function getManifestFile() {
 }
 
 
+/* =========================================================
+ * Manifest
+ * ======================================================= */
+
 function createEmptyManifest() {
   const config =
     loadConfig();
 
   return {
-    version: 1,
+    version:
+      1,
 
     worker:
       config.cdn.workerName,
@@ -145,6 +159,10 @@ function writeManifest(
 }
 
 
+/* =========================================================
+ * Hash
+ * ======================================================= */
+
 function computeSHA256(
   buffer
 ) {
@@ -193,6 +211,10 @@ function computeCloudflareAssetHash(
 }
 
 
+/* =========================================================
+ * Limits
+ * ======================================================= */
+
 function getMaxAssetBytes() {
   const config =
     loadConfig();
@@ -224,6 +246,10 @@ function validateAssetSize(
   }
 }
 
+
+/* =========================================================
+ * GitHub Source
+ * ======================================================= */
 
 function encodeContentPath(
   filePath
@@ -315,6 +341,10 @@ async function downloadSourceBuffer(
   );
 }
 
+
+/* =========================================================
+ * Asset Registration
+ * ======================================================= */
 
 function buildAssetObject({
   buffer,
@@ -475,6 +505,10 @@ function getManifestAsset(
   );
 }
 
+
+/* =========================================================
+ * Storage Compatibility
+ * ======================================================= */
 
 function getRepositoryFullName(
   record,
@@ -637,6 +671,10 @@ function shouldPublishRecord(
   return true;
 }
 
+
+/* =========================================================
+ * Reconcile DB -> CDN Manifest
+ * ======================================================= */
 
 async function reconcileManifestFromDatabases() {
   const config =
@@ -818,6 +856,10 @@ async function reconcileManifestFromDatabases() {
 }
 
 
+/* =========================================================
+ * Cloudflare Manifest
+ * ======================================================= */
+
 function buildCloudflareManifest(
   manifest
 ) {
@@ -886,6 +928,10 @@ function validateManifestLimits(
 }
 
 
+/* =========================================================
+ * Cloudflare SDK
+ * ======================================================= */
+
 async function getCloudflareClient() {
   const apiToken =
     process.env
@@ -913,6 +959,10 @@ async function getCloudflareClient() {
   });
 }
 
+
+/* =========================================================
+ * Asset Upload
+ * ======================================================= */
 
 async function getBufferForHash(
   manifest,
@@ -1072,48 +1122,39 @@ async function uploadMissingAssets({
 }
 
 
-/*
- * CDN routing contract
+/* =========================================================
+ * Worker Script
  *
- * Human-facing direct link:
+ * SIMPLE CONTRACT
  *
  * /video/file.mp4
+ *     = RAW VIDEO
+ *
  * /audio/file.mp3
+ *     = RAW AUDIO
  *
- * → Jingyan viewer page
+ * /play/video/file.mp4
+ *     = HUMAN VIEWER
  *
+ * /play/audio/file.mp3
+ *     = HUMAN VIEWER
  *
- * Guaranteed raw media:
- *
- * /raw/video/file.mp4
- * /raw/audio/file.mp3
- *
- * → video/mp4 / audio/*
- * → no HTML
- * → no Purple Aurora shell
- *
- *
- * Legacy raw:
- *
- * /video/file.mp4?raw=1
- *
- *
- * Existing <video>/<audio> using bare URLs remain
- * compatible when Fetch Metadata clearly identifies
- * a media element.
- */
+ * No browser-header guessing.
+ * No /raw routes.
+ * No Range-based routing decisions.
+ * ======================================================= */
 
 function createWorkerScript() {
   return String.raw`
+const PLAY_PREFIX =
+  "/play";
+
+
 const MEDIA_PREFIXES = [
   "/audio/",
   "/music/",
   "/video/"
 ];
-
-
-const RAW_PREFIX =
-  "/raw";
 
 
 const MIME_TYPES = {
@@ -1152,7 +1193,7 @@ const MIME_TYPES = {
 };
 
 
-function stripRawPrefix(
+function stripPlayPrefix(
   pathname
 ) {
   const value =
@@ -1162,18 +1203,23 @@ function stripRawPrefix(
     );
 
 
-  return value.startsWith(
-    RAW_PREFIX +
-    "/"
-  )
-    ? value.slice(
-        RAW_PREFIX.length
-      )
-    : value;
+  if (
+    value.startsWith(
+      PLAY_PREFIX +
+      "/"
+    )
+  ) {
+    return value.slice(
+      PLAY_PREFIX.length
+    );
+  }
+
+
+  return value;
 }
 
 
-function isRawPath(
+function isPlayPath(
   pathname
 ) {
   return String(
@@ -1182,7 +1228,7 @@ function isRawPath(
   )
     .toLowerCase()
     .startsWith(
-      RAW_PREFIX +
+      PLAY_PREFIX +
       "/"
     );
 }
@@ -1192,10 +1238,10 @@ function isMediaPath(
   pathname
 ) {
   const clean =
-    stripRawPrefix(
+    stripPlayPrefix(
       pathname
     )
-    .toLowerCase();
+      .toLowerCase();
 
 
   return MEDIA_PREFIXES
@@ -1212,7 +1258,7 @@ function getExtension(
   pathname
 ) {
   const clean =
-    stripRawPrefix(
+    stripPlayPrefix(
       pathname
     );
 
@@ -1230,16 +1276,19 @@ function getExtension(
     );
 
 
-  return (
+  if (
     dot <
     0
-      ? ""
-      : filename
-          .substring(
-            dot
-          )
-          .toLowerCase()
-  );
+  ) {
+    return "";
+  }
+
+
+  return filename
+    .substring(
+      dot
+    )
+    .toLowerCase();
 }
 
 
@@ -1292,7 +1341,7 @@ function getFilename(
   pathname
 ) {
   const raw =
-    stripRawPrefix(
+    stripPlayPrefix(
       pathname
     )
       .split("/")
@@ -1341,216 +1390,237 @@ function escapeHtml(
 }
 
 
-/*
- * IMPORTANT:
- *
- * Range alone is NOT considered raw anymore.
- *
- * Desktop browsers can send Range while somebody is
- * directly opening an MP4 in a tab.
- *
- * That was the cause of the remaining Edge download case.
- */
+function corsHeaders() {
+  return {
+    "Access-Control-Allow-Origin":
+      "*",
 
-function isExplicitRawRequest(
-  request,
-  url
-) {
-  if (
-    isRawPath(
-      url.pathname
-    )
-  ) {
-    return true;
-  }
+    "Access-Control-Allow-Methods":
+      "GET, HEAD, OPTIONS",
 
+    "Access-Control-Allow-Headers":
+      "Range, If-Range, Content-Type",
 
-  if (
-    url.searchParams.get(
-      "raw"
-    ) ===
-    "1"
-  ) {
-    return true;
-  }
-
-
-  if (
-    request.method ===
-    "HEAD"
-  ) {
-    return true;
-  }
-
-
-  const mode =
-    String(
-      request.headers.get(
-        "Sec-Fetch-Mode"
-      ) ||
-      ""
-    )
-    .toLowerCase();
-
-
-  const destination =
-    String(
-      request.headers.get(
-        "Sec-Fetch-Dest"
-      ) ||
-      ""
-    )
-    .toLowerCase();
-
-
-  const site =
-    String(
-      request.headers.get(
-        "Sec-Fetch-Site"
-      ) ||
-      ""
-    )
-    .toLowerCase();
-
-
-  /*
-   * Human navigation wins.
-   */
-
-  if (
-    mode ===
-      "navigate" ||
-
-    destination ===
-      "document" ||
-
-    site ===
-      "none"
-  ) {
-    return false;
-  }
-
-
-  /*
-   * Real media elements receive raw data.
-   */
-
-  if (
-    destination ===
-      "video" ||
-
-    destination ===
-      "audio"
-  ) {
-    return true;
-  }
-
-
-  return false;
+    "Access-Control-Expose-Headers":
+      [
+        "Accept-Ranges",
+        "Content-Length",
+        "Content-Range",
+        "Content-Type",
+        "Content-Disposition",
+        "ETag",
+        "Last-Modified"
+      ].join(
+        ", "
+      )
+  };
 }
 
 
-function shouldShowViewer(
-  request,
-  url
+function applyMediaHeaders(
+  originalHeaders,
+  pathname
 ) {
-  if (
-    request.method !==
-    "GET"
-  ) {
-    return false;
-  }
-
-
-  if (
-    url.searchParams.get(
-      "view"
-    ) ===
-    "1"
-  ) {
-    return true;
-  }
-
-
-  if (
-    isExplicitRawRequest(
-      request,
-      url
-    )
-  ) {
-    return false;
-  }
-
-
-  /*
-   * Safe default:
-   *
-   * An ambiguous normal GET is assumed to be a person
-   * opening the direct link.
-   */
-
-  return true;
-}
-
-
-function rawPathFor(
-  url
-) {
-  const pathname =
-    stripRawPrefix(
-      url.pathname
+  const headers =
+    new Headers(
+      originalHeaders
     );
 
 
-  return (
-    RAW_PREFIX +
-    pathname
+  headers.set(
+    "Content-Type",
+    getMimeType(
+      pathname
+    )
+  );
+
+
+  headers.set(
+    "Content-Disposition",
+    "inline"
+  );
+
+
+  headers.set(
+    "Accept-Ranges",
+    "bytes"
+  );
+
+
+  headers.set(
+    "Access-Control-Allow-Origin",
+    "*"
+  );
+
+
+  headers.set(
+    "Access-Control-Allow-Methods",
+    "GET, HEAD, OPTIONS"
+  );
+
+
+  headers.set(
+    "Access-Control-Allow-Headers",
+    "Range, If-Range, Content-Type"
+  );
+
+
+  headers.set(
+    "Access-Control-Expose-Headers",
+    [
+      "Accept-Ranges",
+      "Content-Length",
+      "Content-Range",
+      "Content-Type",
+      "Content-Disposition",
+      "ETag",
+      "Last-Modified"
+    ].join(
+      ", "
+    )
+  );
+
+
+  headers.set(
+    "Cross-Origin-Resource-Policy",
+    "cross-origin"
+  );
+
+
+  headers.set(
+    "X-Content-Type-Options",
+    "nosniff"
+  );
+
+
+  /*
+   * Development-stage browser caching:
+   * revalidate rather than keeping an old response forever.
+   */
+
+  headers.set(
+    "Cache-Control",
+    "public, max-age=0, must-revalidate"
+  );
+
+
+  return headers;
+}
+
+
+async function serveRawMedia(
+  request,
+  env,
+  pathname
+) {
+  const assetUrl =
+    new URL(
+      request.url
+    );
+
+
+  assetUrl.pathname =
+    pathname;
+
+
+  assetUrl.searchParams.delete(
+    "view"
+  );
+
+
+  assetUrl.searchParams.delete(
+    "raw"
+  );
+
+
+  const assetRequest =
+    new Request(
+      assetUrl.toString(),
+      request
+    );
+
+
+  const response =
+    await env.ASSETS.fetch(
+      assetRequest
+    );
+
+
+  if (
+    response.status ===
+    404
+  ) {
+    return response;
+  }
+
+
+  const headers =
+    applyMediaHeaders(
+      response.headers,
+      pathname
+    );
+
+
+  return new Response(
+    request.method ===
+      "HEAD"
+      ? null
+      : response.body,
+    {
+      status:
+        response.status,
+
+      statusText:
+        response.statusText,
+
+      headers
+    }
   );
 }
 
 
 function buildPlayerHtml(
-  url
+  pathname
 ) {
+  const rawPath =
+    stripPlayPrefix(
+      pathname
+    );
+
+
   const kind =
     getMediaKind(
-      url.pathname
+      rawPath
     );
 
 
   const mime =
     getMimeType(
-      url.pathname
+      rawPath
     );
 
 
   const filename =
     getFilename(
-      url.pathname
+      rawPath
     );
 
 
-  const rawSource =
-    rawPathFor(
-      url
-    );
-
-
-  const safeFilename =
+  const safePath =
     escapeHtml(
-      filename
-    );
-
-
-  const safeSource =
-    escapeHtml(
-      rawSource
+      rawPath
     );
 
 
   const safeMime =
     escapeHtml(
       mime
+    );
+
+
+  const safeFilename =
+    escapeHtml(
+      filename
     );
 
 
@@ -1561,7 +1631,7 @@ function buildPlayerHtml(
       ? (
           '<video class="media video" controls playsinline preload="metadata">' +
             '<source src="' +
-            safeSource +
+            safePath +
             '" type="' +
             safeMime +
             '">' +
@@ -1576,7 +1646,7 @@ function buildPlayerHtml(
 
           '<audio class="media audio" controls preload="metadata">' +
             '<source src="' +
-            safeSource +
+            safePath +
             '" type="' +
             safeMime +
             '">' +
@@ -1671,7 +1741,6 @@ function buildPlayerHtml(
       'border-radius:24px;',
       'background:var(--surface);',
       'box-shadow:0 24px 70px rgba(62,40,94,.09);',
-      'backdrop-filter:blur(16px);',
     '}',
 
     '.video{',
@@ -1679,7 +1748,7 @@ function buildPlayerHtml(
       'max-height:78svh;',
       'display:block;',
       'border-radius:18px;',
-      'background:#09070c;',
+      'background:#08070b;',
     '}',
 
     '.audio-art{',
@@ -1767,10 +1836,6 @@ function buildPlayerHtml(
         'border-radius:14px;',
       '}',
 
-      '.brand{',
-        'margin-left:4px;',
-      '}',
-
     '}',
 
     '</style>',
@@ -1807,8 +1872,8 @@ function buildPlayerHtml(
 
     kind ===
       "video"
-      ? '视频直链 · 支持拖动进度'
-      : '音频直链 · 支持拖动进度',
+      ? '视频播放链接 · 支持进度拖动'
+      : '音频播放链接 · 支持进度拖动',
 
     '</p>',
 
@@ -1837,12 +1902,12 @@ function buildPlayerHtml(
 }
 
 
-function playerResponse(
-  url
+function viewerResponse(
+  pathname
 ) {
   return new Response(
     buildPlayerHtml(
-      url
+      pathname
     ),
     {
       status:
@@ -1878,295 +1943,50 @@ function playerResponse(
 }
 
 
-function corsHeaders() {
-  return {
-    "Access-Control-Allow-Origin":
-      "*",
-
-    "Access-Control-Allow-Methods":
-      "GET, HEAD, OPTIONS",
-
-    "Access-Control-Allow-Headers":
-      "Range, If-Range, Content-Type",
-
-    "Access-Control-Expose-Headers":
-      [
-        "Accept-Ranges",
-        "Content-Length",
-        "Content-Range",
-        "Content-Type",
-        "Content-Disposition",
-        "ETag",
-        "Last-Modified"
-      ].join(
-        ", "
-      )
-  };
-}
-
-
-function applyRawMediaHeaders(
-  originalHeaders,
-  pathname
+function legacyViewerRedirect(
+  request
 ) {
-  const headers =
-    new Headers(
-      originalHeaders
-    );
-
-
-  headers.set(
-    "Content-Type",
-    getMimeType(
-      pathname
-    )
-  );
-
-
-  headers.set(
-    "Content-Disposition",
-    "inline"
-  );
-
-
-  headers.set(
-    "Accept-Ranges",
-    "bytes"
-  );
-
-
-  /*
-   * 网站还在 V1 收尾阶段。
-   *
-   * 暂时把浏览器缓存控制在很短时间，
-   * 避免再次出现旧错误响应被电脑长期缓存。
-   */
-
-  headers.set(
-    "Cache-Control",
-    "public, max-age=60, must-revalidate"
-  );
-
-
-  headers.set(
-    "Access-Control-Allow-Origin",
-    "*"
-  );
-
-
-  headers.set(
-    "Access-Control-Allow-Methods",
-    "GET, HEAD, OPTIONS"
-  );
-
-
-  headers.set(
-    "Access-Control-Allow-Headers",
-    "Range, If-Range, Content-Type"
-  );
-
-
-  headers.set(
-    "Access-Control-Expose-Headers",
-    [
-      "Accept-Ranges",
-      "Content-Length",
-      "Content-Range",
-      "Content-Type",
-      "Content-Disposition",
-      "ETag",
-      "Last-Modified"
-    ].join(
-      ", "
-    )
-  );
-
-
-  headers.set(
-    "Cross-Origin-Resource-Policy",
-    "cross-origin"
-  );
-
-
-  headers.set(
-    "X-Content-Type-Options",
-    "nosniff"
-  );
-
-
-  return headers;
-}
-
-
-async function rawMediaResponse(
-  request,
-  env,
-  url
-) {
-  const assetUrl =
+  const sourceUrl =
     new URL(
       request.url
     );
 
 
-  /*
-   * /raw/video/xxx.mp4
-   *
-   * must be mapped back to the actual Static Asset:
-   *
-   * /video/xxx.mp4
-   */
-
-  assetUrl.pathname =
-    stripRawPrefix(
-      assetUrl.pathname
+  const target =
+    new URL(
+      request.url
     );
 
 
-  assetUrl.searchParams.delete(
-    "raw"
-  );
+  target.pathname =
+    PLAY_PREFIX +
+    sourceUrl.pathname;
 
 
-  assetUrl.searchParams.delete(
+  target.searchParams.delete(
     "view"
   );
 
 
-  const assetRequest =
-    new Request(
-      assetUrl.toString(),
-      request
-    );
-
-
-  const response =
-    await env.ASSETS.fetch(
-      assetRequest
-    );
-
-
-  if (
-    response.status ===
-    404
-  ) {
-    return response;
-  }
-
-
-  const headers =
-    applyRawMediaHeaders(
-      response.headers,
-      assetUrl.pathname
-    );
+  target.searchParams.delete(
+    "raw"
+  );
 
 
   return new Response(
-    request.method ===
-      "HEAD"
-      ? null
-      : response.body,
+    null,
     {
       status:
-        response.status,
+        302,
 
-      statusText:
-        response.statusText,
+      headers: {
+        Location:
+          target.toString(),
 
-      headers
+        "Cache-Control":
+          "no-store"
+      }
     }
-  );
-}
-
-
-async function serveMedia(
-  request,
-  env,
-  url
-) {
-  const method =
-    request.method
-      .toUpperCase();
-
-
-  if (
-    method ===
-    "OPTIONS"
-  ) {
-    return new Response(
-      null,
-      {
-        status:
-          204,
-
-        headers:
-          corsHeaders()
-      }
-    );
-  }
-
-
-  if (
-    method !==
-      "GET" &&
-    method !==
-      "HEAD"
-  ) {
-    return new Response(
-      "Method Not Allowed",
-      {
-        status:
-          405,
-
-        headers: {
-          ...corsHeaders(),
-
-          "Allow":
-            "GET, HEAD, OPTIONS"
-        }
-      }
-    );
-  }
-
-
-  /*
-   * Explicit raw source always wins.
-   */
-
-  if (
-    isExplicitRawRequest(
-      request,
-      url
-    )
-  ) {
-    return rawMediaResponse(
-      request,
-      env,
-      url
-    );
-  }
-
-
-  /*
-   * Human-facing direct link.
-   */
-
-  if (
-    shouldShowViewer(
-      request,
-      url
-    )
-  ) {
-    return playerResponse(
-      url
-    );
-  }
-
-
-  return rawMediaResponse(
-    request,
-    env,
-    url
   );
 }
 
@@ -2182,15 +2002,129 @@ export default {
       );
 
 
+    const method =
+      request.method
+        .toUpperCase();
+
+
+    if (
+      method ===
+      "OPTIONS" &&
+      isMediaPath(
+        url.pathname
+      )
+    ) {
+      return new Response(
+        null,
+        {
+          status:
+            204,
+
+          headers:
+            corsHeaders()
+        }
+      );
+    }
+
+
+    /*
+     * New deterministic viewer route.
+     */
+
+    if (
+      isPlayPath(
+        url.pathname
+      ) &&
+      isMediaPath(
+        url.pathname
+      )
+    ) {
+      if (
+        method !==
+        "GET"
+      ) {
+        return new Response(
+          "Method Not Allowed",
+          {
+            status:
+              405,
+
+            headers: {
+              Allow:
+                "GET"
+            }
+          }
+        );
+      }
+
+
+      return viewerResponse(
+        url.pathname
+      );
+    }
+
+
+    /*
+     * Backward compatibility:
+     *
+     * /video/file.mp4?view=1
+     * becomes
+     * /play/video/file.mp4
+     */
+
+    if (
+      url.searchParams.get(
+        "view"
+      ) ===
+      "1" &&
+      isMediaPath(
+        url.pathname
+      )
+    ) {
+      return legacyViewerRedirect(
+        request
+      );
+    }
+
+
+    /*
+     * Actual raw media.
+     *
+     * No browser-header guessing.
+     */
+
     if (
       isMediaPath(
         url.pathname
       )
     ) {
-      return serveMedia(
+      if (
+        method !==
+          "GET" &&
+        method !==
+          "HEAD"
+      ) {
+        return new Response(
+          "Method Not Allowed",
+          {
+            status:
+              405,
+
+            headers: {
+              ...corsHeaders(),
+
+              Allow:
+                "GET, HEAD, OPTIONS"
+            }
+          }
+        );
+      }
+
+
+      return serveRawMedia(
         request,
         env,
-        url
+        url.pathname
       );
     }
 
@@ -2203,6 +2137,10 @@ export default {
 `.trim();
 }
 
+
+/* =========================================================
+ * Publish
+ * ======================================================= */
 
 async function publishCDN() {
   const config =
@@ -2409,12 +2347,10 @@ async function publishCDN() {
                 "none",
 
               run_worker_first: [
+                "/play/*",
                 "/audio/*",
                 "/music/*",
-                "/video/*",
-                "/raw/audio/*",
-                "/raw/music/*",
-                "/raw/video/*"
+                "/video/*"
               ]
             }
           },
@@ -2513,17 +2449,27 @@ async function publishCDN() {
 
 
   console.log(
-    "Human direct link -> viewer page"
+    "CDN routing protocol:"
   );
 
 
   console.log(
-    "/raw/audio/* and /raw/video/* -> raw media source"
+    "/play/video/* = viewer"
   );
 
 
   console.log(
-    "Legacy ?raw=1 raw source remains supported"
+    "/play/audio/* = viewer"
+  );
+
+
+  console.log(
+    "/video/* = raw video"
+  );
+
+
+  console.log(
+    "/audio/* = raw audio"
   );
 
 
@@ -2541,6 +2487,10 @@ async function publishCDN() {
   };
 }
 
+
+/* =========================================================
+ * CLI
+ * ======================================================= */
 
 if (
   require.main ===
@@ -2610,6 +2560,10 @@ if (
     );
 }
 
+
+/* =========================================================
+ * Exports
+ * ======================================================= */
 
 module.exports = {
   readManifest,
