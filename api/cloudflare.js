@@ -1073,24 +1073,34 @@ async function uploadMissingAssets({
 
 
 /*
- * CDN Worker
+ * CDN routing contract
  *
- * Human:
+ * Human-facing direct link:
  *
  * /video/file.mp4
- *        ↓
- * /video/file.mp4?view=1
- *        ↓
- * Player page
+ * /audio/file.mp3
  *
- * Media:
+ * → Jingyan viewer page
+ *
+ *
+ * Guaranteed raw media:
+ *
+ * /raw/video/file.mp4
+ * /raw/audio/file.mp3
+ *
+ * → video/mp4 / audio/*
+ * → no HTML
+ * → no Purple Aurora shell
+ *
+ *
+ * Legacy raw:
  *
  * /video/file.mp4?raw=1
- *        ↓
- * Raw MP4
  *
- * Range requests / <video> / <audio>
- * also receive the raw media automatically.
+ *
+ * Existing <video>/<audio> using bare URLs remain
+ * compatible when Fetch Metadata clearly identifies
+ * a media element.
  */
 
 function createWorkerScript() {
@@ -1100,6 +1110,10 @@ const MEDIA_PREFIXES = [
   "/music/",
   "/video/"
 ];
+
+
+const RAW_PREFIX =
+  "/raw";
 
 
 const MIME_TYPES = {
@@ -1138,20 +1152,56 @@ const MIME_TYPES = {
 };
 
 
-function isMediaPath(
+function stripRawPrefix(
   pathname
 ) {
-  const lower =
+  const value =
     String(
       pathname ||
       ""
+    );
+
+
+  return value.startsWith(
+    RAW_PREFIX +
+    "/"
+  )
+    ? value.slice(
+        RAW_PREFIX.length
+      )
+    : value;
+}
+
+
+function isRawPath(
+  pathname
+) {
+  return String(
+    pathname ||
+    ""
+  )
+    .toLowerCase()
+    .startsWith(
+      RAW_PREFIX +
+      "/"
+    );
+}
+
+
+function isMediaPath(
+  pathname
+) {
+  const clean =
+    stripRawPrefix(
+      pathname
     )
     .toLowerCase();
+
 
   return MEDIA_PREFIXES
     .some(
       prefix =>
-        lower.startsWith(
+        clean.startsWith(
           prefix
         )
     );
@@ -1161,19 +1211,24 @@ function isMediaPath(
 function getExtension(
   pathname
 ) {
+  const clean =
+    stripRawPrefix(
+      pathname
+    );
+
+
   const filename =
-    String(
-      pathname ||
-      ""
-    )
-    .split("/")
-    .pop() ||
+    clean
+      .split("/")
+      .pop() ||
     "";
+
 
   const dot =
     filename.lastIndexOf(
       "."
     );
+
 
   return (
     dot <
@@ -1210,6 +1265,7 @@ function getMediaKind(
       pathname
     );
 
+
   if (
     mime.startsWith(
       "video/"
@@ -1217,6 +1273,7 @@ function getMediaKind(
   ) {
     return "video";
   }
+
 
   if (
     mime.startsWith(
@@ -1226,6 +1283,7 @@ function getMediaKind(
     return "audio";
   }
 
+
   return "file";
 }
 
@@ -1234,13 +1292,13 @@ function getFilename(
   pathname
 ) {
   const raw =
-    String(
-      pathname ||
-      ""
+    stripRawPrefix(
+      pathname
     )
-    .split("/")
-    .pop() ||
+      .split("/")
+      .pop() ||
     "media";
+
 
   try {
     return decodeURIComponent(
@@ -1284,20 +1342,29 @@ function escapeHtml(
 
 
 /*
- * Raw mode is ONLY used when:
+ * IMPORTANT:
  *
- * 1. URL explicitly has ?raw=1
- * 2. Browser sends a Range request
- * 3. Request destination is audio/video
- * 4. HEAD is checking the file
+ * Range alone is NOT considered raw anymore.
  *
- * Everything else is treated as a human opening a link.
+ * Desktop browsers can send Range while somebody is
+ * directly opening an MP4 in a tab.
+ *
+ * That was the cause of the remaining Edge download case.
  */
 
 function isExplicitRawRequest(
   request,
   url
 ) {
+  if (
+    isRawPath(
+      url.pathname
+    )
+  ) {
+    return true;
+  }
+
+
   if (
     url.searchParams.get(
       "raw"
@@ -1316,13 +1383,14 @@ function isExplicitRawRequest(
   }
 
 
-  if (
-    request.headers.has(
-      "Range"
+  const mode =
+    String(
+      request.headers.get(
+        "Sec-Fetch-Mode"
+      ) ||
+      ""
     )
-  ) {
-    return true;
-  }
+    .toLowerCase();
 
 
   const destination =
@@ -1335,11 +1403,44 @@ function isExplicitRawRequest(
     .toLowerCase();
 
 
+  const site =
+    String(
+      request.headers.get(
+        "Sec-Fetch-Site"
+      ) ||
+      ""
+    )
+    .toLowerCase();
+
+
+  /*
+   * Human navigation wins.
+   */
+
+  if (
+    mode ===
+      "navigate" ||
+
+    destination ===
+      "document" ||
+
+    site ===
+      "none"
+  ) {
+    return false;
+  }
+
+
+  /*
+   * Real media elements receive raw data.
+   */
+
   if (
     destination ===
-      "audio" ||
+      "video" ||
+
     destination ===
-      "video"
+      "audio"
   ) {
     return true;
   }
@@ -1349,21 +1450,7 @@ function isExplicitRawRequest(
 }
 
 
-/*
- * Any ambiguous normal GET becomes a viewer request.
- *
- * This is intentional.
- *
- * We no longer depend on:
- *
- * Sec-Fetch-Mode: navigate
- * Accept: text/html
- *
- * because different browser / app clients do not always
- * send the same metadata.
- */
-
-function shouldRedirectToViewer(
+function shouldShowViewer(
   request,
   url
 ) {
@@ -1381,7 +1468,7 @@ function shouldRedirectToViewer(
     ) ===
     "1"
   ) {
-    return false;
+    return true;
   }
 
 
@@ -1395,57 +1482,34 @@ function shouldRedirectToViewer(
   }
 
 
+  /*
+   * Safe default:
+   *
+   * An ambiguous normal GET is assumed to be a person
+   * opening the direct link.
+   */
+
   return true;
 }
 
 
-function viewerUrlFor(
-  request
-) {
-  const viewerUrl =
-    new URL(
-      request.url
-    );
-
-  viewerUrl.searchParams.delete(
-    "raw"
-  );
-
-  viewerUrl.searchParams.set(
-    "view",
-    "1"
-  );
-
-  return viewerUrl.toString();
-}
-
-
 function rawPathFor(
-  request
+  url
 ) {
-  const rawUrl =
-    new URL(
-      request.url
+  const pathname =
+    stripRawPrefix(
+      url.pathname
     );
 
-  rawUrl.searchParams.delete(
-    "view"
-  );
-
-  rawUrl.searchParams.set(
-    "raw",
-    "1"
-  );
 
   return (
-    rawUrl.pathname +
-    rawUrl.search
+    RAW_PREFIX +
+    pathname
   );
 }
 
 
 function buildPlayerHtml(
-  request,
   url
 ) {
   const kind =
@@ -1453,30 +1517,36 @@ function buildPlayerHtml(
       url.pathname
     );
 
+
   const mime =
     getMimeType(
       url.pathname
     );
+
 
   const filename =
     getFilename(
       url.pathname
     );
 
+
   const rawSource =
     rawPathFor(
-      request
+      url
     );
+
 
   const safeFilename =
     escapeHtml(
       filename
     );
 
+
   const safeSource =
     escapeHtml(
       rawSource
     );
+
 
   const safeMime =
     escapeHtml(
@@ -1529,8 +1599,11 @@ function buildPlayerHtml(
     '<meta name="color-scheme" content="light">',
 
     '<title>',
+
     safeFilename,
+
     ' · Jingyan Media',
+
     '</title>',
 
     '<style>',
@@ -1543,8 +1616,6 @@ function buildPlayerHtml(
       '--muted:#887d9c;',
       '--purple:#8058e8;',
       '--purple-soft:#eee8ff;',
-      '--mint:#43b88c;',
-      '--sky:#58a7e8;',
       '--line:rgba(91,65,129,.12);',
     '}',
 
@@ -1560,7 +1631,7 @@ function buildPlayerHtml(
       'display:grid;',
       'place-items:center;',
       'padding:clamp(16px,4vw,40px);',
-      'font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;',
+      'font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;',
       'color:var(--text);',
       'background:',
         'radial-gradient(circle at 10% 5%,rgba(128,88,232,.11),transparent 30%),',
@@ -1617,9 +1688,7 @@ function buildPlayerHtml(
       'display:grid;',
       'place-items:center;',
       'border-radius:18px;',
-      'background:',
-        'radial-gradient(circle at 30% 25%,rgba(255,255,255,.55),transparent 28%),',
-        'linear-gradient(145deg,#eee8ff,#edf7ff 60%,#edf9f4);',
+      'background:linear-gradient(145deg,#eee8ff,#edf7ff 60%,#edf9f4);',
     '}',
 
     '.audio-art span{',
@@ -1713,8 +1782,11 @@ function buildPlayerHtml(
     '<main class="shell">',
 
     '<div class="brand">',
+
       '<span class="mark">J</span>',
+
       '<span>Jingyan Media CDN</span>',
+
     '</div>',
 
     '<section class="card">',
@@ -1726,23 +1798,29 @@ function buildPlayerHtml(
     '<div class="copy">',
 
     '<p class="name">',
-      safeFilename,
+
+    safeFilename,
+
     '</p>',
 
     '<p class="meta">',
-      kind ===
-        "video"
-        ? '视频直链 · 支持拖动进度'
-        : '音频直链 · 支持拖动进度',
+
+    kind ===
+      "video"
+      ? '视频直链 · 支持拖动进度'
+      : '音频直链 · 支持拖动进度',
+
     '</p>',
 
     '</div>',
 
     '<span class="badge">',
-      kind ===
-        "video"
-        ? 'VIDEO'
-        : 'AUDIO',
+
+    kind ===
+      "video"
+      ? 'VIDEO'
+      : 'AUDIO',
+
     '</span>',
 
     '</div>',
@@ -1760,12 +1838,10 @@ function buildPlayerHtml(
 
 
 function playerResponse(
-  request,
   url
 ) {
   return new Response(
     buildPlayerHtml(
-      request,
       url
     ),
     {
@@ -1796,38 +1872,6 @@ function playerResponse(
 
         "X-Frame-Options":
           "DENY"
-      }
-    }
-  );
-}
-
-
-function redirectToViewer(
-  request
-) {
-  return new Response(
-    null,
-    {
-      status:
-        302,
-
-      headers: {
-        "Location":
-          viewerUrlFor(
-            request
-          ),
-
-        "Cache-Control":
-          "no-store, max-age=0",
-
-        "Pragma":
-          "no-cache",
-
-        "Expires":
-          "0",
-
-        "Vary":
-          "Sec-Fetch-Dest, Range"
       }
     }
   );
@@ -1891,9 +1935,16 @@ function applyRawMediaHeaders(
   );
 
 
+  /*
+   * 网站还在 V1 收尾阶段。
+   *
+   * 暂时把浏览器缓存控制在很短时间，
+   * 避免再次出现旧错误响应被电脑长期缓存。
+   */
+
   headers.set(
     "Cache-Control",
-    "public, max-age=3600, must-revalidate"
+    "public, max-age=60, must-revalidate"
   );
 
 
@@ -1943,12 +1994,6 @@ function applyRawMediaHeaders(
   );
 
 
-  headers.set(
-    "Vary",
-    "Range"
-  );
-
-
   return headers;
 }
 
@@ -1961,6 +2006,20 @@ async function rawMediaResponse(
   const assetUrl =
     new URL(
       request.url
+    );
+
+
+  /*
+   * /raw/video/xxx.mp4
+   *
+   * must be mapped back to the actual Static Asset:
+   *
+   * /video/xxx.mp4
+   */
+
+  assetUrl.pathname =
+    stripRawPrefix(
+      assetUrl.pathname
     );
 
 
@@ -1998,7 +2057,7 @@ async function rawMediaResponse(
   const headers =
     applyRawMediaHeaders(
       response.headers,
-      url.pathname
+      assetUrl.pathname
     );
 
 
@@ -2071,51 +2130,38 @@ async function serveMedia(
 
 
   /*
-   * ?view=1 is deterministic.
-   *
-   * Every browser / WebView must render the player.
+   * Explicit raw source always wins.
    */
 
   if (
-    url.searchParams.get(
-      "view"
-    ) ===
-    "1"
-  ) {
-    return playerResponse(
-      request,
-      url
-    );
-  }
-
-
-  /*
-   * Ambiguous normal GET:
-   *
-   * redirect to canonical viewer URL.
-   */
-
-  if (
-    shouldRedirectToViewer(
+    isExplicitRawRequest(
       request,
       url
     )
   ) {
-    return redirectToViewer(
-      request
+    return rawMediaResponse(
+      request,
+      env,
+      url
     );
   }
 
 
   /*
-   * Raw media:
-   *
-   * ?raw=1
-   * Range
-   * <video>
-   * <audio>
-   * HEAD
+   * Human-facing direct link.
    */
+
+  if (
+    shouldShowViewer(
+      request,
+      url
+    )
+  ) {
+    return playerResponse(
+      url
+    );
+  }
+
 
   return rawMediaResponse(
     request,
@@ -2365,7 +2411,10 @@ async function publishCDN() {
               run_worker_first: [
                 "/audio/*",
                 "/music/*",
-                "/video/*"
+                "/video/*",
+                "/raw/audio/*",
+                "/raw/music/*",
+                "/raw/video/*"
               ]
             }
           },
@@ -2464,12 +2513,17 @@ async function publishCDN() {
 
 
   console.log(
-    "Direct navigation -> canonical ?view=1 player"
+    "Human direct link -> viewer page"
   );
 
 
   console.log(
-    "Media element / Range / ?raw=1 -> raw media stream"
+    "/raw/audio/* and /raw/video/* -> raw media source"
+  );
+
+
+  console.log(
+    "Legacy ?raw=1 raw source remains supported"
   );
 
 
