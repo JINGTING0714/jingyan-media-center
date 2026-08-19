@@ -36,6 +36,10 @@ href="/profile-overview.css?v=20260819-profile-overview-v1">
 
 <link
 rel="stylesheet"
+href="/profile-convenience.css?v=20260820-convenience-v1">
+
+<link
+rel="stylesheet"
 href="/app-shell.css?v=20260819-shell-v1">
 
 <script
@@ -50,6 +54,11 @@ defer>
 
 <script
 src="/profile-overview.js?v=20260819-profile-overview-v1"
+defer>
+</script>
+
+<script
+src="/profile-convenience.js?v=20260820-convenience-v1"
 defer>
 </script>
 
@@ -126,6 +135,7 @@ id="identity">
 </div>
 
 </header>
+
 
 
 
@@ -218,6 +228,7 @@ id="profileRole">
 
 
 
+
 <section class="profile-intro">
 
 <div>
@@ -231,13 +242,14 @@ COLLECTIONS
 </h2>
 
 <p>
-图库、歌单和影集只是整理方式。
-媒体本身仍然只保存一份，不会因为加入多个分组而重复占用 GitHub 或 CDN 空间。
+图库、歌单和影集是日常整理与寻找媒体的主要入口。
+媒体本身只保存一份，加入多个分组不会重复占用 GitHub 或 CDN 空间。
 </p>
 
 </div>
 
 </section>
+
 
 
 
@@ -356,6 +368,7 @@ data-page-type="image">
 
 
 
+
 <section
 class="collection-panel"
 data-collection-type="audio">
@@ -465,6 +478,7 @@ data-page-type="audio">
 </div>
 
 </section>
+
 
 
 
@@ -583,6 +597,7 @@ data-page-type="video">
 
 
 
+
 <section class="profile-overview-section">
 
 <div class="profile-overview-heading">
@@ -590,7 +605,7 @@ data-page-type="video">
 <div>
 
 <span class="section-kicker">
-RECENT
+SUMMARY
 </span>
 
 <h2>
@@ -598,7 +613,7 @@ RECENT
 </h2>
 
 <p>
-这里只展示最近 6 个项目。完整内容继续通过分组和分页管理，个人主页不会变成无限长页面。
+主页只保留少量摘要。图库、歌单和影集负责长期整理，媒体库负责完整查找。
 </p>
 
 </div>
@@ -634,7 +649,7 @@ class="profile-upload-link">
 
 
 <span class="profile-overview-note">
-最近 6 个
+最近 4 个
 </span>
 
 </div>
@@ -656,6 +671,7 @@ id="recentUploadList">
 
 
 
+
 <section class="profile-overview-card">
 
 <div class="profile-overview-card-head">
@@ -674,7 +690,7 @@ id="recentUploadList">
 
 
 <span class="profile-overview-note">
-最近 6 个
+默认折叠
 </span>
 
 </div>
@@ -704,6 +720,7 @@ id="favoriteList">
 
 
 
+
 <footer>
 
 <span>
@@ -718,6 +735,7 @@ Collections · Favorites · Personal Profile
 
 
 </div>
+
 
 
 
@@ -762,6 +780,7 @@ aria-label="关闭">
 </button>
 
 </div>
+
 
 
 
@@ -864,6 +883,7 @@ id="collectionDelete">
 
 
 
+
 <section
 class="drawer-media-section hidden"
 id="drawerMediaSection">
@@ -898,6 +918,7 @@ id="drawerMediaList">
 
 
 </aside>
+
 
 
 
