@@ -14,89 +14,79 @@
 
     const ICONS = {
 
-        upload:
-            `
+        upload: `
             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <path d="M12 16V4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                 <path d="M7.5 8.5 12 4l4.5 4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
                 <path d="M5 14.5v3.25A2.25 2.25 0 0 0 7.25 20h9.5A2.25 2.25 0 0 0 19 17.75V14.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
             </svg>
-            `,
+        `,
 
-        library:
-            `
+        library: `
             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <rect x="3.5" y="4" width="17" height="16" rx="3" stroke="currentColor" stroke-width="1.8"/>
                 <path d="M3.5 9h17" stroke="currentColor" stroke-width="1.8"/>
                 <circle cx="8" cy="6.5" r=".8" fill="currentColor"/>
                 <circle cx="11" cy="6.5" r=".8" fill="currentColor"/>
             </svg>
-            `,
+        `,
 
-        profile:
-            `
+        profile: `
             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <circle cx="12" cy="8" r="3.5" stroke="currentColor" stroke-width="1.8"/>
                 <path d="M5.5 19c.65-3.45 3.05-5.5 6.5-5.5s5.85 2.05 6.5 5.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
             </svg>
-            `,
+        `,
 
-        admin:
-            `
+        admin: `
             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <path d="M12 3.5 19 6v5.3c0 4.15-2.75 7.65-7 9.2-4.25-1.55-7-5.05-7-9.2V6l7-2.5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
                 <path d="m9.2 12 1.8 1.8 3.8-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
-            `,
+        `,
 
-        account:
-            `
+        account: `
             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <circle cx="12" cy="8" r="3.3" stroke="currentColor" stroke-width="1.8"/>
                 <path d="M5.8 19c.6-3.2 2.85-5.05 6.2-5.05S17.6 15.8 18.2 19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
             </svg>
-            `,
+        `,
 
-        key:
-            `
+        key: `
             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <circle cx="8.5" cy="12" r="4" stroke="currentColor" stroke-width="1.8"/>
                 <path d="M12.5 12H20m-2.5 0v2.5M15 12v2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
             </svg>
-            `,
+        `,
 
-        palette:
-            `
+        palette: `
             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <path d="M12 4a8 8 0 1 0 0 16h1.25a1.75 1.75 0 0 0 0-3.5h-.65a1.8 1.8 0 0 1 0-3.6H14A6 6 0 0 0 20 7c0-1.65-3.55-3-8-3Z" stroke="currentColor" stroke-width="1.7"/>
                 <circle cx="8" cy="8" r="1" fill="currentColor"/>
                 <circle cx="11.2" cy="6.8" r="1" fill="currentColor"/>
                 <circle cx="15" cy="7.5" r="1" fill="currentColor"/>
             </svg>
-            `,
+        `,
 
-        chevron:
-            `
+        chevron: `
             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <path d="m8 10 4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
-            `,
+        `,
 
-        collapse:
-            `
+        collapse: `
             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <path d="m14.5 7-5 5 5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
-            `,
+        `,
 
-        more:
-            `
+        more: `
             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <circle cx="5.5" cy="12" r="1.3" fill="currentColor"/>
                 <circle cx="12" cy="12" r="1.3" fill="currentColor"/>
                 <circle cx="18.5" cy="12" r="1.3" fill="currentColor"/>
             </svg>
-            `
+        `
 
     };
 
@@ -183,8 +173,10 @@
         }
 
 
-        return path ||
-            "/";
+        return (
+            path ||
+            "/"
+        );
 
     }
 
@@ -202,8 +194,10 @@
             "/"
         ) {
 
-            return path ===
-                "/";
+            return (
+                path ===
+                "/"
+            );
 
         }
 
@@ -231,19 +225,15 @@
         name
     ) {
 
-        const characters =
+        return (
             Array.from(
                 String(
                     name ||
                     "J"
                 )
-            );
-
-
-        return characters[
-            0
-        ] ||
-        "J";
+            )[0] ||
+            "J"
+        );
 
     }
 
@@ -252,27 +242,12 @@
         user
     ) {
 
-        if (
+        return (
             user?.role ===
             "owner"
-        ) {
-
-            return "Owner";
-
-        }
-
-
-        if (
-            user?.role ===
-            "uploader"
-        ) {
-
-            return "Member";
-
-        }
-
-
-        return "Member";
+                ? "Owner"
+                : "Member"
+        );
 
     }
 
@@ -300,9 +275,6 @@
                 await fetch(
                     "/api/auth/me",
                     {
-                        method:
-                            "GET",
-
                         credentials:
                             "same-origin",
 
@@ -348,11 +320,219 @@
     }
 
 
+    async function loadProfileSettings() {
+
+        try {
+
+            const response =
+                await fetch(
+                    "/api/profile/settings",
+                    {
+                        credentials:
+                            "same-origin",
+
+                        headers: {
+                            Accept:
+                                "application/json"
+                        }
+                    }
+                );
+
+
+            if (
+                !response.ok
+            ) {
+
+                return null;
+
+            }
+
+
+            const data =
+                await response.json();
+
+
+            return (
+                data.profile ||
+                null
+            );
+
+        } catch {
+
+            return null;
+
+        }
+
+    }
+
+
+    function displayName(
+        user,
+        profile
+    ) {
+
+        return (
+            profile?.displayName ||
+            user?.displayName ||
+            "Member"
+        );
+
+    }
+
+
+    function fillAvatar(
+        node,
+        user,
+        profile
+    ) {
+
+        if (
+            !node
+        ) {
+
+            return;
+
+        }
+
+
+        node.textContent =
+            "";
+
+
+        node.style.overflow =
+            "hidden";
+
+
+        const avatar =
+            profile?.avatar;
+
+
+        if (
+            avatar?.mode ===
+            "media" &&
+            avatar?.url
+        ) {
+
+            const image =
+                document.createElement(
+                    "img"
+                );
+
+
+            image.src =
+                avatar.url;
+
+            image.alt =
+                "";
+
+            image.decoding =
+                "async";
+
+            image.loading =
+                "eager";
+
+
+            image.style.width =
+                "100%";
+
+            image.style.height =
+                "100%";
+
+            image.style.display =
+                "block";
+
+            image.style.objectFit =
+                "cover";
+
+            image.style.borderRadius =
+                "inherit";
+
+
+            image.addEventListener(
+                "error",
+                () => {
+
+                    node.textContent =
+                        firstCharacter(
+                            displayName(
+                                user,
+                                profile
+                            )
+                        );
+
+                },
+                {
+                    once:
+                        true
+                }
+            );
+
+
+            node.append(
+                image
+            );
+
+
+            return;
+
+        }
+
+
+        if (
+            avatar?.mode ===
+            "emoji" &&
+            avatar?.value
+        ) {
+
+            node.textContent =
+                avatar.value;
+
+
+            return;
+
+        }
+
+
+        node.textContent =
+            firstCharacter(
+                displayName(
+                    user,
+                    profile
+                )
+            );
+
+    }
+
+
+    function avatarElement(
+        user,
+        profile
+    ) {
+
+        const node =
+            element(
+                "span",
+                "jy-account-avatar"
+            );
+
+
+        fillAvatar(
+            node,
+            user,
+            profile
+        );
+
+
+        return node;
+
+    }
+
+
     function navItems(
         user
     ) {
 
-        const items = [
+        return [
             {
                 href:
                     "/",
@@ -426,10 +606,7 @@
                 mobile:
                     false
             }
-        ];
-
-
-        return items.filter(
+        ].filter(
             item =>
                 item.visible
         );
@@ -556,6 +733,7 @@
                 icon(
                     item.icon
                 ),
+
                 element(
                     "span",
                     "jy-nav-text",
@@ -673,7 +851,7 @@
 
                 } catch {
 
-                    // Ignore unavailable storage.
+                    // Ignore storage failures.
 
                 }
 
@@ -702,24 +880,9 @@
     }
 
 
-    function accountAvatar(
-        user
-    ) {
-
-        return element(
-            "span",
-            "jy-account-avatar",
-            firstCharacter(
-                user?.displayName ||
-                "J"
-            )
-        );
-
-    }
-
-
     function buildAccountTrigger(
         user,
+        profile,
         openMenu
     ) {
 
@@ -739,7 +902,8 @@
 
 
             login.append(
-                accountAvatar(
+                avatarElement(
+                    null,
                     null
                 )
             );
@@ -811,8 +975,10 @@
             element(
                 "strong",
                 "",
-                user.displayName ||
-                "Member"
+                displayName(
+                    user,
+                    profile
+                )
             ),
 
             element(
@@ -837,8 +1003,9 @@
 
 
         button.append(
-            accountAvatar(
-                user
+            avatarElement(
+                user,
+                profile
             ),
             copy,
             chevron
@@ -889,6 +1056,7 @@
 
         link.append(
             iconNode,
+
             element(
                 "span",
                 "",
@@ -918,7 +1086,8 @@
 
 
     function buildAccountPanel(
-        user
+        user,
+        profile
     ) {
 
         const panel =
@@ -952,7 +1121,8 @@
 
 
             head.append(
-                accountAvatar(
+                avatarElement(
+                    null,
                     null
                 )
             );
@@ -987,6 +1157,7 @@
 
             panel.append(
                 head,
+
                 menuLink(
                     "/login",
                     "account",
@@ -1008,8 +1179,9 @@
 
 
         head.append(
-            accountAvatar(
-                user
+            avatarElement(
+                user,
+                profile
             )
         );
 
@@ -1025,8 +1197,10 @@
             element(
                 "strong",
                 "",
-                user.displayName ||
-                "Member"
+                displayName(
+                    user,
+                    profile
+                )
             ),
 
             element(
@@ -1046,30 +1220,43 @@
 
         panel.append(
             head,
+
             element(
                 "div",
                 "jy-menu-separator"
             ),
+
             element(
                 "div",
                 "jy-menu-label",
                 "ME"
             ),
+
             menuLink(
                 "/profile/",
                 "profile",
                 "我的主页"
             ),
+
+            menuLink(
+                "/profile/settings/",
+                "palette",
+                "编辑个人资料",
+                "头像 · 名称"
+            ),
+
             menuLink(
                 "/",
                 "upload",
                 "我的上传"
             ),
+
             menuLink(
                 "/account",
                 "account",
                 "账户与安全"
             ),
+
             menuLink(
                 "/passkeys",
                 "key",
@@ -1184,6 +1371,7 @@
 
     function buildMobileHeader(
         user,
+        profile,
         openMenu
     ) {
 
@@ -1245,8 +1433,9 @@
 
 
             account.append(
-                accountAvatar(
-                    user
+                avatarElement(
+                    user,
+                    profile
                 )
             );
 
@@ -1269,14 +1458,9 @@
                 "/login";
 
 
-            account.setAttribute(
-                "aria-label",
-                "登录"
-            );
-
-
             account.append(
-                accountAvatar(
+                avatarElement(
+                    null,
                     null
                 )
             );
@@ -1316,12 +1500,11 @@
         const items =
             navItems(
                 user
-            )
-                .filter(
-                    item =>
-                        item.mobile !==
-                        false
-                );
+            ).filter(
+                item =>
+                    item.mobile !==
+                    false
+            );
 
 
         for (
@@ -1359,6 +1542,7 @@
 
             link.append(
                 iconNode,
+
                 element(
                     "span",
                     "",
@@ -1401,6 +1585,7 @@
 
             more.append(
                 iconNode,
+
                 element(
                     "span",
                     "",
@@ -1438,6 +1623,125 @@
     }
 
 
+    function applyAvatarToPageElement(
+        id,
+        user,
+        profile
+    ) {
+
+        const node =
+            document.getElementById(
+                id
+            );
+
+
+        if (
+            node
+        ) {
+
+            fillAvatar(
+                node,
+                user,
+                profile
+            );
+
+        }
+
+    }
+
+
+    function applyProfileToDocument(
+        user,
+        profile
+    ) {
+
+        if (
+            !user ||
+            !profile
+        ) {
+
+            return;
+
+        }
+
+
+        const name =
+            displayName(
+                user,
+                profile
+            );
+
+
+        const profileName =
+            document.getElementById(
+                "profileName"
+            );
+
+
+        if (
+            profileName
+        ) {
+
+            profileName.textContent =
+                name;
+
+        }
+
+
+        const profileSubtitle =
+            document.getElementById(
+                "profileSubtitle"
+            );
+
+
+        if (
+            profileSubtitle
+        ) {
+
+            profileSubtitle.textContent =
+                profile.bio ||
+                (
+                    user.role ===
+                    "owner"
+                        ? "Owner · 我的私人媒体空间"
+                        : "我的私人媒体空间"
+                );
+
+        }
+
+
+        const accountName =
+            document.getElementById(
+                "accountName"
+            );
+
+
+        if (
+            accountName
+        ) {
+
+            accountName.textContent =
+                name;
+
+        }
+
+
+        applyAvatarToPageElement(
+            "profileAvatar",
+            user,
+            profile
+        );
+
+
+        applyAvatarToPageElement(
+            "accountAvatar",
+            user,
+            profile
+        );
+
+    }
+
+
     function restoreSidebarState() {
 
         try {
@@ -1449,17 +1753,15 @@
                 "1"
             ) {
 
-                document.body
-                    .classList
-                    .add(
-                        "jy-sidebar-collapsed"
-                    );
+                document.body.classList.add(
+                    "jy-sidebar-collapsed"
+                );
 
             }
 
         } catch {
 
-            // Ignore unavailable storage.
+            // Ignore storage failures.
 
         }
 
@@ -1473,6 +1775,12 @@
 
         const user =
             await loadUser();
+
+
+        const profile =
+            user
+                ? await loadProfileSettings()
+                : null;
 
 
         const backdrop =
@@ -1518,17 +1826,9 @@
                 );
 
 
-            if (
-                MOBILE_QUERY.matches
-            ) {
-
-                document.body
-                    .classList
-                    .remove(
-                        "jy-menu-open"
-                    );
-
-            }
+            document.body.classList.remove(
+                "jy-menu-open"
+            );
 
         }
 
@@ -1541,7 +1841,6 @@
 
                 location.href =
                     "/login";
-
 
                 return;
 
@@ -1561,7 +1860,6 @@
             ) {
 
                 closeMenu();
-
 
                 return;
 
@@ -1589,11 +1887,9 @@
                 MOBILE_QUERY.matches
             ) {
 
-                document.body
-                    .classList
-                    .add(
-                        "jy-menu-open"
-                    );
+                document.body.classList.add(
+                    "jy-menu-open"
+                );
 
             }
 
@@ -1602,13 +1898,15 @@
 
         panel =
             buildAccountPanel(
-                user
+                user,
+                profile
             );
 
 
         desktopTrigger =
             buildAccountTrigger(
                 user,
+                profile,
                 openMenu
             );
 
@@ -1622,6 +1920,7 @@
         const mobileHeader =
             buildMobileHeader(
                 user,
+                profile,
                 openMenu
             );
 
@@ -1676,11 +1975,7 @@
 
         MOBILE_QUERY.addEventListener?.(
             "change",
-            () => {
-
-                closeMenu();
-
-            }
+            closeMenu
         );
 
 
@@ -1698,14 +1993,35 @@
         );
 
 
+        applyProfileToDocument(
+            user,
+            profile
+        );
+
+
+        /*
+         * 部分旧页面自己的 JS 也会渲染一次用户名/头像。
+         * 再同步一次，保证最终以 Profile Settings 为准。
+         */
+        setTimeout(
+            () => {
+
+                applyProfileToDocument(
+                    user,
+                    profile
+                );
+
+            },
+            600
+        );
+
+
         requestAnimationFrame(
             () => {
 
-                document.body
-                    .classList
-                    .add(
-                        "jy-shell-ready"
-                    );
+                document.body.classList.add(
+                    "jy-shell-ready"
+                );
 
             }
         );
