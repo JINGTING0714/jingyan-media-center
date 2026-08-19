@@ -40,6 +40,10 @@ import {
 } from "./collections-api.mjs";
 
 import {
+  handleProfileRequest
+} from "./profile-api.mjs";
+
+import {
   handlePasskeyApiRequest,
   isPublicPasskeyApiPath
 } from "./passkeys.mjs";
@@ -132,7 +136,8 @@ function cloneWithCookie(
 function redirectWithCookie(
   request,
   pathname,
-  cookie = null
+  cookie =
+    null
 ) {
   const url =
     new URL(
@@ -186,7 +191,6 @@ async function authenticateThroughExistingWorker(
 
   url.pathname =
     "/api/auth/me";
-
 
   url.search =
     "";
@@ -408,7 +412,6 @@ async function serveProtectedOwnerAsset(
 
   assetUrl.pathname =
     canonicalPath;
-
 
   assetUrl.search =
     "";
@@ -917,6 +920,59 @@ async function handleAuthenticatedCollectionApi(
 }
 
 
+async function handleAuthenticatedProfileApi(
+  request,
+  env,
+  ctx
+) {
+  const authentication =
+    await authenticateThroughExistingWorker(
+      request,
+      env,
+      ctx
+    );
+
+
+  if (
+    !authentication.ok
+  ) {
+    return authentication
+      .response;
+  }
+
+
+  if (
+    !hasActiveAccount(
+      authentication
+        .auth
+        .user
+    )
+  ) {
+    return jsonResponse(
+      {
+        error:
+          "active_account_required"
+      },
+      403
+    );
+  }
+
+
+  const response =
+    await handleProfileRequest(
+      request,
+      env,
+      authentication.auth
+    );
+
+
+  return cloneWithCookie(
+    response,
+    authentication.cookie
+  );
+}
+
+
 function errorResponse(
   error
 ) {
@@ -964,6 +1020,10 @@ export default {
 
 
     try {
+
+      /*
+       * Login
+       */
       if (
         url.pathname ===
           "/login" ||
@@ -983,6 +1043,9 @@ export default {
       }
 
 
+      /*
+       * Passkey Manager
+       */
       if (
         url.pathname ===
           "/passkeys" ||
@@ -1004,6 +1067,9 @@ export default {
       }
 
 
+      /*
+       * Passkey API
+       */
       if (
         url.pathname ===
           "/api/passkeys" ||
@@ -1020,6 +1086,9 @@ export default {
       }
 
 
+      /*
+       * User Lifecycle
+       */
       if (
         isAdminUserLifecyclePath(
           url.pathname
@@ -1046,6 +1115,9 @@ export default {
       }
 
 
+      /*
+       * Internal Media Sync
+       */
       if (
         url.pathname.startsWith(
           "/api/internal/media-sync/"
@@ -1058,6 +1130,9 @@ export default {
       }
 
 
+      /*
+       * Internal Batch Upload
+       */
       if (
         url.pathname.startsWith(
           "/api/internal/upload-batches/"
@@ -1070,6 +1145,9 @@ export default {
       }
 
 
+      /*
+       * Internal Single Upload
+       */
       if (
         url.pathname.startsWith(
           "/api/internal/uploads/"
@@ -1078,6 +1156,28 @@ export default {
         return await handleInternalUploadRequest(
           request,
           env
+        );
+      }
+
+
+      /*
+       * Personal Profile + Favorites
+       */
+      if (
+        url.pathname ===
+          "/api/profile/overview" ||
+
+        url.pathname ===
+          "/api/favorites" ||
+
+        url.pathname.startsWith(
+          "/api/favorites/"
+        )
+      ) {
+        return await handleAuthenticatedProfileApi(
+          request,
+          env,
+          ctx
         );
       }
 
@@ -1120,6 +1220,9 @@ export default {
       }
 
 
+      /*
+       * Upload API
+       */
       if (
         url.pathname ===
           "/api/uploads" ||
@@ -1176,6 +1279,9 @@ export default {
       }
 
 
+      /*
+       * Owner Media API
+       */
       if (
         url.pathname ===
           "/api/admin/media"
@@ -1188,6 +1294,9 @@ export default {
       }
 
 
+      /*
+       * Owner-only static pages
+       */
       const protectedAsset =
         PROTECTED_OWNER_ASSETS
           .get(
@@ -1207,6 +1316,10 @@ export default {
       }
 
 
+      /*
+       * Everything else continues through
+       * the original authentication worker.
+       */
       return await authWorker.fetch(
         request,
         env,
