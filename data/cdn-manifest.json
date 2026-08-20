@@ -2,10 +2,10 @@
   "version": 1,
   "worker": "jingyan-media-cdn",
   "baseURL": "https://jingyan-media-cdn.jingyancdn.workers.dev",
-  "updatedAt": "2026-08-20T07:08:33.683Z",
-  "lastPublishedAt": "2026-08-20T07:08:33.683Z",
-  "lastVersionId": "de9f3c4f-9c1b-4d1a-a74a-ddb0d6007492",
-  "lastDeploymentId": "755c2dba-ab0f-4e5a-b475-5d76c2c7ebdd",
+  "updatedAt": "2026-08-20T09:23:42.486Z",
+  "lastPublishedAt": "2026-08-20T09:23:42.486Z",
+  "lastVersionId": "6c3f4d56-6e95-4197-ba4d-f0af7a40cda4",
+  "lastDeploymentId": "09058ebe-aee2-400a-a265-695706379d17",
   "assets": {
     "/audio/001-christmas.mp3": {
       "hash": "6c23ab88513bb99a558582c6f14cef89",
@@ -292,6 +292,19 @@
         "path": "music/009-fang-da-tong-hei-ye.mp3"
       },
       "addedAt": "2026-08-20T07:08:24.700Z"
+    },
+    "/image/017-img-2651.jpeg": {
+      "hash": "8c568c9f013f2d91392004470d15be65",
+      "size": 43764,
+      "sha256": "7e59ab84d95ef5dc95d47b41c36f2b736896cbf9e5260ca0274660dcb0d72db0",
+      "type": "image",
+      "mediaId": "image-000017",
+      "source": {
+        "repo": "JINGTING0714/jingyan-image-01",
+        "branch": "main",
+        "path": "image/017-img-2651.jpeg"
+      },
+      "addedAt": "2026-08-20T09:23:37.622Z"
     }
   }
 }
