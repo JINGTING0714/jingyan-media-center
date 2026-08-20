@@ -562,8 +562,13 @@
                 icon:
                     "library",
 
+                /*
+                 * V1.0:
+                 * 媒体库不是 Owner 后台。
+                 * 所有已登录用户都应该能进入自己的媒体库。
+                 */
                 visible:
-                    isOwner(
+                    Boolean(
                         user
                     )
             },
@@ -1218,6 +1223,10 @@
         );
 
 
+        /*
+         * 普通成员自己的高频功能全部放在 ME。
+         * 媒体库不是 Owner 管理功能。
+         */
         panel.append(
             head,
 
@@ -1252,6 +1261,12 @@
             ),
 
             menuLink(
+                "/library",
+                "library",
+                "我的媒体库"
+            ),
+
+            menuLink(
                 "/account",
                 "account",
                 "账户与安全"
@@ -1266,6 +1281,9 @@
         );
 
 
+        /*
+         * Owner 区域只保留真正的后台能力。
+         */
         if (
             isOwner(
                 user
@@ -1282,12 +1300,6 @@
                     "div",
                     "jy-menu-label",
                     "OWNER"
-                ),
-
-                menuLink(
-                    "/library",
-                    "library",
-                    "媒体库"
                 ),
 
                 menuLink(
