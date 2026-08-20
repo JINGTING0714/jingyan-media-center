@@ -1,7 +1,7 @@
 {
   "version": 1,
   "system": "jingyan-media-center",
-  "updatedAt": "2026-08-20T09:23:45.290Z",
+  "updatedAt": "2026-08-20T10:07:21.045Z",
   "repositories": [
     {
       "id": "image-01",
@@ -57,16 +57,16 @@
       "database": "data/music.json",
       "status": "data/status.json",
       "marker": "data/repository.json",
-      "sizeMB": 73.516,
-      "fileCount": 8,
+      "sizeMB": 82.163,
+      "fileCount": 9,
       "firstMediaId": "music-000001",
-      "lastMediaId": "music-000009",
+      "lastMediaId": "music-000010",
       "state": "active",
       "layout": "legacy-flat",
       "bucketSize": null,
       "createdAt": "2026-08-17T05:34:30.105Z",
       "sealedAt": null,
-      "updatedAt": "2026-08-20T07:08:36.539Z",
+      "updatedAt": "2026-08-20T10:07:21.045Z",
       "health": "healthy"
     },
     {

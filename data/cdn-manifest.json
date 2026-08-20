@@ -2,10 +2,10 @@
   "version": 1,
   "worker": "jingyan-media-cdn",
   "baseURL": "https://jingyan-media-cdn.jingyancdn.workers.dev",
-  "updatedAt": "2026-08-20T09:23:42.486Z",
-  "lastPublishedAt": "2026-08-20T09:23:42.486Z",
-  "lastVersionId": "6c3f4d56-6e95-4197-ba4d-f0af7a40cda4",
-  "lastDeploymentId": "09058ebe-aee2-400a-a265-695706379d17",
+  "updatedAt": "2026-08-20T10:07:18.036Z",
+  "lastPublishedAt": "2026-08-20T10:07:18.036Z",
+  "lastVersionId": "6b084350-3d4b-4337-93f1-7d46c4e3c8f2",
+  "lastDeploymentId": "83a4d2c8-6938-4640-90ad-bee1a14b120b",
   "assets": {
     "/audio/001-christmas.mp3": {
       "hash": "6c23ab88513bb99a558582c6f14cef89",
@@ -305,6 +305,19 @@
         "path": "image/017-img-2651.jpeg"
       },
       "addedAt": "2026-08-20T09:23:37.622Z"
+    },
+    "/audio/010-zhi-jue.mp3": {
+      "hash": "88feed6ff76605c9603a12e631fcaf36",
+      "size": 9066771,
+      "sha256": "1e9460a550e319a6706e53d3c913fa158d0e0a4c6b9cb4bee25fb5ade0d1363b",
+      "type": "audio",
+      "mediaId": "music-000010",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/010-zhi-jue.mp3"
+      },
+      "addedAt": "2026-08-20T10:07:08.827Z"
     }
   }
 }
