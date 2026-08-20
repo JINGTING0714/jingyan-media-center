@@ -2,10 +2,10 @@
   "version": 1,
   "worker": "jingyan-media-cdn",
   "baseURL": "https://jingyan-media-cdn.jingyancdn.workers.dev",
-  "updatedAt": "2026-08-20T04:54:42.695Z",
-  "lastPublishedAt": "2026-08-20T04:54:42.695Z",
-  "lastVersionId": "2a02cf38-dcbd-45b3-a588-f260a23de7a4",
-  "lastDeploymentId": "3c584d4b-434e-47cc-9952-970d7dd87e69",
+  "updatedAt": "2026-08-20T05:22:29.217Z",
+  "lastPublishedAt": "2026-08-20T05:22:29.217Z",
+  "lastVersionId": "5d726833-3c28-4056-9b0d-6d736189fc19",
+  "lastDeploymentId": "3672afe1-d58c-4a64-8b43-b01cc173cd31",
   "assets": {
     "/audio/001-christmas.mp3": {
       "hash": "6c23ab88513bb99a558582c6f14cef89",
@@ -253,6 +253,19 @@
         "path": "music/006-funny-sh.mp3"
       },
       "addedAt": "2026-08-20T04:54:33.884Z"
+    },
+    "/audio/007-utada-hikaru-beautiful-world.mp3": {
+      "hash": "82adb2528f623dc2c158a077da980c7b",
+      "size": 12954044,
+      "sha256": "e71b1f588514a2204bd871c6786c7fc19b77804146b7ea12d20e6f73cdb5523d",
+      "type": "audio",
+      "mediaId": "music-000007",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/007-utada-hikaru-beautiful-world.mp3"
+      },
+      "addedAt": "2026-08-20T05:22:19.164Z"
     }
   }
 }
