@@ -2,24 +2,11 @@
   "version": 1,
   "worker": "jingyan-media-cdn",
   "baseURL": "https://jingyan-media-cdn.jingyancdn.workers.dev",
-  "updatedAt": "2026-08-20T10:12:40.993Z",
-  "lastPublishedAt": "2026-08-20T10:12:40.993Z",
-  "lastVersionId": "894b3cd8-d03f-457b-b544-ed92007e1bdf",
-  "lastDeploymentId": "ae1560d2-df04-4ebd-a810-cd0ba5bd4960",
+  "updatedAt": "2026-08-20T10:13:21.731Z",
+  "lastPublishedAt": "2026-08-20T10:13:21.731Z",
+  "lastVersionId": "d9b505a0-0d05-4124-8d6c-f720085ab199",
+  "lastDeploymentId": "1fc78078-7b4e-4405-b3a7-ef9e6e73478b",
   "assets": {
-    "/audio/001-christmas.mp3": {
-      "hash": "6c23ab88513bb99a558582c6f14cef89",
-      "size": 7623745,
-      "sha256": "dad5b8f51d2b5bd945101c4faf84854fd07488981e365c1a1f7c8d64075a2785",
-      "type": "audio",
-      "mediaId": "music-000001",
-      "source": {
-        "repo": "JINGTING0714/jingyan-media-01",
-        "branch": "main",
-        "path": "music/001-christmas.mp3"
-      },
-      "addedAt": "2026-08-17T04:51:31.035Z"
-    },
     "/audio/004-jingyan-test-004-mp3.mp3": {
       "hash": "6e41de8f8e42b9643d7f2a5bcc066aae",
       "size": 9549516,
