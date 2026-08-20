@@ -11,6 +11,7 @@
 
 
     function getHistoryElements() {
+
         const historyList =
             document.getElementById(
                 "historyList"
@@ -20,6 +21,7 @@
         if (
             !historyList
         ) {
+
             return {
                 historyList:
                     null,
@@ -55,6 +57,7 @@
 
 
     function ensureHistoryNote() {
+
         const {
             heading
         } =
@@ -64,6 +67,7 @@
         if (
             !heading
         ) {
+
             return;
         }
 
@@ -73,6 +77,7 @@
                 "[data-history-summary-note]"
             )
         ) {
+
             return;
         }
 
@@ -86,6 +91,7 @@
         if (
             !headingCopy
         ) {
+
             return;
         }
 
@@ -100,22 +106,17 @@
             "true";
 
 
-        /*
-         * 直接复用网站已经存在的 job-meta 样式：
-         * 不另外增加 CSS，
-         * 保持当前 UI 的字号、颜色和间距体系。
-         */
         note.className =
             "job-meta";
 
 
-        const text =
+        const summary =
             document.createElement(
                 "span"
             );
 
 
-        text.textContent =
+        summary.textContent =
             `仅展示最近 ${HISTORY_LIMIT} 条`;
 
 
@@ -130,7 +131,7 @@
 
 
         note.append(
-            text,
+            summary,
             hint
         );
 
@@ -144,6 +145,7 @@
     function removeOldFooter(
         card
     ) {
+
         card
             ?.querySelector(
                 "[data-history-summary-footer]"
@@ -156,9 +158,11 @@
         card,
         hiddenCount
     ) {
+
         if (
             !card
         ) {
+
             return;
         }
 
@@ -172,6 +176,7 @@
             hiddenCount <=
             0
         ) {
+
             return;
         }
 
@@ -186,45 +191,41 @@
             "true";
 
 
-        /*
-         * 继续复用现有 job-meta。
-         * 它本身就是轻量的辅助信息样式。
-         */
         footer.className =
             "job-meta";
 
 
-        const info =
+        const text =
             document.createElement(
                 "span"
             );
 
 
-        info.textContent =
+        text.textContent =
             `已收起更早的 ${hiddenCount} 条记录`;
 
 
-        const libraryLink =
+        const link =
             document.createElement(
                 "a"
             );
 
 
-        libraryLink.href =
+        link.href =
             "/library/";
 
 
-        libraryLink.className =
+        link.className =
             "text-button";
 
 
-        libraryLink.textContent =
+        link.textContent =
             "去媒体库 →";
 
 
         footer.append(
-            info,
-            libraryLink
+            text,
+            link
         );
 
 
@@ -234,18 +235,51 @@
             );
 
 
-        if (
-            historyList
-        ) {
-            historyList.insertAdjacentElement(
+        historyList
+            ?.insertAdjacentElement(
                 "afterend",
                 footer
             );
-        }
+    }
+
+
+    function setRowVisible(
+        row,
+        visible
+    ) {
+
+        /*
+         * 之前使用 row.hidden。
+         *
+         * 但 .job-item 本身设置了 display:grid，
+         * 在当前样式结构下会导致 hidden 没真正隐藏。
+         *
+         * 项目已经有：
+         *
+         * .hidden {
+         *   display:none !important;
+         * }
+         *
+         * 所以这里直接使用统一 hidden class。
+         */
+
+        row.classList.toggle(
+            "hidden",
+            !visible
+        );
+
+
+        row.setAttribute(
+            "aria-hidden",
+            visible
+                ? "false"
+                : "true"
+        );
     }
 
 
     function compactHistory() {
+
         const {
             historyList,
             card
@@ -256,6 +290,7 @@
         if (
             !historyList
         ) {
+
             return;
         }
 
@@ -263,6 +298,11 @@
         const rows =
             Array.from(
                 historyList.children
+            )
+            .filter(
+                element =>
+                    element.nodeType ===
+                    Node.ELEMENT_NODE
             );
 
 
@@ -271,13 +311,12 @@
                 row,
                 index
             ) => {
-                /*
-                 * 使用浏览器原生 hidden，
-                 * 不依赖新的 CSS 文件。
-                 */
-                row.hidden =
-                    index >=
-                    HISTORY_LIMIT;
+
+                setRowVisible(
+                    row,
+                    index <
+                    HISTORY_LIMIT
+                );
             }
         );
 
@@ -298,6 +337,7 @@
 
 
     function apply() {
+
         ensureHistoryNote();
 
         compactHistory();
@@ -305,9 +345,11 @@
 
 
     function scheduleApply() {
+
         if (
             scheduled
         ) {
+
             return;
         }
 
@@ -318,6 +360,7 @@
 
         requestAnimationFrame(
             () => {
+
                 scheduled =
                     false;
 
@@ -329,6 +372,7 @@
 
 
     function startObserver() {
+
         const historyList =
             document.getElementById(
                 "historyList"
@@ -338,20 +382,17 @@
         if (
             !historyList
         ) {
+
             return;
         }
 
 
-        /*
-         * app.js 每次点击“刷新”
-         * 都会重新生成 History DOM。
-         *
-         * 所以这里监听 childList，
-         * 每次刷新以后自动重新压缩。
-         */
         const observer =
             new MutationObserver(
-                scheduleApply
+                () => {
+
+                    scheduleApply();
+                }
             );
 
 
@@ -366,9 +407,27 @@
 
 
     function init() {
+
         apply();
 
         startObserver();
+
+
+        /*
+         * app.js 的历史数据是异步加载。
+         * 再做一次延迟保险。
+         */
+
+        setTimeout(
+            apply,
+            300
+        );
+
+
+        setTimeout(
+            apply,
+            1000
+        );
     }
 
 
@@ -376,6 +435,7 @@
         document.readyState ===
         "loading"
     ) {
+
         document.addEventListener(
             "DOMContentLoaded",
             init,
@@ -386,6 +446,7 @@
         );
 
     } else {
+
         init();
     }
 
