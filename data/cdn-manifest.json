@@ -2,10 +2,10 @@
   "version": 1,
   "worker": "jingyan-media-cdn",
   "baseURL": "https://jingyan-media-cdn.jingyancdn.workers.dev",
-  "updatedAt": "2026-08-20T04:35:28.168Z",
-  "lastPublishedAt": "2026-08-20T04:35:28.168Z",
-  "lastVersionId": "0814e0c7-3a77-4dc8-af5a-bc76c03ea8b9",
-  "lastDeploymentId": "4bcabf9c-4e2b-4fdc-8a6f-cd0c3003cd8e",
+  "updatedAt": "2026-08-20T04:54:42.695Z",
+  "lastPublishedAt": "2026-08-20T04:54:42.695Z",
+  "lastVersionId": "2a02cf38-dcbd-45b3-a588-f260a23de7a4",
+  "lastDeploymentId": "3c584d4b-434e-47cc-9952-970d7dd87e69",
   "assets": {
     "/audio/001-christmas.mp3": {
       "hash": "6c23ab88513bb99a558582c6f14cef89",
@@ -240,6 +240,19 @@
         "path": "image/016-file-0000000002cc8211a03a078e23004aa4.png"
       },
       "addedAt": "2026-08-20T04:35:21.363Z"
+    },
+    "/audio/006-funny-sh.mp3": {
+      "hash": "c1bf3c733b9f098db9b026fcb2e2df2d",
+      "size": 7953550,
+      "sha256": "d36768a180b1d49336fa0585dcfcff6d4ab8ef70bc5159d63144d09d812b9947",
+      "type": "audio",
+      "mediaId": "music-000006",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/006-funny-sh.mp3"
+      },
+      "addedAt": "2026-08-20T04:54:33.884Z"
     }
   }
 }
