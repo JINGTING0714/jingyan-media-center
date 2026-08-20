@@ -21,6 +21,11 @@ import {
 } from "./db.mjs";
 
 
+import {
+  handleMediaAccessRequest
+} from "./media-access-api.mjs";
+
+
 const HOME_HEAD =
   `<script src="/upload-convenience.js?v=20260820-history-v2" defer></script>`;
 
@@ -33,9 +38,14 @@ const ACCOUNT_HEAD =
   `<script src="/account-access.js?v=20260820-account-access-v1" defer></script>`;
 
 
+const LIBRARY_HEAD =
+  `<script src="/library-access.js?v=20260820-library-access-v1" defer></script>`;
+
+
 function jsonResponse(
   data,
-  status = 200
+  status =
+    200
 ) {
 
   return new Response(
@@ -94,6 +104,57 @@ function cloneWithCookie(
 
       statusText:
         response.statusText,
+
+      headers
+    }
+  );
+}
+
+
+function redirect(
+  request,
+  pathname,
+  cookie =
+    null
+) {
+
+  const url =
+    new URL(
+      pathname,
+      request.url
+    );
+
+
+  const headers =
+    new Headers({
+
+      Location:
+        url.toString(),
+
+      "Cache-Control":
+        "no-store, max-age=0",
+
+      Pragma:
+        "no-cache"
+    });
+
+
+  if (
+    cookie
+  ) {
+
+    headers.append(
+      "Set-Cookie",
+      cookie
+    );
+  }
+
+
+  return new Response(
+    null,
+    {
+      status:
+        302,
 
       headers
     }
@@ -190,7 +251,8 @@ function canEnhance(
   const contentType =
     response.headers.get(
       "Content-Type"
-    ) || "";
+    ) ||
+    "";
 
 
   return contentType
@@ -258,8 +320,10 @@ function sameOriginAllowed(
     ).origin;
 
 
-  return suppliedOrigin ===
-    expectedOrigin;
+  return (
+    suppliedOrigin ===
+    expectedOrigin
+  );
 }
 
 
@@ -331,6 +395,7 @@ async function authenticateThroughV2(
   ) {
 
     return {
+
       ok:
         false,
 
@@ -355,6 +420,7 @@ async function authenticateThroughV2(
   ) {
 
     return {
+
       ok:
         false,
 
@@ -376,7 +442,6 @@ async function authenticateThroughV2(
     session:
       data.session ||
       null
-
   };
 }
 
@@ -538,13 +603,6 @@ async function handleCreateSelfRecovery(
   await env.AUTH_DB
     .batch([
 
-      /*
-       * 一个用户同时只保留一个未使用的备用 / 恢复码。
-       *
-       * 用户重新生成时：
-       * 旧的未使用代码立即失效。
-       */
-
       env.AUTH_DB
         .prepare(
           `
@@ -644,7 +702,6 @@ async function handleCreateSelfRecovery(
 
             mode:
               "self_service"
-
           },
 
           ipHash:
@@ -652,9 +709,7 @@ async function handleCreateSelfRecovery(
 
           createdAt:
             now
-
         }
-
       )
 
     ]);
@@ -687,6 +742,255 @@ async function handleCreateSelfRecovery(
 }
 
 
+async function serveLibrary(
+  request,
+  env,
+  ctx
+) {
+
+  const method =
+    request.method
+      .toUpperCase();
+
+
+  if (
+    ![
+      "GET",
+      "HEAD"
+    ].includes(
+      method
+    )
+  ) {
+
+    return new Response(
+      null,
+      {
+        status:
+          405,
+
+        headers: {
+          Allow:
+            "GET, HEAD"
+        }
+      }
+    );
+  }
+
+
+  const authentication =
+    await authenticateThroughV2(
+      request,
+      env,
+      ctx
+    );
+
+
+  if (
+    !authentication.ok
+  ) {
+
+    return redirect(
+      request,
+      "/login",
+      authentication.cookie
+    );
+  }
+
+
+  const assetUrl =
+    new URL(
+      request.url
+    );
+
+
+  assetUrl.pathname =
+    "/library/index.html";
+
+
+  assetUrl.search =
+    "";
+
+
+  const assetRequest =
+    new Request(
+      assetUrl.toString(),
+      {
+
+        method,
+
+        headers:
+          new Headers(
+            request.headers
+          )
+      }
+    );
+
+
+  const assetResponse =
+    await env.ASSETS.fetch(
+      assetRequest
+    );
+
+
+  const headers =
+    new Headers(
+      assetResponse.headers
+    );
+
+
+  headers.set(
+    "Cache-Control",
+    "no-store, max-age=0"
+  );
+
+
+  headers.set(
+    "Pragma",
+    "no-cache"
+  );
+
+
+  if (
+    authentication.cookie
+  ) {
+
+    headers.append(
+      "Set-Cookie",
+      authentication.cookie
+    );
+  }
+
+
+  let response =
+    new Response(
+      assetResponse.body,
+      {
+
+        status:
+          assetResponse.status,
+
+        statusText:
+          assetResponse.statusText,
+
+        headers
+      }
+    );
+
+
+  if (
+    method ===
+      "GET" &&
+    response.status ===
+      200
+  ) {
+
+    response =
+      injectHead(
+        response,
+        LIBRARY_HEAD
+      );
+  }
+
+
+  return response;
+}
+
+
+async function handleMediaApi(
+  request,
+  env,
+  ctx
+) {
+
+  const authentication =
+    await authenticateThroughV2(
+      request,
+      env,
+      ctx
+    );
+
+
+  if (
+    !authentication.ok
+  ) {
+
+    return cloneWithCookie(
+
+      jsonResponse(
+        {
+          error:
+            "authentication_required"
+        },
+        401
+      ),
+
+      authentication.cookie
+
+    );
+  }
+
+
+  try {
+
+    const response =
+      await handleMediaAccessRequest(
+        request,
+        env,
+        {
+
+          user:
+            authentication.user,
+
+          session:
+            authentication.session
+        }
+      );
+
+
+    return cloneWithCookie(
+      response,
+      authentication.cookie
+    );
+
+  } catch (
+    error
+  ) {
+
+    console.error(
+      "Media access API error:",
+      error
+    );
+
+
+    const status =
+      Number(
+        error?.status ||
+        500
+      );
+
+
+    const code =
+      error?.code ||
+      "internal_error";
+
+
+    return cloneWithCookie(
+
+      jsonResponse(
+        {
+          error:
+            code
+        },
+        status
+      ),
+
+      authentication.cookie
+
+    );
+  }
+}
+
+
 export default {
 
   async fetch(
@@ -703,6 +1007,51 @@ export default {
 
     const pathname =
       url.pathname;
+
+
+    /*
+     * ------------------------------------------------
+     * LIBRARY V2
+     * ALL ACTIVE MEMBERS CAN READ
+     * ------------------------------------------------
+     */
+
+    if (
+      pathname ===
+        "/library" ||
+      pathname ===
+        "/library/" ||
+      pathname ===
+        "/library/index.html"
+    ) {
+
+      return serveLibrary(
+        request,
+        env,
+        ctx
+      );
+    }
+
+
+    /*
+     * ------------------------------------------------
+     * MEDIA ACCESS V2
+     * READ FOR MEMBERS
+     * DELETE / RESTORE BY PERMISSION
+     * ------------------------------------------------
+     */
+
+    if (
+      pathname ===
+        "/api/admin/media"
+    ) {
+
+      return handleMediaApi(
+        request,
+        env,
+        ctx
+      );
+    }
 
 
     /*
