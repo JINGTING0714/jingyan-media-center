@@ -1,3 +1,20 @@
+.admin-hero-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+
+    gap: 9px;
+}
+
+
+.admin-hero-actions .button {
+    min-height: 42px;
+
+    white-space: nowrap;
+}
+
+
 .admin-toolbar {
     margin: 0 0 16px;
 
@@ -330,6 +347,39 @@
         margin-top: 14px;
 
         font-size: 13px;
+    }
+
+
+    .admin-hero-actions {
+        width: 100%;
+
+        display: grid;
+
+        grid-template-columns:
+            repeat(
+                2,
+                minmax(0, 1fr)
+            );
+
+        justify-content: stretch;
+    }
+
+
+    .admin-hero-actions .button {
+        width: 100%;
+
+        min-width: 0;
+
+        padding-left: 10px;
+        padding-right: 10px;
+
+        text-align: center;
+    }
+
+
+    .admin-hero-actions .button:last-child {
+        grid-column:
+            1 / -1;
     }
 
 
