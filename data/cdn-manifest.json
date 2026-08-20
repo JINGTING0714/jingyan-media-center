@@ -2,10 +2,10 @@
   "version": 1,
   "worker": "jingyan-media-cdn",
   "baseURL": "https://jingyan-media-cdn.jingyancdn.workers.dev",
-  "updatedAt": "2026-08-20T06:02:56.362Z",
-  "lastPublishedAt": "2026-08-20T06:02:56.362Z",
-  "lastVersionId": "e8ed2ccb-2a66-4f2b-825c-b6c37167914a",
-  "lastDeploymentId": "d274bb43-6b50-4daf-8d72-ec1b84582ed3",
+  "updatedAt": "2026-08-20T07:08:33.683Z",
+  "lastPublishedAt": "2026-08-20T07:08:33.683Z",
+  "lastVersionId": "de9f3c4f-9c1b-4d1a-a74a-ddb0d6007492",
+  "lastDeploymentId": "755c2dba-ab0f-4e5a-b475-5d76c2c7ebdd",
   "assets": {
     "/audio/001-christmas.mp3": {
       "hash": "6c23ab88513bb99a558582c6f14cef89",
@@ -279,6 +279,19 @@
         "path": "music/008-fang-da-tong-peace-itunes-session.mp3"
       },
       "addedAt": "2026-08-20T06:02:47.934Z"
+    },
+    "/audio/009-fang-da-tong-hei-ye.mp3": {
+      "hash": "e603db82cc1894072be35cfc7973d50b",
+      "size": 12589199,
+      "sha256": "db6f0dead36d04ba88bf4ca11bd7fec6e823fa218d367989dca097bf88c0ac45",
+      "type": "audio",
+      "mediaId": "music-000009",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/009-fang-da-tong-hei-ye.mp3"
+      },
+      "addedAt": "2026-08-20T07:08:24.700Z"
     }
   }
 }
