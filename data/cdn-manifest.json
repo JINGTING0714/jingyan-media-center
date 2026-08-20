@@ -2,10 +2,10 @@
   "version": 1,
   "worker": "jingyan-media-cdn",
   "baseURL": "https://jingyan-media-cdn.jingyancdn.workers.dev",
-  "updatedAt": "2026-08-20T10:12:16.717Z",
-  "lastPublishedAt": "2026-08-20T10:12:16.717Z",
-  "lastVersionId": "268fdad0-d951-40ff-a573-d7cec7468488",
-  "lastDeploymentId": "0c53d035-3149-4ec3-8e4a-df821ea9a143",
+  "updatedAt": "2026-08-20T10:12:40.993Z",
+  "lastPublishedAt": "2026-08-20T10:12:40.993Z",
+  "lastVersionId": "894b3cd8-d03f-457b-b544-ed92007e1bdf",
+  "lastDeploymentId": "ae1560d2-df04-4ebd-a810-cd0ba5bd4960",
   "assets": {
     "/audio/001-christmas.mp3": {
       "hash": "6c23ab88513bb99a558582c6f14cef89",
@@ -19,19 +19,6 @@
         "path": "music/001-christmas.mp3"
       },
       "addedAt": "2026-08-17T04:51:31.035Z"
-    },
-    "/audio/003-fang-da-tong-boarding.mp3": {
-      "hash": "98e3a0365c32f68d061a0c0d376391b5",
-      "size": 1167920,
-      "sha256": "8ddd21fe71e8d79861f6f9fa21a854206e3000b97535bbcab715852672451a7c",
-      "type": "audio",
-      "mediaId": "music-000003",
-      "source": {
-        "repo": "JINGTING0714/jingyan-media-01",
-        "branch": "main",
-        "path": "music/003-fang-da-tong-boarding.mp3"
-      },
-      "addedAt": "2026-08-17T04:51:31.475Z"
     },
     "/audio/004-jingyan-test-004-mp3.mp3": {
       "hash": "6e41de8f8e42b9643d7f2a5bcc066aae",
