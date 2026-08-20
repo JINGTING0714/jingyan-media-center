@@ -23,7 +23,7 @@
     "maxAssets": 20000,
     "warningAssets": 18000,
     "maxAssetSizeMiB": 25,
-    "reconcileDatabasesOnPublish": true
+    "reconcileDatabasesOnPublish": false
   },
   "storage": {
     "registryFile": "data/storage-registry.json",
