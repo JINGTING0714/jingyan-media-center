@@ -59,6 +59,24 @@
     }
 
 
+    function setText(
+        element,
+        text
+    ) {
+
+        if (
+            element &&
+            element.textContent !==
+            text
+        ) {
+
+            element.textContent =
+                text;
+        }
+
+    }
+
+
     function createLoginCard(
         {
             id,
@@ -82,34 +100,24 @@
             id;
 
 
-        const heading =
+        card.append(
             createElement(
                 "strong",
                 "",
                 title
-            );
+            ),
 
-
-        const copy =
             createElement(
                 "p",
                 "",
                 description
-            );
+            ),
 
-
-        const link =
             createLink(
                 action,
                 href,
                 buttonClass
-            );
-
-
-        card.append(
-            heading,
-            copy,
-            link
+            )
         );
 
 
@@ -127,11 +135,14 @@
 
         if (
             choices &&
-            !choices.dataset.recoveryV5
+            choices.dataset
+                .recoveryUiVersion !==
+                "6"
         ) {
 
-            choices.dataset.recoveryV5 =
-                "true";
+            choices.dataset
+                .recoveryUiVersion =
+                "6";
 
 
             choices.textContent =
@@ -148,7 +159,7 @@
                         "备用登录码 · 你自己保存",
 
                     description:
-                        "由你本人在「账户与安全」提前生成并保存。换手机、换电脑，或者其他已登录设备不在身边时，都可以直接使用。",
+                        "由你本人在「账户与安全」提前生成并保存。换手机、换电脑，或者其他已登录设备不在身边时，可以直接使用。",
 
                     action:
                         "使用我的备用登录码 →",
@@ -166,7 +177,7 @@
                         "Owner 恢复码 · 紧急情况",
 
                     description:
-                        "只有 Passkey、自己的备用登录码和已登录设备都不可用时，再联系 Owner。Owner 会为你的原账户临时签发恢复码。",
+                        "Passkey、自己的备用登录码和已登录设备都不可用时，再联系 Owner。Owner 会为你的原账户临时签发恢复码。",
 
                     action:
                         "使用 Owner 恢复码 →",
@@ -178,7 +189,7 @@
 
                 createLoginCard({
                     id:
-                        "loginPairingCardV5",
+                        "loginPairingCardV6",
 
                     title:
                         "6 位设备配对",
@@ -196,7 +207,7 @@
 
                 createLoginCard({
                     id:
-                        "loginInviteCardV5",
+                        "loginInviteCardV6",
 
                     title:
                         "第一次加入",
@@ -224,19 +235,12 @@
             );
 
 
-        const guideText =
+        setText(
             guide?.querySelector(
                 "p"
-            );
-
-
-        if (
-            guideText
-        ) {
-
-            guideText.textContent =
-                "Passkey 用于日常快捷登录；备用登录码由你本人提前保存；6 位配对适合另一台已登录设备就在身边；Owner 恢复码只用于正常登录方式全部不可用的紧急情况。";
-        }
+            ),
+            "Passkey 用于日常快捷登录；备用登录码由你本人提前保存；6 位配对适合另一台已登录设备就在身边；Owner 恢复码只用于正常登录方式全部不可用的紧急情况。"
+        );
 
 
         const advanced =
@@ -249,16 +253,20 @@
             advanced
         ) {
 
-            const summary =
+            setText(
                 advanced.querySelector(
                     "summary"
-                );
+                ),
+                "Owner 本人账户紧急恢复"
+            );
 
 
-            const description =
+            setText(
                 advanced.querySelector(
                     "p"
-                );
+                ),
+                "这里不是 Owner 给普通成员签发恢复码的入口。它只用于 Owner 自己的账户在所有正常登录方式失效时，通过系统级恢复 Secret 进行最终恢复。"
+            );
 
 
             const link =
@@ -267,376 +275,769 @@
                 );
 
 
-            if (
-                summary
-            ) {
-
-                summary.textContent =
-                    "Owner 本人账户紧急恢复";
-            }
-
-
-            if (
-                description
-            ) {
-
-                description.textContent =
-                    "这里不是 Owner 给普通成员签发恢复码的入口。它只用于 Owner 自己的账户在所有正常登录方式失效时，通过系统级恢复 Secret 进行最终恢复。";
-            }
-
-
-            if (
-                link
-            ) {
-
-                link.textContent =
-                    "Owner 本人紧急恢复";
-            }
+            setText(
+                link,
+                "Owner 本人紧急恢复"
+            );
         }
 
     }
 
 
-    function ensureRecoverySourceGuide(
-        mode
-    ) {
+    function recoveryMode() {
+
+        const value =
+            new URLSearchParams(
+                window.location.search
+            )
+                .get(
+                    "mode"
+                );
+
+
+        return (
+            value ===
+            "owner"
+
+                ? "owner"
+
+                : "backup"
+        );
+
+    }
+
+
+    function findRecoveryElements() {
+
+        const main =
+            document.querySelector(
+                "main"
+            ) ||
+            document.body;
+
+
+        const hero =
+            main.querySelector(
+                ".card.hero"
+            ) ||
+            main.querySelector(
+                ".card"
+            ) ||
+            main;
+
+
+        const title =
+            hero.querySelector(
+                "h1"
+            );
+
+
+        let intro =
+            hero.querySelector(
+                ".intro"
+            ) ||
+            hero.querySelector(
+                "h1 + p"
+            );
+
 
         if (
-            document.getElementById(
-                "recoveryCodeSourceGuideV5"
-            )
+            !intro &&
+            title
         ) {
 
-            return;
+            let node =
+                title.nextElementSibling;
+
+
+            while (
+                node
+            ) {
+
+                if (
+                    node.tagName ===
+                    "P"
+                ) {
+
+                    intro =
+                        node;
+
+                    break;
+                }
+
+
+                node =
+                    node.nextElementSibling;
+            }
         }
 
 
         const form =
-            document.querySelector(
+            hero.querySelector(
                 ".flow-form"
+            ) ||
+            hero.querySelector(
+                "form"
+            ) ||
+            main.querySelector(
+                "form"
+            );
+
+
+        const input =
+            form?.querySelector(
+                "#flowInput"
+            ) ||
+            form?.querySelector(
+                'input[placeholder*="JYR"]'
+            ) ||
+            form?.querySelector(
+                'input[name="code"]'
+            ) ||
+            form?.querySelector(
+                'input[type="text"]'
+            );
+
+
+        let label =
+            null;
+
+
+        if (
+            input
+        ) {
+
+            label =
+                input.closest(
+                    ".field"
+                )
+                    ?.querySelector(
+                        "label"
+                    ) ||
+                input.parentElement
+                    ?.querySelector(
+                        "label"
+                    ) ||
+                form?.querySelector(
+                    "label"
+                );
+        }
+
+
+        const submit =
+            form?.querySelector(
+                'button[type="submit"]'
+            ) ||
+            form?.querySelector(
+                ".button-primary"
+            );
+
+
+        const eyebrow =
+            hero.querySelector(
+                ".eyebrow"
+            ) ||
+            hero.querySelector(
+                ".kicker"
+            );
+
+
+        return {
+            main,
+            hero,
+            title,
+            intro,
+            form,
+            input,
+            label,
+            submit,
+            eyebrow
+        };
+
+    }
+
+
+    function recoveryCard(
+        mode
+    ) {
+
+        const existing =
+            document.getElementById(
+                "recoveryModeCardV6"
             );
 
 
         if (
-            !form
+            existing &&
+            existing.dataset.mode ===
+                mode
         ) {
 
-            return;
+            return existing;
         }
 
 
-        const box =
+        existing
+            ?.remove();
+
+
+        const card =
             createElement(
-                "div",
-                "notice"
+                "div"
             );
 
 
-        box.id =
-            "recoveryCodeSourceGuideV5";
+        card.id =
+            "recoveryModeCardV6";
 
 
-        box.style.marginTop =
-            "22px";
+        card.dataset.mode =
+            mode;
 
 
-        const title =
+        Object.assign(
+            card.style,
+            {
+                margin:
+                    "22px 0",
+
+                padding:
+                    "18px 20px",
+
+                borderRadius:
+                    "18px",
+
+                border:
+                    mode ===
+                    "owner"
+
+                        ? "1px solid rgba(205, 139, 57, .22)"
+
+                        : "1px solid rgba(124, 80, 233, .20)",
+
+                background:
+                    mode ===
+                    "owner"
+
+                        ? "linear-gradient(135deg, rgba(255,249,235,.94), rgba(250,245,255,.92))"
+
+                        : "linear-gradient(135deg, rgba(246,241,255,.96), rgba(243,248,255,.94))",
+
+                lineHeight:
+                    "1.65"
+            }
+        );
+
+
+        const badge =
+            createElement(
+                "span",
+                "",
+                mode ===
+                "owner"
+
+                    ? "OWNER 签发 · 紧急恢复"
+
+                    : "个人备份 · 自己保存"
+            );
+
+
+        Object.assign(
+            badge.style,
+            {
+                display:
+                    "inline-flex",
+
+                padding:
+                    "6px 10px",
+
+                marginBottom:
+                    "10px",
+
+                borderRadius:
+                    "999px",
+
+                fontSize:
+                    "13px",
+
+                fontWeight:
+                    "700",
+
+                color:
+                    mode ===
+                    "owner"
+
+                        ? "#8c5a16"
+
+                        : "#6840d9",
+
+                background:
+                    mode ===
+                    "owner"
+
+                        ? "rgba(246, 205, 126, .22)"
+
+                        : "rgba(124, 80, 233, .10)"
+            }
+        );
+
+
+        const heading =
             createElement(
                 "strong",
                 "",
-                "先确认你手里的代码来源"
+                mode ===
+                "owner"
+
+                    ? "这是 Owner 为你的原账户签发的恢复凭据"
+
+                    : "这是你本人提前保存的备用登录凭据"
             );
 
 
-        const copy =
+        Object.assign(
+            heading.style,
+            {
+                display:
+                    "block",
+
+                marginBottom:
+                    "5px",
+
+                fontSize:
+                    "17px",
+
+                color:
+                    "#30204f"
+            }
+        );
+
+
+        const description =
             createElement(
                 "p"
             );
 
 
-        copy.style.margin =
-            "7px 0 12px";
-
-
-        if (
-            mode ===
-            "backup"
-        ) {
-
-            copy.textContent =
-                "当前选择：你本人提前保存的备用登录码。这个代码是在已经登录时，从「账户与安全」生成的。";
-
-        } else if (
-            mode ===
-            "owner"
-        ) {
-
-            copy.textContent =
-                "当前选择：Owner 为你的原账户临时签发的恢复码。它只用于正常登录方式全部丢失的紧急情况。";
-
-        } else {
-
-            copy.textContent =
-                "如果代码是你本人以前保存的，选择「我的备用登录码」；如果是刚刚由 Owner 发给你的，选择「Owner 恢复码」。";
-        }
-
-
-        const actions =
-            createElement(
-                "div",
-                "actions"
-            );
-
-
-        actions.style.marginTop =
+        description.style.margin =
             "0";
 
 
-        actions.append(
+        description.style.color =
+            "#76688f";
 
-            createLink(
-                "我的备用登录码",
-                "/recover?mode=backup",
-                mode ===
-                    "backup"
-                    ? "button button-primary"
-                    : "button button-secondary"
-            ),
 
-            createLink(
-                "Owner 恢复码",
-                "/recover?mode=owner",
-                mode ===
-                    "owner"
-                    ? "button button-primary"
-                    : "button button-secondary"
-            )
+        description.textContent =
+            mode ===
+            "owner"
 
+                ? "只在 Passkey、你的备用登录码和已登录设备全部不可用时使用。恢复成功后仍然进入原来的账户，不会重新注册，也不会创建第二个用户。"
+
+                : "它由你自己在已登录状态下生成，适合换设备或身边没有其他已登录设备时使用。重新生成备用登录码不会删除 Owner 单独签发的紧急恢复码。";
+
+
+        card.append(
+            badge,
+            heading,
+            description
         );
 
 
-        box.append(
-            title,
+        return card;
+    }
+
+
+    function ensureModeSwitch(
+        elements,
+        mode
+    ) {
+
+        let switcher =
+            document.getElementById(
+                "recoveryModeSwitchV6"
+            );
+
+
+        if (
+            !switcher
+        ) {
+
+            switcher =
+                createElement(
+                    "div"
+                );
+
+
+            switcher.id =
+                "recoveryModeSwitchV6";
+
+
+            Object.assign(
+                switcher.style,
+                {
+                    marginTop:
+                        "20px",
+
+                    paddingTop:
+                        "18px",
+
+                    borderTop:
+                        "1px solid rgba(111,91,148,.14)"
+                }
+            );
+
+
+            elements.form
+                ?.insertAdjacentElement(
+                    "afterend",
+                    switcher
+                );
+        }
+
+
+        switcher.textContent =
+            "";
+
+
+        const copy =
+            createElement(
+                "span",
+                "",
+                mode ===
+                "owner"
+
+                    ? "你手里的是自己以前保存的备用登录码？"
+
+                    : "你手里的是 Owner 刚刚签发的恢复码？"
+            );
+
+
+        copy.style.display =
+            "block";
+
+
+        copy.style.marginBottom =
+            "9px";
+
+
+        copy.style.color =
+            "#84779a";
+
+
+        const link =
+            createLink(
+                mode ===
+                "owner"
+
+                    ? "改用我的备用登录码 →"
+
+                    : "改用 Owner 恢复码 →",
+
+                mode ===
+                "owner"
+
+                    ? "/recover?mode=backup"
+
+                    : "/recover?mode=owner",
+
+                "button button-soft"
+            );
+
+
+        switcher.append(
             copy,
-            actions
-        );
-
-
-        form.insertAdjacentElement(
-            "beforebegin",
-            box
+            link
         );
 
     }
 
 
-    function enhanceRecoverPage() {
+    function replaceRecoveryNotice(
+        elements,
+        mode
+    ) {
 
-        const params =
-            new URLSearchParams(
-                location.search
+        const paragraphs =
+            Array.from(
+                elements.hero
+                    .querySelectorAll(
+                        "p"
+                    )
             );
 
 
-        const requestedMode =
-            params.get(
-                "mode"
-            );
-
-
-        const mode =
-            requestedMode ===
-                "backup" ||
-            requestedMode ===
-                "owner"
-
-                ? requestedMode
-
-                : "choose";
-
-
-        const title =
-            document.querySelector(
-                "h1"
-            );
-
-
-        const intro =
-            document.querySelector(
-                ".intro"
-            );
-
-
-        const label =
-            document.querySelector(
-                'label[for="flowInput"]'
-            );
-
-
-        const input =
-            document.getElementById(
-                "flowInput"
+        const notice =
+            paragraphs.find(
+                paragraph =>
+                    paragraph.textContent
+                        ?.includes(
+                            "验证信息只用于当前登录流程"
+                        )
             );
 
 
         if (
-            mode ===
-            "backup"
+            !notice
         ) {
 
-            if (
-                title
-            ) {
-
-                title.textContent =
-                    "使用你的备用登录码。";
-            }
+            return;
+        }
 
 
-            if (
-                intro
-            ) {
+        setText(
+            notice,
+            mode ===
+            "owner"
 
-                intro.textContent =
-                    "输入你本人以前在「账户与安全」生成并保存的备用登录码。它属于你的个人灾备登录方式，不等于 Owner 紧急签发的恢复码。";
-            }
+                ? "Owner 恢复码属于一次性紧急凭据。验证成功后只会为原账户建立新的登录 Session，不会修改你的媒体、图库、歌单或影集。"
 
+                : "备用登录码只用于验证你对原账户的访问权。成功后会为当前浏览器建立新的登录 Session，不会修改你的媒体、图库、歌单或影集。"
+        );
 
-            if (
-                label
-            ) {
-
-                label.textContent =
-                    "我的备用登录码";
-            }
+    }
 
 
-            if (
-                input
-            ) {
+    function replaceRecoveryGuide(
+        elements,
+        mode
+    ) {
 
-                input.setAttribute(
-                    "aria-label",
-                    "我的备用登录码"
-                );
-            }
+        const headings =
+            Array.from(
+                elements.main
+                    .querySelectorAll(
+                        "h2, h3"
+                    )
+            );
 
-        } else if (
+
+        const heading =
+            headings.find(
+                element => {
+
+                    const text =
+                        element.textContent ||
+                        "";
+
+
+                    return (
+                        text.includes(
+                            "恢复已有账户"
+                        ) ||
+                        text.includes(
+                            "恢复账户"
+                        ) ||
+                        text.includes(
+                            "备用登录"
+                        ) ||
+                        text.includes(
+                            "紧急恢复"
+                        )
+                    );
+                }
+            );
+
+
+        if (
+            heading
+        ) {
+
+            setText(
+                heading,
+                mode ===
+                "owner"
+
+                    ? "Owner 紧急恢复说明"
+
+                    : "备用登录码说明"
+            );
+        }
+
+    }
+
+
+    function applyRecoveryMode() {
+
+        const path =
+            window.location.pathname;
+
+
+        if (
+            path !==
+                "/recover" &&
+            path !==
+                "/recover/"
+        ) {
+
+            return;
+        }
+
+
+        const mode =
+            recoveryMode();
+
+
+        const elements =
+            findRecoveryElements();
+
+
+        if (
+            !elements.title
+        ) {
+
+            return;
+        }
+
+
+        if (
             mode ===
             "owner"
         ) {
 
+            document.title =
+                "Owner 恢复码 · Jingyan Media Center";
+
+
+            setText(
+                elements.eyebrow,
+                "OWNER RECOVERY"
+            );
+
+
+            setText(
+                elements.title,
+                "使用 Owner 恢复码。"
+            );
+
+
+            setText(
+                elements.intro,
+                "输入 Owner 为你的原账户临时签发的一次性恢复码。这个入口只用于正常登录方式全部不可用的紧急情况。"
+            );
+
+
+            setText(
+                elements.label,
+                "Owner 恢复码"
+            );
+
+
             if (
-                title
+                elements.input
             ) {
 
-                title.textContent =
-                    "使用 Owner 恢复码。";
-            }
-
-
-            if (
-                intro
-            ) {
-
-                intro.textContent =
-                    "当 Passkey、你自己的备用登录码和已登录设备都不可用时，Owner 可以为你的原账户签发一次性恢复码。输入后仍然恢复原来的用户，不会创建第二个账户。";
-            }
-
-
-            if (
-                label
-            ) {
-
-                label.textContent =
-                    "Owner 恢复码";
-            }
-
-
-            if (
-                input
-            ) {
-
-                input.setAttribute(
+                elements.input.setAttribute(
                     "aria-label",
                     "Owner 恢复码"
                 );
+
+
+                elements.input.setAttribute(
+                    "autocomplete",
+                    "one-time-code"
+                );
             }
+
+
+            setText(
+                elements.submit,
+                "恢复原账户"
+            );
 
         } else {
 
+            document.title =
+                "备用登录码 · Jingyan Media Center";
+
+
+            setText(
+                elements.eyebrow,
+                "BACKUP ACCESS"
+            );
+
+
+            setText(
+                elements.title,
+                "使用备用登录码。"
+            );
+
+
+            setText(
+                elements.intro,
+                "输入你本人以前在「账户与安全」生成并保存的备用登录码。它是你的个人灾备登录方式，不需要另一台设备。"
+            );
+
+
+            setText(
+                elements.label,
+                "备用登录码"
+            );
+
+
             if (
-                title
+                elements.input
             ) {
 
-                title.textContent =
-                    "恢复已有账户。";
+                elements.input.setAttribute(
+                    "aria-label",
+                    "备用登录码"
+                );
+
+
+                elements.input.setAttribute(
+                    "autocomplete",
+                    "one-time-code"
+                );
             }
 
 
+            setText(
+                elements.submit,
+                "使用备用登录码登录"
+            );
+        }
+
+
+        if (
+            elements.form
+        ) {
+
+            const card =
+                recoveryCard(
+                    mode
+                );
+
+
             if (
-                intro
+                card.parentElement !==
+                elements.hero
             ) {
 
-                intro.textContent =
-                    "备用登录码和 Owner 恢复码是两种不同来源的凭据。请选择你手里的代码来源；两者都只恢复原来的账户，不会创建新用户。";
-            }
-
-
-            if (
-                label
-            ) {
-
-                label.textContent =
-                    "备用登录码 / Owner 恢复码";
+                elements.form
+                    .insertAdjacentElement(
+                        "beforebegin",
+                        card
+                    );
             }
         }
 
 
-        ensureRecoverySourceGuide(
+        replaceRecoveryNotice(
+            elements,
             mode
         );
 
 
-        const alternatives =
-            document.getElementById(
-                "recoveryLoginAlternatives"
-            );
+        replaceRecoveryGuide(
+            elements,
+            mode
+        );
 
 
-        if (
-            alternatives
-        ) {
-
-            const strong =
-                alternatives.querySelector(
-                    "strong"
-                );
-
-
-            const copy =
-                alternatives.querySelector(
-                    "p"
-                );
-
-
-            if (
-                strong
-            ) {
-
-                strong.textContent =
-                    "还有其他登录方式";
-            }
-
-
-            if (
-                copy
-            ) {
-
-                copy.textContent =
-                    "如果当前设备可以使用 Passkey，可以返回登录页；如果另一台已登录设备就在身边，也可以使用 6 位配对。Owner 恢复码只作为最后的成员账户恢复方案。";
-            }
-        }
+        ensureModeSwitch(
+            elements,
+            mode
+        );
 
     }
 
@@ -652,25 +1053,22 @@
         const intro =
             document.querySelector(
                 ".intro"
+            ) ||
+            document.querySelector(
+                "h1 + p"
             );
 
 
-        if (
-            title
-        ) {
-
-            title.textContent =
-                "Owner 本人紧急恢复。";
-        }
+        setText(
+            title,
+            "Owner 本人紧急恢复。"
+        );
 
 
-        if (
-            intro
-        ) {
-
-            intro.textContent =
-                "这里只恢复 Owner 自己的账户，并使用系统级 Owner Recovery Secret。它不是 Owner 给普通成员签发恢复码的页面，成员恢复请使用「Owner 恢复码」入口。";
-        }
+        setText(
+            intro,
+            "这里只恢复 Owner 自己的账户，并使用系统级 Owner Recovery Secret。它不是 Owner 给普通成员签发恢复码的页面。"
+        );
 
     }
 
@@ -691,19 +1089,12 @@
         }
 
 
-        const description =
+        setText(
             methods.querySelector(
                 "p"
-            );
-
-
-        if (
-            description
-        ) {
-
-            description.textContent =
-                "建议至少准备两种日常登录方式：Passkey 用于快捷登录；你自己保存的备用登录码用于个人灾备；设备配对适合另一台已登录设备就在身边。Owner 恢复码属于紧急恢复，不是日常登录方式。";
-        }
+            ),
+            "建议至少准备两种日常登录方式：Passkey 用于快捷登录；你自己保存的备用登录码用于个人灾备；设备配对适合另一台已登录设备就在身边。Owner 恢复码属于紧急恢复，不是日常登录方式。"
+        );
 
 
         const selfPanel =
@@ -712,25 +1103,18 @@
             );
 
 
-        const selfDescription =
+        setText(
             selfPanel
                 ?.querySelector(
                     ".pair-panel-copy p"
-                );
-
-
-        if (
-            selfDescription
-        ) {
-
-            selfDescription.textContent =
-                "这是你本人持有的备用登录码。请保存到可信的密码管理器或安全位置。以后没有其他已登录设备时，可以从登录页使用。重新生成只会替换你自己以前的备用登录码，不会删除 Owner 单独为你签发的紧急恢复码。";
-        }
+                ),
+            "这是你本人持有的备用登录码。请保存到可信的密码管理器或安全位置。重新生成只会替换你自己以前的备用登录码，不会删除 Owner 单独为你签发的紧急恢复码。"
+        );
 
 
         if (
             document.getElementById(
-                "ownerRecoveryExplanationV5"
+                "ownerRecoveryExplanationV6"
             )
         ) {
 
@@ -745,7 +1129,7 @@
 
 
         note.id =
-            "ownerRecoveryExplanationV5";
+            "ownerRecoveryExplanationV6";
 
 
         Object.assign(
@@ -758,13 +1142,13 @@
                     "16px 18px",
 
                 border:
-                    "1px solid rgba(124, 80, 233, .14)",
+                    "1px solid rgba(124,80,233,.14)",
 
                 borderRadius:
                     "16px",
 
                 background:
-                    "rgba(247, 244, 255, .78)",
+                    "rgba(247,244,255,.78)",
 
                 color:
                     "#5e5275",
@@ -802,7 +1186,7 @@
 
 
         copy.textContent =
-            "这个代码不能由你自己在这里生成。当 Passkey、自己的备用登录码和已登录设备全部不可用时，请联系 Owner。Owner 会为你的原账户签发临时恢复码；它与你自己保存的备用登录码分开管理，不会互相替换。";
+            "这个代码不能由你自己在这里生成。当 Passkey、自己的备用登录码和已登录设备全部不可用时，请联系 Owner。Owner 会为你的原账户签发临时恢复码；它与你自己的备用登录码分开管理。";
 
 
         note.append(
@@ -834,19 +1218,12 @@
         }
 
 
-        const copy =
+        setText(
             gate.querySelector(
                 ".gate-copy"
-            );
-
-
-        if (
-            copy
-        ) {
-
-            copy.textContent =
-                "第一次使用请用 Owner 发放的邀请码激活。已有账户可以使用 Passkey、6 位设备配对或自己保存的备用登录码；如果这些方式全部不可用，再使用 Owner 为原账户签发的紧急恢复码。";
-        }
+            ),
+            "第一次使用请用 Owner 发放的邀请码激活。已有账户可以使用 Passkey、6 位设备配对或自己保存的备用登录码；如果这些方式全部不可用，再使用 Owner 为原账户签发的紧急恢复码。"
+        );
 
 
         const actions =
@@ -877,14 +1254,16 @@
                 "/recover?mode=backup";
 
 
-            recovery.textContent =
-                "备用登录码";
+            setText(
+                recovery,
+                "备用登录码"
+            );
         }
 
 
         if (
             !document.getElementById(
-                "homeOwnerRecoveryLinkV5"
+                "homeOwnerRecoveryLinkV6"
             )
         ) {
 
@@ -897,7 +1276,7 @@
 
 
             ownerRecovery.id =
-                "homeOwnerRecoveryLinkV5";
+                "homeOwnerRecoveryLinkV6";
 
 
             actions.append(
@@ -911,7 +1290,7 @@
     function apply() {
 
         const path =
-            location.pathname;
+            window.location.pathname;
 
 
         if (
@@ -938,7 +1317,7 @@
                 "/recover/"
         ) {
 
-            enhanceRecoverPage();
+            applyRecoveryMode();
 
             return;
         }
@@ -983,28 +1362,119 @@
     }
 
 
+    function installRecoveryObserver() {
+
+        const path =
+            window.location.pathname;
+
+
+        if (
+            path !==
+                "/recover" &&
+            path !==
+                "/recover/"
+        ) {
+
+            return;
+        }
+
+
+        const root =
+            document.querySelector(
+                "main"
+            ) ||
+            document.body;
+
+
+        if (
+            !root
+        ) {
+
+            return;
+        }
+
+
+        let scheduled =
+            false;
+
+
+        const observer =
+            new MutationObserver(
+                () => {
+
+                    if (
+                        scheduled
+                    ) {
+
+                        return;
+                    }
+
+
+                    scheduled =
+                        true;
+
+
+                    requestAnimationFrame(
+                        () => {
+
+                            scheduled =
+                                false;
+
+
+                            applyRecoveryMode();
+                        }
+                    );
+                }
+            );
+
+
+        observer.observe(
+            root,
+            {
+                childList:
+                    true,
+
+                subtree:
+                    true,
+
+                characterData:
+                    true
+            }
+        );
+
+    }
+
+
     function init() {
 
         apply();
 
 
+        installRecoveryObserver();
+
+
         /*
-         * account-access.js / login-v3.js
-         * 也会在 DOMContentLoaded 时增强页面。
+         * 基础页面的 login-v3 / account 脚本
+         * 可能会稍后再次修改 DOM。
          *
-         * 这里再做两次轻量保险，
-         * 保证我们最后覆盖的是 V5 文案。
+         * 多做几次轻量重绘，保证最终显示的是 V6 UI。
          */
-        setTimeout(
-            apply,
-            80
-        );
+        [
+            80,
+            240,
+            650,
+            1400
+        ]
+            .forEach(
+                delay => {
 
+                    setTimeout(
+                        apply,
+                        delay
+                    );
 
-        setTimeout(
-            apply,
-            450
-        );
+                }
+            );
 
     }
 
