@@ -46,7 +46,7 @@ defer>
 </script>
 
 <script
-src="/app.js"
+src="/app.js?v=20260820-upload-fast-v1"
 defer>
 </script>
 
@@ -511,7 +511,7 @@ GitHub Media Repositories
 </strong>
 
 <small>
-Cloudflare Static Assets
+Cloudflare delivery
 </small>
 
 </div>
@@ -580,6 +580,99 @@ class="toast"
 id="toast"
 role="status">
 </div>
+
+
+<script>
+(() => {
+    "use strict";
+
+
+    let refreshTimer =
+        null;
+
+
+    function refreshVisibleUploadState() {
+
+        if (
+            document.visibilityState !==
+            "visible"
+        ) {
+
+            return;
+
+        }
+
+
+        clearTimeout(
+            refreshTimer
+        );
+
+
+        refreshTimer =
+            setTimeout(
+                () => {
+
+                    const button =
+                        document.getElementById(
+                            "refreshHistory"
+                        );
+
+
+                    if (
+                        button
+                    ) {
+
+                        button.click();
+
+                    }
+
+                },
+                180
+            );
+
+    }
+
+
+    window.addEventListener(
+        "pageshow",
+        event => {
+
+            if (
+                event.persisted
+            ) {
+
+                refreshVisibleUploadState();
+
+            }
+
+        }
+    );
+
+
+    window.addEventListener(
+        "focus",
+        refreshVisibleUploadState
+    );
+
+
+    document.addEventListener(
+        "visibilitychange",
+        () => {
+
+            if (
+                document.visibilityState ===
+                "visible"
+            ) {
+
+                refreshVisibleUploadState();
+
+            }
+
+        }
+    );
+
+})();
+</script>
 
 </body>
 
