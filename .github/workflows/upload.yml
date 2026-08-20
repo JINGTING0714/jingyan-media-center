@@ -46,114 +46,20 @@ jobs:
     steps:
       - name: Checkout Latest Main
         uses: actions/checkout@v4
-
         with:
           ref: main
           fetch-depth: 0
 
 
-      - name: Refresh Latest Pipeline State
-        if: ${{ inputs.web_job_id != '' || inputs.web_batch_id != '' }}
-
-        shell: bash
-
-        run: |
-          set -e
-
-          echo "Refreshing latest main before queued web upload..."
-
-          git fetch origin main
-
-          git reset --hard origin/main
-
-          echo "Pipeline state refreshed."
-
-          git status --short
-
-
       - name: Setup Node
         uses: actions/setup-node@v4
-
         with:
           node-version: 22
 
 
-      - name: Validate Storage V2
-        run: |
-          node --check api/storage-registry.js
-          node --check api/github.js
-          node --check api/repository.js
-          node --check api/upload.js
-          node --check api/web-upload-runner.js
-          node --check api/batch-upload-runner.js
-
-          node -e "JSON.parse(require('fs').readFileSync('config.json','utf8'))"
-
-          node -e "JSON.parse(require('fs').readFileSync('data/storage-registry.json','utf8'))"
-
-
-      - name: Check Storage Credentials
-        env:
-          GH_TOKEN: ${{ secrets.MEDIA_TOKEN }}
-          MEDIA_TOKEN: ${{ secrets.MEDIA_TOKEN }}
-          STORAGE_TOKEN: ${{ secrets.STORAGE_TOKEN }}
-
-        run: |
-          node - <<'NODE'
-          const {
-            githubRequest,
-            getRepositoryInfo,
-            getTokenForOwner
-          } = require("./api/github");
-
-          (async () => {
-            const legacy = await getRepositoryInfo(
-              "JINGTING0714/jingyan-image-01"
-            );
-
-            if (
-              !legacy ||
-              legacy.full_name !== "JINGTING0714/jingyan-image-01"
-            ) {
-              throw new Error(
-                "MEDIA_TOKEN legacy repository check failed"
-              );
-            }
-
-            const storageToken = getTokenForOwner(
-              "jingyan-media-storage"
-            );
-
-            const org = await githubRequest(
-              "GET",
-              "/orgs/jingyan-media-storage",
-              storageToken
-            );
-
-            if (
-              !org ||
-              org.login !== "jingyan-media-storage"
-            ) {
-              throw new Error(
-                "STORAGE_TOKEN organization check failed"
-              );
-            }
-
-            console.log(
-              "Storage V2 credentials OK"
-            );
-          })().catch(error => {
-            console.error(error);
-            process.exit(1);
-          });
-          NODE
-
-
-      - name: Check Upload Files
+      - name: Check Upload Mode
         id: check
-
         shell: bash
-
         run: |
           set -e
 
@@ -197,16 +103,46 @@ jobs:
           fi
 
 
+      - name: Validate Upload Runtime
+        if: steps.check.outputs.skip == 'false'
+        shell: bash
+        run: |
+          set -e
+
+          node --check api/storage-registry.js
+          node --check api/github.js
+          node --check api/repository.js
+          node --check api/upload.js
+          node --check api/web-upload-runner.js
+          node --check api/batch-upload-runner.js
+
+          node -e "JSON.parse(require('fs').readFileSync('config.json','utf8'))"
+          node -e "JSON.parse(require('fs').readFileSync('data/storage-registry.json','utf8'))"
+
+
+      - name: Restore NPM Download Cache
+        if: steps.check.outputs.skip == 'false'
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node22-npm-${{ hashFiles('package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node22-npm-
+
+
       - name: Install Dependencies
         if: steps.check.outputs.skip == 'false'
-
         run: |
-          npm install --omit=dev --package-lock=false
+          npm install \
+            --omit=dev \
+            --package-lock=false \
+            --prefer-offline \
+            --no-audit \
+            --no-fund
 
 
       - name: Run Web Batch Upload
         id: batch_upload
-
         if: steps.check.outputs.mode == 'web_batch'
 
         env:
@@ -223,7 +159,6 @@ jobs:
 
       - name: Run Web Media Upload
         id: web_upload
-
         if: steps.check.outputs.mode == 'web'
 
         env:
@@ -240,7 +175,6 @@ jobs:
 
       - name: Run Standard Media Upload
         id: standard_upload
-
         if: steps.check.outputs.mode == 'standard' && steps.check.outputs.skip == 'false'
 
         env:
@@ -257,11 +191,9 @@ jobs:
 
       - name: Save Automation State
         id: save_state
-
         if: always() && steps.check.outputs.skip == 'false'
 
         shell: bash
-
         run: |
           set -e
 
