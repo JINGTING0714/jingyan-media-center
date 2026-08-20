@@ -69,6 +69,9 @@
     "GITHUB_MEDIA_SYNC_WORKFLOW":
       "media-index-sync.yml",
 
+    "GITHUB_MEDIA_DELETE_WORKFLOW":
+      "media-delete.yml",
+
     "GITHUB_UPLOAD_REF":
       "main",
 
