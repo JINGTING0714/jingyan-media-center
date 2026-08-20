@@ -2,10 +2,10 @@
   "version": 1,
   "worker": "jingyan-media-cdn",
   "baseURL": "https://jingyan-media-cdn.jingyancdn.workers.dev",
-  "updatedAt": "2026-08-20T10:07:18.036Z",
-  "lastPublishedAt": "2026-08-20T10:07:18.036Z",
-  "lastVersionId": "6b084350-3d4b-4337-93f1-7d46c4e3c8f2",
-  "lastDeploymentId": "83a4d2c8-6938-4640-90ad-bee1a14b120b",
+  "updatedAt": "2026-08-20T10:11:27.188Z",
+  "lastPublishedAt": "2026-08-20T10:11:27.188Z",
+  "lastVersionId": "170327ec-7c68-4b82-b6f3-5671fd19dce8",
+  "lastDeploymentId": "5686b039-4334-4f5c-a193-77054dc637ff",
   "assets": {
     "/audio/001-christmas.mp3": {
       "hash": "6c23ab88513bb99a558582c6f14cef89",
@@ -214,19 +214,6 @@
         "path": "image/014-yue-shen-shi-yong-shui-yin.jpg"
       },
       "addedAt": "2026-08-18T13:27:35.919Z"
-    },
-    "/image/015-yue-shen-shi-yong-di-wen.jpg": {
-      "hash": "becf8fd6fb136066b59dc4335a154c09",
-      "size": 2958175,
-      "sha256": "aa02f1f1bfad05bcd7a3d85a74181c01e32ab320fa8011eb1ef643bed555524d",
-      "type": "image",
-      "mediaId": "image-000015",
-      "source": {
-        "repo": "JINGTING0714/jingyan-image-01",
-        "branch": "main",
-        "path": "image/015-yue-shen-shi-yong-di-wen.jpg"
-      },
-      "addedAt": "2026-08-18T13:27:54.952Z"
     },
     "/image/016-file-0000000002cc8211a03a078e23004aa4.png": {
       "hash": "a2a011a52d3cc6ab2ac3209475cc041b",
