@@ -22,7 +22,7 @@ import {
 
 
 const AUTH_UX_SCRIPT =
-  `<script src="/auth-ux-v5.js?v=20260820-auth-recovery-v5" defer></script>`;
+  `<script src="/auth-ux-v5.js?v=20260820-auth-recovery-ui-v6" defer></script>`;
 
 
 const UPLOAD_STATUS_SCRIPT =
@@ -143,6 +143,7 @@ function sameOriginAllowed(
 
   let expected;
 
+
   try {
 
     expected =
@@ -178,6 +179,7 @@ async function authenticateThroughV4(
 
   url.pathname =
     "/api/auth/me";
+
 
   url.search =
     "";
@@ -481,25 +483,6 @@ async function handleCreateSelfRecovery(
     );
 
 
-  /*
-   * --------------------------------------------------
-   * SELF BACKUP CODE
-   * --------------------------------------------------
-   *
-   * 关键规则：
-   *
-   * created_by_user_id = user_id
-   * 代表用户本人创建的备用登录码。
-   *
-   * 这里只删除用户自己以前生成的备用登录码。
-   *
-   * Owner 为用户创建的恢复码：
-   *
-   * created_by_user_id != user_id
-   *
-   * 不会被这里删除。
-   * --------------------------------------------------
-   */
   await env.AUTH_DB
     .batch([
 
@@ -843,21 +826,6 @@ async function handleCreateOwnerRecovery(
     );
 
 
-  /*
-   * --------------------------------------------------
-   * OWNER EMERGENCY RECOVERY CODE
-   * --------------------------------------------------
-   *
-   * 这里只删除 Owner 以前为该用户创建的、
-   * 尚未使用的恢复码。
-   *
-   * 用户自己保存的备用登录码：
-   *
-   * created_by_user_id = user_id
-   *
-   * 必须保留。
-   * --------------------------------------------------
-   */
   await env.AUTH_DB
     .batch([
 
@@ -1058,6 +1026,7 @@ function enhancementScripts(
       scripts
     )
   ];
+
 }
 
 
@@ -1122,6 +1091,7 @@ function enhanceHtml(
                 true
             }
           );
+
         }
       }
     )
@@ -1153,11 +1123,6 @@ export default {
 
     try {
 
-      /*
-       * -----------------------------------------------
-       * USER SELF-SERVICE BACKUP LOGIN CODE
-       * -----------------------------------------------
-       */
       if (
         pathname ===
           "/api/account/recovery-code"
@@ -1168,14 +1133,10 @@ export default {
           env,
           ctx
         );
+
       }
 
 
-      /*
-       * -----------------------------------------------
-       * OWNER -> MEMBER EMERGENCY RECOVERY CODE
-       * -----------------------------------------------
-       */
       const ownerRecoveryMatch =
         pathname.match(
           /^\/api\/admin\/users\/([^/]+)\/recovery$/
@@ -1194,14 +1155,10 @@ export default {
             ownerRecoveryMatch[1]
           )
         );
+
       }
 
 
-      /*
-       * -----------------------------------------------
-       * EVERYTHING ELSE
-       * -----------------------------------------------
-       */
       let response =
         await appV4.fetch(
           request,
@@ -1243,6 +1200,7 @@ export default {
         },
         500
       );
+
     }
 
   }
