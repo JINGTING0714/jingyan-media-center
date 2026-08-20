@@ -1,7 +1,7 @@
 {
   "name": "jingyan-media-app",
 
-  "main": "src/app-v4.mjs",
+  "main": "src/app-v5.mjs",
 
   "compatibility_date": "2026-08-17",
 
@@ -31,6 +31,8 @@
     "PAIRING_TTL_MINUTES": "10",
 
     "RECOVERY_TTL_MINUTES": "30",
+
+    "SELF_RECOVERY_TTL_DAYS": "180",
 
 
     "TURNSTILE_REQUIRED": "true",
