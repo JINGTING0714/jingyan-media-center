@@ -1842,24 +1842,28 @@ function renderDeletedUsers() {
 
         head.append(
             info,
+
             createBadge(
                 "已删除",
                 "disabled"
             )
         );
 
+
         const warning =
             createElement(
                 "div",
                 "delete-warning",
-                "媒体、Media ID 与上传记录仍然保留。恢复账号不会恢复旧 Session 或已撤销 Passkey。"
+                "恢复用户会重新启用账号；永久删除用户会删除登录身份和上传历史，但已发布媒体本身会保留并匿名化上传者。"
             );
+
 
         const actions =
             createElement(
                 "div",
                 "deleted-user-actions"
             );
+
 
         const restore =
             createElement(
@@ -1870,6 +1874,7 @@ function renderDeletedUsers() {
 
         restore.type =
             "button";
+
 
         restore.addEventListener(
             "click",
@@ -1917,9 +1922,99 @@ function renderDeletedUsers() {
             }
         );
 
-        actions.append(
-            restore
+
+        const purge =
+            createElement(
+                "button",
+                "button danger small",
+                "立即永久删除"
+            );
+
+        purge.type =
+            "button";
+
+
+        purge.addEventListener(
+            "click",
+            async () => {
+                const first =
+                    confirm(
+                        `永久删除 ${user.displayName}？\n\n` +
+                        "账号、Session、Passkey、恢复码和上传历史将永久删除。\n" +
+                        "已发布媒体会保留，但上传者身份会匿名化。\n\n" +
+                        "此操作不能恢复。"
+                    );
+
+                if (
+                    !first
+                ) {
+                    return;
+                }
+
+
+                const typed =
+                    prompt(
+                        "请输入 DELETE 确认永久删除："
+                    );
+
+
+                if (
+                    typed !==
+                    "DELETE"
+                ) {
+                    showToast(
+                        "已取消永久删除"
+                    );
+
+                    return;
+                }
+
+
+                restore.disabled =
+                    true;
+
+                purge.disabled =
+                    true;
+
+
+                try {
+                    await api(
+                        `/api/admin/deleted-users/${encodeURIComponent(user.id)}/purge`,
+                        {
+                            method:
+                                "DELETE"
+                        }
+                    );
+
+                    showToast(
+                        `${user.displayName} 已永久删除`
+                    );
+
+                    await loadAll();
+
+                } catch (
+                    error
+                ) {
+                    showToast(
+                        error.code ||
+                        error.message
+                    );
+
+                    restore.disabled =
+                        false;
+
+                    purge.disabled =
+                        false;
+                }
+            }
         );
+
+
+        actions.append(
+            restore,
+            purge
+        );
+
 
         item.append(
             head,
@@ -1927,12 +2022,12 @@ function renderDeletedUsers() {
             actions
         );
 
+
         deletedUsersList.append(
             item
         );
     }
 }
-
 
 function inviteDisplayStatus(
     invite
