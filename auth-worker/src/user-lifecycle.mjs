@@ -91,6 +91,7 @@ function publicDeletedUser(
         row.snapshot_permissions_json ||
         "{}"
       );
+
   } catch {
     permissions =
       {};
@@ -149,10 +150,8 @@ async function handleListDeletedUsers(
 
   const result =
     await env.AUTH_DB
-      .prepare(
-        `
+      .prepare(`
         SELECT
-
           d.user_id,
           d.snapshot_display_name,
           d.snapshot_permissions_json,
@@ -177,8 +176,7 @@ async function handleListDeletedUsers(
 
         ORDER BY
           d.deleted_at DESC
-        `
-      )
+      `)
       .all();
 
   return jsonResponse({
@@ -210,18 +208,13 @@ async function handleDeleteUser(
 
   const target =
     await env.AUTH_DB
-      .prepare(
-        `
+      .prepare(`
         SELECT
-
           id,
           display_name,
           role,
           permissions_json,
-          status,
-          created_at,
-          updated_at,
-          last_login_at
+          status
 
         FROM users
 
@@ -229,14 +222,15 @@ async function handleDeleteUser(
           id = ?
 
         LIMIT 1
-        `
-      )
+      `)
       .bind(
         userId
       )
       .first();
 
-  if (!target) {
+  if (
+    !target
+  ) {
     throw new HttpError(
       404,
       "user_not_found"
@@ -255,10 +249,8 @@ async function handleDeleteUser(
 
   const existingDeletion =
     await env.AUTH_DB
-      .prepare(
-        `
-        SELECT
-          user_id
+      .prepare(`
+        SELECT user_id
 
         FROM user_deletions
 
@@ -267,8 +259,7 @@ async function handleDeleteUser(
           AND restored_at IS NULL
 
         LIMIT 1
-        `
-      )
+      `)
       .bind(
         userId
       )
@@ -302,12 +293,10 @@ async function handleDeleteUser(
       .batch([
 
         env.AUTH_DB
-          .prepare(
-            `
+          .prepare(`
             UPDATE users
 
             SET
-
               status =
                 'disabled',
 
@@ -315,14 +304,12 @@ async function handleDeleteUser(
                 ?
 
             WHERE
-
               id = ?
 
             AND
               role =
                 'uploader'
-            `
-          )
+          `)
           .bind(
             now,
             userId
@@ -330,8 +317,7 @@ async function handleDeleteUser(
 
 
         env.AUTH_DB
-          .prepare(
-            `
+          .prepare(`
             UPDATE sessions
 
             SET
@@ -346,8 +332,7 @@ async function handleDeleteUser(
 
             AND
               revoked_at IS NULL
-            `
-          )
+          `)
           .bind(
             now,
             userId
@@ -355,38 +340,27 @@ async function handleDeleteUser(
 
 
         env.AUTH_DB
-          .prepare(
-            `
-            DELETE FROM
-              device_links
-
-            WHERE
-              user_id = ?
-            `
-          )
+          .prepare(`
+            DELETE FROM device_links
+            WHERE user_id = ?
+          `)
           .bind(
             userId
           ),
 
 
         env.AUTH_DB
-          .prepare(
-            `
-            DELETE FROM
-              recovery_codes
-
-            WHERE
-              user_id = ?
-            `
-          )
+          .prepare(`
+            DELETE FROM recovery_codes
+            WHERE user_id = ?
+          `)
           .bind(
             userId
           ),
 
 
         env.AUTH_DB
-          .prepare(
-            `
+          .prepare(`
             UPDATE passkey_credentials
 
             SET
@@ -401,8 +375,7 @@ async function handleDeleteUser(
 
             AND
               revoked_at IS NULL
-            `
-          )
+          `)
           .bind(
             now,
             userId
@@ -410,10 +383,8 @@ async function handleDeleteUser(
 
 
         env.AUTH_DB
-          .prepare(
-            `
+          .prepare(`
             INSERT INTO user_deletions (
-
               user_id,
               snapshot_display_name,
               snapshot_permissions_json,
@@ -423,7 +394,6 @@ async function handleDeleteUser(
               deleted_by_user_id,
               restored_at,
               restored_by_user_id
-
             )
 
             VALUES (
@@ -458,8 +428,7 @@ async function handleDeleteUser(
 
               restored_by_user_id =
                 NULL
-            `
-          )
+          `)
           .bind(
             userId,
             target.display_name,
@@ -505,7 +474,6 @@ async function handleDeleteUser(
               now
           }
         )
-
       ]);
 
   if (
@@ -553,10 +521,8 @@ async function handleRestoreUser(
 
   const deletion =
     await env.AUTH_DB
-      .prepare(
-        `
+      .prepare(`
         SELECT
-
           d.user_id,
           d.snapshot_display_name,
           d.snapshot_permissions_json,
@@ -564,7 +530,6 @@ async function handleRestoreUser(
           d.deleted_at,
           d.purge_after,
           d.restored_at,
-
           u.role
 
         FROM user_deletions d
@@ -580,14 +545,15 @@ async function handleRestoreUser(
           d.restored_at IS NULL
 
         LIMIT 1
-        `
-      )
+      `)
       .bind(
         userId
       )
       .first();
 
-  if (!deletion) {
+  if (
+    !deletion
+  ) {
     throw new HttpError(
       404,
       "deleted_user_not_found"
@@ -619,12 +585,10 @@ async function handleRestoreUser(
       .batch([
 
         env.AUTH_DB
-          .prepare(
-            `
+          .prepare(`
             UPDATE users
 
             SET
-
               display_name =
                 ?,
 
@@ -643,8 +607,7 @@ async function handleRestoreUser(
             AND
               role =
                 'uploader'
-            `
-          )
+          `)
           .bind(
             deletion
               .snapshot_display_name,
@@ -659,12 +622,10 @@ async function handleRestoreUser(
 
 
         env.AUTH_DB
-          .prepare(
-            `
+          .prepare(`
             UPDATE user_deletions
 
             SET
-
               restored_at =
                 ?,
 
@@ -676,8 +637,7 @@ async function handleRestoreUser(
 
             AND
               restored_at IS NULL
-            `
-          )
+          `)
           .bind(
             now,
             auth.user.id,
@@ -715,18 +675,15 @@ async function handleRestoreUser(
               now
           }
         )
-
       ]);
 
   if (
     changes(
       results[0]
-    ) !==
-      1 ||
+    ) !== 1 ||
     changes(
       results[1]
-    ) !==
-      1
+    ) !== 1
   ) {
     throw new HttpError(
       409,
@@ -744,6 +701,247 @@ async function handleRestoreUser(
       now,
 
     requiresNewLogin:
+      true
+  });
+}
+
+
+async function handlePurgeUser(
+  request,
+  env,
+  auth,
+  userId
+) {
+  requireOwnerUserManagement(
+    auth
+  );
+
+  requireSameOrigin(
+    request
+  );
+
+  const deletion =
+    await env.AUTH_DB
+      .prepare(`
+        SELECT
+          d.user_id,
+          d.snapshot_display_name,
+          u.role
+
+        FROM user_deletions d
+
+        INNER JOIN users u
+          ON u.id =
+             d.user_id
+
+        WHERE
+          d.user_id = ?
+
+        AND
+          d.restored_at IS NULL
+
+        LIMIT 1
+      `)
+      .bind(
+        userId
+      )
+      .first();
+
+  if (
+    !deletion
+  ) {
+    throw new HttpError(
+      404,
+      "deleted_user_not_found"
+    );
+  }
+
+  if (
+    deletion.role ===
+    "owner"
+  ) {
+    throw new HttpError(
+      403,
+      "owner_is_immutable"
+    );
+  }
+
+  const context =
+    await auditContext(
+      request,
+      env,
+      auth
+    );
+
+  const now =
+    nowSeconds();
+
+
+  /*
+   * MEDIA_DB 与 AUTH_DB 是两个独立 D1。
+   *
+   * 永久删除账号时：
+   * - 不删除用户曾经上传的媒体；
+   * - 把媒体上传者匿名化；
+   * - 删除该用户自己的收藏与分组；
+   * - 清除跨数据库残留 user id。
+   */
+  await env.MEDIA_DB
+    .batch([
+
+      env.MEDIA_DB
+        .prepare(`
+          UPDATE media
+
+          SET
+            uploader_user_id = NULL,
+            updated_at = ?
+
+          WHERE
+            uploader_user_id = ?
+        `)
+        .bind(
+          now,
+          userId
+        ),
+
+
+      env.MEDIA_DB
+        .prepare(`
+          DELETE FROM media_favorites
+          WHERE user_id = ?
+        `)
+        .bind(
+          userId
+        ),
+
+
+      env.MEDIA_DB
+        .prepare(`
+          DELETE FROM collections
+          WHERE owner_user_id = ?
+        `)
+        .bind(
+          userId
+        ),
+
+
+      env.MEDIA_DB
+        .prepare(`
+          UPDATE collection_items
+          SET added_by_user_id = NULL
+          WHERE added_by_user_id = ?
+        `)
+        .bind(
+          userId
+        ),
+
+
+      env.MEDIA_DB
+        .prepare(`
+          UPDATE media_tags
+          SET created_by_user_id = NULL
+          WHERE created_by_user_id = ?
+        `)
+        .bind(
+          userId
+        ),
+
+
+      env.MEDIA_DB
+        .prepare(`
+          UPDATE media_events
+          SET actor_user_id = NULL
+          WHERE actor_user_id = ?
+        `)
+        .bind(
+          userId
+        )
+    ]);
+
+
+  const result =
+    await env.AUTH_DB
+      .prepare(`
+        DELETE FROM users
+
+        WHERE
+          id = ?
+          AND role = 'uploader'
+      `)
+      .bind(
+        userId
+      )
+      .run();
+
+
+  if (
+    changes(
+      result
+    ) !== 1
+  ) {
+    throw new HttpError(
+      409,
+      "user_purge_failed"
+    );
+  }
+
+
+  await auditStatement(
+    env,
+    {
+      ...context,
+
+      action:
+        "user.purge",
+
+      targetType:
+        "user",
+
+      targetId:
+        userId,
+
+      metadata: {
+        displayName:
+          deletion
+            .snapshot_display_name,
+
+        permanent:
+          true,
+
+        mediaPreserved:
+          true,
+
+        mediaOwnershipAnonymized:
+          true,
+
+        uploadHistoryDeleted:
+          true
+      },
+
+      createdAt:
+        now
+    }
+  )
+    .run();
+
+
+  return jsonResponse({
+    ok:
+      true,
+
+    userId,
+
+    permanent:
+      true,
+
+    mediaPreserved:
+      true,
+
+    mediaOwnershipAnonymized:
+      true,
+
+    uploadHistoryDeleted:
       true
   });
 }
@@ -770,6 +968,15 @@ export function isAdminUserLifecyclePath(
 
   if (
     /^\/api\/admin\/deleted-users\/[^/]+\/restore$/
+      .test(
+        pathname
+      )
+  ) {
+    return true;
+  }
+
+  if (
+    /^\/api\/admin\/deleted-users\/[^/]+\/purge$/
       .test(
         pathname
       )
@@ -863,6 +1070,34 @@ export async function handleAdminUserLifecycleRequest(
       auth,
       decodeURIComponent(
         restoreMatch[1]
+      )
+    );
+  }
+
+
+  const purgeMatch =
+    pathname.match(
+      /^\/api\/admin\/deleted-users\/([^/]+)\/purge$/
+    );
+
+  if (
+    purgeMatch
+  ) {
+    if (
+      method !==
+      "DELETE"
+    ) {
+      return methodNotAllowed([
+        "DELETE"
+      ]);
+    }
+
+    return handlePurgeUser(
+      request,
+      env,
+      auth,
+      decodeURIComponent(
+        purgeMatch[1]
       )
     );
   }
