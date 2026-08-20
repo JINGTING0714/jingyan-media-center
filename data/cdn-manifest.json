@@ -2,10 +2,10 @@
   "version": 1,
   "worker": "jingyan-media-cdn",
   "baseURL": "https://jingyan-media-cdn.jingyancdn.workers.dev",
-  "updatedAt": "2026-08-20T10:13:21.731Z",
-  "lastPublishedAt": "2026-08-20T10:13:21.731Z",
-  "lastVersionId": "d9b505a0-0d05-4124-8d6c-f720085ab199",
-  "lastDeploymentId": "1fc78078-7b4e-4405-b3a7-ef9e6e73478b",
+  "updatedAt": "2026-08-20T11:21:46.161Z",
+  "lastPublishedAt": "2026-08-20T11:21:46.161Z",
+  "lastVersionId": "c3ca136d-832f-4982-9e3d-331924b9be4d",
+  "lastDeploymentId": "3cde22eb-66b9-4e19-b2b3-261584787d60",
   "assets": {
     "/audio/004-jingyan-test-004-mp3.mp3": {
       "hash": "6e41de8f8e42b9643d7f2a5bcc066aae",
@@ -253,6 +253,19 @@
         "path": "music/010-zhi-jue.mp3"
       },
       "addedAt": "2026-08-20T10:07:08.827Z"
+    },
+    "/audio/011-xing-fu-zhe-jian-xiao-shi-qing.mp3": {
+      "hash": "2296c06d9c566e22056b711433b487d7",
+      "size": 10396936,
+      "sha256": "6ab9742bdc2a51373c68a9906deaa1a23292341e5940c3984e12b0b5224b743b",
+      "type": "audio",
+      "mediaId": "music-000011",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/011-xing-fu-zhe-jian-xiao-shi-qing.mp3"
+      },
+      "addedAt": "2026-08-20T11:21:38.861Z"
     }
   }
 }
