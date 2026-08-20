@@ -2,10 +2,10 @@
   "version": 1,
   "worker": "jingyan-media-cdn",
   "baseURL": "https://jingyan-media-cdn.jingyancdn.workers.dev",
-  "updatedAt": "2026-08-20T03:56:14.443Z",
-  "lastPublishedAt": "2026-08-20T03:56:14.443Z",
-  "lastVersionId": "a864e8f4-eb67-43d2-88c8-34590fa50dbe",
-  "lastDeploymentId": "8db0d31e-5d93-44d5-80a8-056715d6e7dc",
+  "updatedAt": "2026-08-20T04:35:28.168Z",
+  "lastPublishedAt": "2026-08-20T04:35:28.168Z",
+  "lastVersionId": "0814e0c7-3a77-4dc8-af5a-bc76c03ea8b9",
+  "lastDeploymentId": "4bcabf9c-4e2b-4fdc-8a6f-cd0c3003cd8e",
   "assets": {
     "/audio/001-christmas.mp3": {
       "hash": "6c23ab88513bb99a558582c6f14cef89",
@@ -227,6 +227,19 @@
         "path": "image/015-yue-shen-shi-yong-di-wen.jpg"
       },
       "addedAt": "2026-08-18T13:27:54.952Z"
+    },
+    "/image/016-file-0000000002cc8211a03a078e23004aa4.png": {
+      "hash": "a2a011a52d3cc6ab2ac3209475cc041b",
+      "size": 1684997,
+      "sha256": "3eb8f6d209b85c18ee7e838e4e2d6e840f7ff60aee86b1063e3ab4dc7e5fecd1",
+      "type": "image",
+      "mediaId": "image-000016",
+      "source": {
+        "repo": "JINGTING0714/jingyan-image-01",
+        "branch": "main",
+        "path": "image/016-file-0000000002cc8211a03a078e23004aa4.png"
+      },
+      "addedAt": "2026-08-20T04:35:21.363Z"
     }
   }
 }
