@@ -2,10 +2,10 @@
   "version": 1,
   "worker": "jingyan-media-cdn",
   "baseURL": "https://jingyan-media-cdn.jingyancdn.workers.dev",
-  "updatedAt": "2026-08-20T05:22:29.217Z",
-  "lastPublishedAt": "2026-08-20T05:22:29.217Z",
-  "lastVersionId": "5d726833-3c28-4056-9b0d-6d736189fc19",
-  "lastDeploymentId": "3672afe1-d58c-4a64-8b43-b01cc173cd31",
+  "updatedAt": "2026-08-20T06:02:56.362Z",
+  "lastPublishedAt": "2026-08-20T06:02:56.362Z",
+  "lastVersionId": "e8ed2ccb-2a66-4f2b-825c-b6c37167914a",
+  "lastDeploymentId": "d274bb43-6b50-4daf-8d72-ec1b84582ed3",
   "assets": {
     "/audio/001-christmas.mp3": {
       "hash": "6c23ab88513bb99a558582c6f14cef89",
@@ -266,6 +266,19 @@
         "path": "music/007-utada-hikaru-beautiful-world.mp3"
       },
       "addedAt": "2026-08-20T05:22:19.164Z"
+    },
+    "/audio/008-fang-da-tong-peace-itunes-session.mp3": {
+      "hash": "5dcac1a8bf58648053ea38bfe140afdc",
+      "size": 11540093,
+      "sha256": "9b7d3d817b4165c22bea2ab8e8dbd80b3322fbcb18ed75017708339870d094af",
+      "type": "audio",
+      "mediaId": "music-000008",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/008-fang-da-tong-peace-itunes-session.mp3"
+      },
+      "addedAt": "2026-08-20T06:02:47.934Z"
     }
   }
 }
