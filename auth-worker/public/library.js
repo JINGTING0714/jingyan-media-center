@@ -9,7 +9,6 @@
 
 
     const COLLECTION_META = {
-
         image: {
             label:
                 "图库",
@@ -51,12 +50,10 @@
             placeholder:
                 "例如：旅行、演唱会、收藏片段"
         }
-
     };
 
 
     const refs = {
-
         identity:
             document.getElementById(
                 "libraryIdentity"
@@ -246,7 +243,6 @@
             document.getElementById(
                 "collectionPickerList"
             )
-
     };
 
 
@@ -269,40 +265,34 @@
     let currentUser =
         null;
 
+    let currentCapabilities =
+        {};
 
     let currentType =
         "all";
 
-
     let currentStatus =
         "published";
-
 
     let currentPage =
         1;
 
-
     let currentTotalPages =
         1;
-
 
     let currentPageSize =
         MOBILE_QUERY.matches
             ? 12
             : 24;
 
-
     let currentPreviewItem =
         null;
-
 
     let collectionMedia =
         null;
 
-
     let searchTimer =
         null;
-
 
     let toastTimer =
         null;
@@ -315,19 +305,15 @@
             status,
             code
         ) {
-
             super(
                 code
             );
 
-
             this.status =
                 status;
 
-
             this.code =
                 code;
-
         }
 
     }
@@ -338,104 +324,75 @@
         className = "",
         text = undefined
     ) {
-
         const element =
             document.createElement(
                 tag
             );
 
-
         if (
             className
         ) {
-
             element.className =
                 className;
-
         }
-
 
         if (
             text !==
             undefined
         ) {
-
             element.textContent =
                 text;
-
         }
 
-
         return element;
-
-    }
-
-
-    function showToast(
-        message
-    ) {
-
-        refs.toast.textContent =
-            message;
-
-
-        refs.toast.classList.add(
-            "show"
-        );
-
-
-        clearTimeout(
-            toastTimer
-        );
-
-
-        toastTimer =
-            setTimeout(
-                () => {
-
-                    refs.toast.classList.remove(
-                        "show"
-                    );
-
-                },
-                3000
-            );
-
     }
 
 
     function humanError(
         code
     ) {
-
         const messages = {
+            authentication_required:
+                "登录状态已经失效",
 
-            media_not_found:
-                "找不到这个媒体",
-
-            media_protected:
-                "媒体已受保护，请先解除保护",
-
-            media_not_published:
-                "这个媒体当前不能删除",
-
-            media_not_trashed:
-                "这个媒体不在回收站",
+            active_account_required:
+                "当前账户不可用",
 
             permission_denied:
-                "没有执行此操作的权限",
+                "你没有删除媒体的权限",
+
+            media_not_found:
+                "找不到这个媒体，或它不属于当前账户",
+
+            media_protected:
+                "这个媒体已受保护，不能删除",
+
+            media_not_published:
+                "这个媒体当前不在普通媒体库",
+
+            media_not_trashed:
+                "这个媒体当前不在回收站",
+
+            media_not_deletable:
+                "这个媒体当前不能永久删除",
+
+            media_source_missing:
+                "媒体源文件信息不完整",
+
+            media_purge_dispatch_failed:
+                "永久删除任务启动失败，媒体没有被删除",
 
             invalid_media_id:
                 "媒体 ID 无效",
 
+            invalid_media_status_filter:
+                "媒体状态参数错误",
+
+            invalid_media_type_filter:
+                "媒体类型参数错误",
+
             collection_name_required:
                 "请输入分组名称",
-
-            collection_name_too_long:
-                "分组名称最多 60 个字符",
-
-            collection_name_invalid:
-                "分组名称包含不允许的字符",
 
             collection_name_exists:
                 "已经存在同名分组",
@@ -449,23 +406,12 @@
             collection_media_type_mismatch:
                 "媒体类型与分组类型不一致",
 
-            active_account_required:
-                "当前账户不可用",
-
-            authentication_required:
-                "登录状态已经失效",
-
-            invalid_json:
-                "请求数据格式错误",
-
             request_failed:
                 "请求失败",
 
             internal_error:
                 "系统暂时出现问题"
-
         };
-
 
         return (
             messages[
@@ -474,7 +420,32 @@
             code ||
             "操作失败"
         );
+    }
 
+
+    function showToast(
+        message
+    ) {
+        refs.toast.textContent =
+            message;
+
+        refs.toast.classList.add(
+            "show"
+        );
+
+        clearTimeout(
+            toastTimer
+        );
+
+        toastTimer =
+            setTimeout(
+                () => {
+                    refs.toast.classList.remove(
+                        "show"
+                    );
+                },
+                3000
+            );
     }
 
 
@@ -482,126 +453,107 @@
         url,
         options = {}
     ) {
-
         const headers =
             new Headers(
                 options.headers ||
                 {}
             );
 
-
         if (
-            options.body &&
+            options.body !==
+                undefined &&
             !headers.has(
                 "Content-Type"
             )
         ) {
-
             headers.set(
                 "Content-Type",
                 "application/json"
             );
-
         }
-
 
         const response =
             await fetch(
                 url,
                 {
-                    ...options,
-
                     credentials:
                         "same-origin",
+
+                    ...options,
 
                     headers
                 }
             );
 
-
-        let data = {};
-
+        let data =
+            {};
 
         try {
-
             data =
                 await response.json();
 
         } catch {
-
-            data = {};
-
+            data =
+                {};
         }
-
 
         if (
             !response.ok
         ) {
-
             if (
                 response.status ===
                 401
             ) {
-
                 location.href =
                     "/login";
-
             }
-
 
             throw new ApiError(
                 response.status,
                 data.error ||
                 "request_failed"
             );
-
         }
 
-
         return data;
+    }
 
+
+    function canDeleteMedia() {
+        return Boolean(
+            currentCapabilities
+                ?.deleteMedia
+        );
     }
 
 
     function formatBytes(
         bytes
     ) {
-
         const value =
             Number(
                 bytes
             );
 
-
         if (
             !Number.isFinite(
                 value
             ) ||
-            value <
-            0
+            value < 0
         ) {
-
             return "—";
-
         }
 
-
         if (
-            value <
-            1024
+            value < 1024
         ) {
-
             return `${value} B`;
-
         }
-
 
         if (
             value <
-            1024 *
-            1024
+            1024 * 1024
         ) {
-
             return (
                 value /
                 1024
@@ -610,9 +562,7 @@
                     1
                 ) +
                 " KiB";
-
         }
-
 
         return (
             value /
@@ -623,39 +573,30 @@
                 2
             ) +
             " MiB";
-
     }
 
 
     function formatDate(
         value
     ) {
-
         if (
             !value
         ) {
-
             return "—";
-
         }
-
 
         const date =
             new Date(
                 value
             );
 
-
         if (
             Number.isNaN(
                 date.getTime()
             )
         ) {
-
             return "—";
-
         }
-
 
         return date.toLocaleString(
             "zh-CN",
@@ -676,54 +617,41 @@
                     "2-digit"
             }
         );
-
     }
 
 
     function remainingTrashTime(
         value
     ) {
-
         if (
             !value
         ) {
-
             return "—";
-
         }
-
 
         const expires =
             new Date(
                 value
-            ).getTime();
-
+            )
+                .getTime();
 
         if (
             !Number.isFinite(
                 expires
             )
         ) {
-
             return "—";
-
         }
-
 
         const remaining =
             expires -
             Date.now();
 
-
         if (
-            remaining <=
-            0
+            remaining <= 0
         ) {
-
-            return "等待永久清理";
-
+            return "已超过保留期";
         }
-
 
         const hours =
             Math.floor(
@@ -731,44 +659,34 @@
                 3600000
             );
 
-
         return (
             `${Math.floor(hours / 24)} 天 ` +
             `${hours % 24} 小时`
         );
-
     }
 
 
     function shortHash(
         value
     ) {
-
         const text =
             String(
                 value ||
                 ""
             );
 
-
         if (
             !text
         ) {
-
             return "—";
-
         }
-
 
         if (
             text.length <=
             18
         ) {
-
             return text;
-
         }
-
 
         return (
             text.slice(
@@ -780,14 +698,12 @@
                 -6
             )
         );
-
     }
 
 
     function mediaName(
         item
     ) {
-
         return (
             item.displayTitle ||
             item.originalName ||
@@ -795,7 +711,6 @@
             item.mediaId ||
             "未命名媒体"
         );
-
     }
 
 
@@ -803,50 +718,38 @@
         value,
         success
     ) {
-
         if (
             !value
         ) {
-
             showToast(
                 "没有可以复制的内容"
             );
 
-
             return;
-
         }
 
-
         try {
-
             await navigator
                 .clipboard
                 .writeText(
                     value
                 );
 
-
             showToast(
                 success
             );
 
         } catch {
-
             showToast(
                 "复制失败，请手动复制"
             );
-
         }
-
     }
 
 
     function renderIdentity() {
-
         refs.identity.textContent =
             "";
-
 
         const link =
             createElement(
@@ -854,18 +757,15 @@
                 "user-chip"
             );
 
-
         link.href =
             "/account";
-
 
         const displayName =
             currentUser
                 ?.displayName ||
-            "Owner";
+            "Jingyan";
 
-
-        const avatar =
+        link.append(
             createElement(
                 "span",
                 "user-avatar",
@@ -873,17 +773,15 @@
                     displayName
                 )[0] ||
                 "J"
-            );
-
+            )
+        );
 
         const copy =
             createElement(
                 "span"
             );
 
-
         copy.append(
-
             createElement(
                 "strong",
                 "",
@@ -893,22 +791,40 @@
             createElement(
                 "small",
                 "",
-                "Owner"
+                currentUser
+                    ?.role ===
+                    "owner"
+                    ? "Owner"
+                    : "Member"
             )
-
         );
-
 
         link.append(
-            avatar,
             copy
         );
-
 
         refs.identity.append(
             link
         );
 
+
+        if (
+            currentUser
+                ?.role !==
+            "owner"
+        ) {
+            document
+                .querySelectorAll(
+                    'a[href="/admin"], a[href="/admin/"]'
+                )
+                .forEach(
+                    element => {
+                        element.classList.add(
+                            "hidden"
+                        );
+                    }
+                );
+        }
     }
 
 
@@ -917,13 +833,11 @@
         value,
         title = ""
     ) {
-
         const row =
             createElement(
                 "div",
                 "media-meta-row"
             );
-
 
         row.append(
             createElement(
@@ -933,7 +847,6 @@
             )
         );
 
-
         const strong =
             createElement(
                 "strong",
@@ -942,24 +855,18 @@
                 "—"
             );
 
-
         if (
             title
         ) {
-
             strong.title =
                 title;
-
         }
-
 
         row.append(
             strong
         );
 
-
         return row;
-
     }
 
 
@@ -967,70 +874,253 @@
         text,
         extraClass = ""
     ) {
-
         return createElement(
             "span",
             `media-badge ${extraClass}`.trim(),
             text
         );
-
     }
 
 
-    function createPreviewThumb(
-        item
-    ) {
+    function lockPage() {
+        document.body
+            .classList
+            .add(
+                "sheet-open"
+            );
+    }
 
-        const wrapper =
-            createElement(
-                "button",
-                `media-thumb ${item.type || "unknown"}`
+
+    function unlockPage() {
+        if (
+            refs.previewSheet
+                .classList
+                .contains(
+                    "hidden"
+                ) &&
+            refs.collectionSheet
+                .classList
+                .contains(
+                    "hidden"
+                )
+        ) {
+            document.body
+                .classList
+                .remove(
+                    "sheet-open"
+                );
+        }
+    }
+
+
+    function closePreview() {
+        refs.previewSheet
+            .classList
+            .add(
+                "hidden"
             );
 
+        refs.previewBackdrop
+            .classList
+            .add(
+                "hidden"
+            );
 
-        wrapper.type =
-            "button";
+        refs.previewSheet
+            .setAttribute(
+                "aria-hidden",
+                "true"
+            );
+
+        refs.previewStage.textContent =
+            "";
+
+        currentPreviewItem =
+            null;
+
+        unlockPage();
+    }
 
 
-        wrapper.title =
-            item.type ===
-                "image"
-                ? "预览图片"
-                : item.type ===
-                    "video"
-                    ? "预览视频"
-                    : "播放音频";
+    function openPreview(
+        item
+    ) {
+        if (
+            !item.url
+        ) {
+            showToast(
+                "这个媒体没有可用 CDN 地址"
+            );
 
+            return;
+        }
+
+        currentPreviewItem =
+            item;
+
+        refs.previewTitle.textContent =
+            mediaName(
+                item
+            );
+
+        refs.previewStage.textContent =
+            "";
 
         if (
             item.type ===
-                "image" &&
-            item.url
+            "image"
         ) {
-
             const image =
                 document.createElement(
                     "img"
                 );
 
-
             image.src =
                 item.url;
-
 
             image.alt =
                 mediaName(
                     item
                 );
 
+            refs.previewStage.append(
+                image
+            );
+
+        } else if (
+            item.type ===
+            "video"
+        ) {
+            const video =
+                document.createElement(
+                    "video"
+                );
+
+            video.src =
+                item.url;
+
+            video.controls =
+                true;
+
+            video.playsInline =
+                true;
+
+            video.preload =
+                "metadata";
+
+            refs.previewStage.append(
+                video
+            );
+
+        } else if (
+            item.type ===
+            "audio"
+        ) {
+            const audio =
+                document.createElement(
+                    "audio"
+                );
+
+            audio.src =
+                item.url;
+
+            audio.controls =
+                true;
+
+            audio.preload =
+                "metadata";
+
+            refs.previewStage.append(
+                audio
+            );
+        }
+
+        refs.previewInfo.textContent =
+            "";
+
+        refs.previewInfo.append(
+            metaRow(
+                "Media ID",
+                item.mediaId
+            ),
+
+            metaRow(
+                "类型",
+                item.type
+            ),
+
+            metaRow(
+                "大小",
+                formatBytes(
+                    item.sizeBytes
+                )
+            ),
+
+            metaRow(
+                "上传者",
+                item.uploader
+                    ?.displayName ||
+                "—"
+            )
+        );
+
+        refs.previewSheet
+            .classList
+            .remove(
+                "hidden"
+            );
+
+        refs.previewBackdrop
+            .classList
+            .remove(
+                "hidden"
+            );
+
+        refs.previewSheet
+            .setAttribute(
+                "aria-hidden",
+                "false"
+            );
+
+        lockPage();
+    }
+
+
+    function createPreviewThumb(
+        item
+    ) {
+        const wrapper =
+            createElement(
+                "button",
+                `media-thumb ${item.type || "unknown"}`
+            );
+
+        wrapper.type =
+            "button";
+
+        if (
+            item.type ===
+                "image" &&
+            item.url
+        ) {
+            const image =
+                document.createElement(
+                    "img"
+                );
+
+            image.src =
+                item.url;
+
+            image.alt =
+                mediaName(
+                    item
+                );
 
             image.loading =
                 "lazy";
 
-
             image.decoding =
                 "async";
-
 
             wrapper.append(
                 image
@@ -1040,50 +1130,15 @@
             item.type ===
                 "video"
         ) {
-
-            if (
-                item.url
-            ) {
-
-                const video =
-                    document.createElement(
-                        "video"
-                    );
-
-
-                video.src =
-                    item.url;
-
-
-                video.muted =
-                    true;
-
-
-                video.playsInline =
-                    true;
-
-
-                video.preload =
-                    "metadata";
-
-
-                wrapper.append(
-                    video
-                );
-
-            }
-
-
             wrapper.append(
                 createElement(
                     "span",
-                    "media-thumb-overlay",
+                    "media-thumb-fallback",
                     "▶"
                 )
             );
 
         } else {
-
             wrapper.append(
                 createElement(
                     "span",
@@ -1094,334 +1149,68 @@
                         : "◆"
                 )
             );
-
         }
-
 
         if (
             currentStatus ===
-            "published"
+                "published"
         ) {
-
             wrapper.addEventListener(
                 "click",
                 () => {
-
-                    if (
-                        item.type ===
-                            "audio"
-                    ) {
-
-                        if (
-                            item.url
-                        ) {
-
-                            window.open(
-                                item.url,
-                                "_blank",
-                                "noopener,noreferrer"
-                            );
-
-                        }
-
-
-                        return;
-
-                    }
-
-
                     openPreview(
                         item
                     );
-
                 }
             );
 
         } else {
-
             wrapper.disabled =
                 true;
-
         }
-
 
         return wrapper;
-
     }
 
 
-    function createOpenButton(
-        item
+    function actionButton(
+        text,
+        className,
+        handler
     ) {
-
         const button =
             createElement(
                 "button",
-                "button primary",
-                item.type ===
-                    "audio"
-                    ? "播放 / 打开"
-                    : "预览"
+                className,
+                text
             );
-
 
         button.type =
             "button";
-
-
-        button.disabled =
-            !item.url;
-
 
         button.addEventListener(
             "click",
-            () => {
-
-                if (
-                    !item.url
-                ) {
-
-                    return;
-
-                }
-
-
-                if (
-                    item.type ===
-                    "audio"
-                ) {
-
-                    window.open(
-                        item.url,
-                        "_blank",
-                        "noopener,noreferrer"
-                    );
-
-
-                    return;
-
-                }
-
-
-                openPreview(
-                    item
-                );
-
-            }
+            handler
         );
 
-
         return button;
-
-    }
-
-
-    function createCopyButton(
-        item
-    ) {
-
-        const button =
-            createElement(
-                "button",
-                "button secondary",
-                "复制 CDN"
-            );
-
-
-        button.type =
-            "button";
-
-
-        button.disabled =
-            !item.url;
-
-
-        button.addEventListener(
-            "click",
-            () => {
-
-                copyText(
-                    item.url,
-                    "CDN 链接已复制"
-                );
-
-            }
-        );
-
-
-        return button;
-
-    }
-
-
-    function createCollectionButton(
-        item
-    ) {
-
-        const meta =
-            COLLECTION_META[
-                item.type
-            ];
-
-
-        if (
-            !meta
-        ) {
-
-            return null;
-
-        }
-
-
-        const button =
-            createElement(
-                "button",
-                "button collection-button",
-                meta.action
-            );
-
-
-        button.type =
-            "button";
-
-
-        button.addEventListener(
-            "click",
-            () => {
-
-                openCollectionPicker(
-                    item
-                );
-
-            }
-        );
-
-
-        return button;
-
-    }
-
-
-    function createTrashButton(
-        item
-    ) {
-
-        const button =
-            createElement(
-                "button",
-                "button danger",
-                item.protected
-                    ? "已保护"
-                    : "移入回收站"
-            );
-
-
-        button.type =
-            "button";
-
-
-        if (
-            item.protected
-        ) {
-
-            button.disabled =
-                true;
-
-
-            button.title =
-                "请先解除媒体保护";
-
-        } else {
-
-            button.addEventListener(
-                "click",
-                () => {
-
-                    trashMedia(
-                        item
-                    );
-
-                }
-            );
-
-        }
-
-
-        return button;
-
-    }
-
-
-    function createRestoreButton(
-        item
-    ) {
-
-        const button =
-            createElement(
-                "button",
-                "button restore",
-                "恢复媒体"
-            );
-
-
-        button.type =
-            "button";
-
-
-        button.addEventListener(
-            "click",
-            () => {
-
-                restoreMedia(
-                    item
-                );
-
-            }
-        );
-
-
-        return button;
-
     }
 
 
     async function trashMedia(
         item
     ) {
-
         if (
-            item.protected
+            !confirm(
+                `把「${mediaName(item)}」移入回收站？\n\n7 天内可以恢复。`
+            )
         ) {
-
-            showToast(
-                "这个媒体已受保护"
-            );
-
-
             return;
-
         }
-
-
-        const confirmed =
-            window.confirm(
-                `确定把「${mediaName(item)}」移入回收站吗？\n\n媒体会从普通媒体库隐藏，并保留 7 天。`
-            );
-
-
-        if (
-            !confirmed
-        ) {
-
-            return;
-
-        }
-
 
         try {
-
             await api(
-                "/api/admin/media",
+                "/api/library/media",
                 {
                     method:
                         "DELETE",
@@ -1434,53 +1223,39 @@
                 }
             );
 
-
             showToast(
-                "媒体已移入回收站"
+                "已移入回收站"
             );
-
 
             await loadLibrary();
 
         } catch (
             error
         ) {
-
             showToast(
                 humanError(
                     error.code ||
                     error.message
                 )
             );
-
         }
-
     }
 
 
     async function restoreMedia(
         item
     ) {
-
-        const confirmed =
-            window.confirm(
-                `确定恢复「${mediaName(item)}」吗？`
-            );
-
-
         if (
-            !confirmed
+            !confirm(
+                `恢复「${mediaName(item)}」？`
+            )
         ) {
-
             return;
-
         }
 
-
         try {
-
             await api(
-                "/api/admin/media",
+                "/api/library/media",
                 {
                     method:
                         "POST",
@@ -1496,34 +1271,92 @@
                 }
             );
 
-
             showToast(
                 "媒体已恢复"
             );
-
 
             await loadLibrary();
 
         } catch (
             error
         ) {
-
             showToast(
                 humanError(
                     error.code ||
                     error.message
                 )
             );
+        }
+    }
 
+
+    async function permanentDeleteMedia(
+        item
+    ) {
+        const confirmed =
+            confirm(
+                `永久删除「${mediaName(item)}」？\n\n` +
+                "这会删除媒体记录，并启动 GitHub 源文件与 CDN 清理。\n" +
+                "此操作不能恢复。"
+            );
+
+        if (
+            !confirmed
+        ) {
+            return;
         }
 
+        const confirmedAgain =
+            confirm(
+                "最后确认：永久删除后无法从回收站恢复。继续？"
+            );
+
+        if (
+            !confirmedAgain
+        ) {
+            return;
+        }
+
+        try {
+            await api(
+                "/api/library/media",
+                {
+                    method:
+                        "DELETE",
+
+                    body:
+                        JSON.stringify({
+                            mediaId:
+                                item.mediaId,
+
+                            permanent:
+                                true
+                        })
+                }
+            );
+
+            showToast(
+                "已提交永久删除"
+            );
+
+            await loadLibrary();
+
+        } catch (
+            error
+        ) {
+            showToast(
+                humanError(
+                    error.code ||
+                    error.message
+                )
+            );
+        }
     }
 
 
     function createMediaCard(
         item
     ) {
-
         const card =
             createElement(
                 "article",
@@ -1533,19 +1366,11 @@
                     : "media-card"
             );
 
-
         const main =
             createElement(
                 "div",
                 "media-card-main"
             );
-
-
-        const thumb =
-            createPreviewThumb(
-                item
-            );
-
 
         const content =
             createElement(
@@ -1553,20 +1378,17 @@
                 "media-card-content"
             );
 
-
         const header =
             createElement(
                 "div",
                 "media-card-header"
             );
 
-
         const titleBlock =
             createElement(
                 "div",
                 "media-title-block"
             );
-
 
         const title =
             createElement(
@@ -1577,35 +1399,28 @@
                 )
             );
 
-
         title.title =
             item.filename ||
             mediaName(
                 item
             );
 
+        titleBlock.append(
+            title,
 
-        const mediaId =
             createElement(
                 "div",
                 "media-id",
                 item.mediaId ||
                 "未记录 Media ID"
-            );
-
-
-        titleBlock.append(
-            title,
-            mediaId
+            )
         );
-
 
         const badges =
             createElement(
                 "div",
                 "media-badges"
             );
-
 
         badges.append(
             createBadge(
@@ -1616,41 +1431,33 @@
             )
         );
 
-
         if (
             currentStatus ===
-            "trashed"
+                "trashed"
         ) {
-
             badges.append(
                 createBadge(
                     "回收站",
                     "trashed"
                 )
             );
-
         }
-
 
         if (
             item.protected
         ) {
-
             badges.append(
                 createBadge(
                     "已保护",
                     "protected"
                 )
             );
-
         }
-
 
         header.append(
             titleBlock,
             badges
         );
-
 
         const essentials =
             createElement(
@@ -1658,9 +1465,7 @@
                 "media-essentials"
             );
 
-
         essentials.append(
-
             metaRow(
                 "类型",
                 item.type
@@ -1686,17 +1491,13 @@
                     ?.displayName ||
                 "—"
             )
-
         );
-
 
         if (
             currentStatus ===
-            "trashed"
+                "trashed"
         ) {
-
             essentials.append(
-
                 metaRow(
                     "删除时间",
                     formatDate(
@@ -1710,23 +1511,20 @@
                         item.trashExpiresAt
                     )
                 )
-
             );
-
         }
-
 
         content.append(
             header,
             essentials
         );
 
-
         main.append(
-            thumb,
+            createPreviewThumb(
+                item
+            ),
             content
         );
-
 
         const actions =
             createElement(
@@ -1734,56 +1532,114 @@
                 "media-actions"
             );
 
-
         if (
             currentStatus ===
-            "published"
+                "published"
         ) {
-
             actions.append(
-                createOpenButton(
-                    item
+                actionButton(
+                    "预览",
+                    "button primary",
+                    () => {
+                        openPreview(
+                            item
+                        );
+                    }
                 ),
 
-                createCopyButton(
-                    item
+                actionButton(
+                    "复制 CDN",
+                    "button secondary",
+                    () => {
+                        copyText(
+                            item.url,
+                            "CDN 链接已复制"
+                        );
+                    }
                 )
             );
-
-
-            const collectionButton =
-                createCollectionButton(
-                    item
-                );
-
 
             if (
-                collectionButton
+                COLLECTION_META[
+                    item.type
+                ]
             ) {
-
                 actions.append(
-                    collectionButton
+                    actionButton(
+                        COLLECTION_META[
+                            item.type
+                        ].action,
+                        "button collection-button",
+                        () => {
+                            openCollectionPicker(
+                                item
+                            );
+                        }
+                    )
                 );
-
             }
 
+            if (
+                canDeleteMedia()
+            ) {
+                actions.append(
+                    actionButton(
+                        item.protected
+                            ? "已保护"
+                            : "移入回收站",
+                        "button danger",
+                        () => {
+                            if (
+                                !item.protected
+                            ) {
+                                trashMedia(
+                                    item
+                                );
+                            }
+                        }
+                    ),
 
+                    actionButton(
+                        "立即删除",
+                        "button danger",
+                        () => {
+                            if (
+                                !item.protected
+                            ) {
+                                permanentDeleteMedia(
+                                    item
+                                );
+                            }
+                        }
+                    )
+                );
+            }
+
+        } else if (
+            canDeleteMedia()
+        ) {
             actions.append(
-                createTrashButton(
-                    item
+                actionButton(
+                    "恢复媒体",
+                    "button restore",
+                    () => {
+                        restoreMedia(
+                            item
+                        );
+                    }
+                ),
+
+                actionButton(
+                    "立即删除",
+                    "button danger",
+                    () => {
+                        permanentDeleteMedia(
+                            item
+                        );
+                    }
                 )
             );
-
-        } else {
-
-            actions.append(
-                createRestoreButton(
-                    item
-                )
-            );
-
         }
-
 
         const details =
             createElement(
@@ -1791,14 +1647,13 @@
                 "media-details"
             );
 
-
-        const summary =
+        details.append(
             createElement(
                 "summary",
                 "",
                 "高级信息"
-            );
-
+            )
+        );
 
         const advanced =
             createElement(
@@ -1806,9 +1661,7 @@
                 "media-advanced"
             );
 
-
         advanced.append(
-
             metaRow(
                 "文件名",
                 item.filename ||
@@ -1838,10 +1691,7 @@
                 "源仓库",
                 item.source
                     ?.repository ||
-                "—",
-                item.source
-                    ?.repository ||
-                ""
+                "—"
             ),
 
             metaRow(
@@ -1855,15 +1705,6 @@
                 "源路径",
                 item.source
                     ?.path ||
-                "—",
-                item.source
-                    ?.path ||
-                ""
-            ),
-
-            metaRow(
-                "CDN Shard",
-                item.cdnShard ||
                 "—"
             ),
 
@@ -1873,134 +1714,87 @@
                     item.publishedAt
                 )
             )
-
         );
 
-
-        if (
-            item.source
-                ?.repository &&
-            item.source
-                ?.path
-        ) {
-
-            const sourceCopy =
-                createElement(
-                    "button",
-                    "advanced-copy",
-                    "复制源路径"
-                );
-
-
-            sourceCopy.type =
-                "button";
-
-
-            sourceCopy.addEventListener(
-                "click",
-                () => {
-
-                    copyText(
-                        `${item.source.repository}:${item.source.path}`,
-                        "源路径已复制"
-                    );
-
-                }
-            );
-
-
-            advanced.append(
-                sourceCopy
-            );
-
-        }
-
-
         details.append(
-            summary,
             advanced
         );
 
+        card.append(
+            main
+        );
+
+        if (
+            actions.childElementCount >
+            0
+        ) {
+            card.append(
+                actions
+            );
+        }
 
         card.append(
-            main,
-            actions,
             details
         );
 
-
         return card;
-
     }
 
 
-    function updateTypeButtons() {
-
-        for (
-            const button
-            of typeButtons
-        ) {
-
-            button.classList.toggle(
-                "active",
-                button.dataset.type ===
-                    currentType
+    function updateButtons() {
+        typeButtons
+            .forEach(
+                button => {
+                    button.classList.toggle(
+                        "active",
+                        button.dataset.type ===
+                            currentType
+                    );
+                }
             );
 
-        }
-
-    }
-
-
-    function updateModeButtons() {
-
-        for (
-            const button
-            of modeButtons
-        ) {
-
-            button.classList.toggle(
-                "active",
-                button.dataset.status ===
-                    currentStatus
+        modeButtons
+            .forEach(
+                button => {
+                    button.classList.toggle(
+                        "active",
+                        button.dataset.status ===
+                            currentStatus
+                    );
+                }
             );
-
-        }
-
 
         refs.searchInput.placeholder =
             currentStatus ===
                 "trashed"
-                ? "搜索回收站中的文件名、Media ID、SHA256、仓库…"
-                : "搜索文件名、Media ID、SHA256、仓库…";
-
+                ? "搜索我的回收站…"
+                : "搜索我的文件名、Media ID、SHA256、仓库…";
     }
 
 
     function setLoading(
         loading
     ) {
-
         refs.loading.classList.toggle(
             "hidden",
             !loading
         );
 
-
         refs.refresh.disabled =
             loading;
-
     }
 
 
     function renderData(
         data
     ) {
+        currentCapabilities =
+            data.capabilities ||
+            {};
 
         const summary =
             data.summary ||
             {};
-
 
         refs.countAll.textContent =
             String(
@@ -2008,13 +1802,11 @@
                 0
             );
 
-
         refs.countImage.textContent =
             String(
                 summary.image ||
                 0
             );
-
 
         refs.countAudio.textContent =
             String(
@@ -2022,25 +1814,21 @@
                 0
             );
 
-
         refs.countVideo.textContent =
             String(
                 summary.video ||
                 0
             );
 
-
         refs.manifestUpdated.textContent =
             data.manifest
                 ?.lastPublishedAt
                 ? `最后发布：${formatDate(data.manifest.lastPublishedAt)}`
-                : "尚无发布时间";
-
+                : "媒体索引已连接";
 
         const query =
             data.query ||
             {};
-
 
         currentPage =
             Number(
@@ -2048,13 +1836,11 @@
             ) ||
             1;
 
-
         currentTotalPages =
             Number(
                 query.totalPages
             ) ||
             1;
-
 
         const filteredTotal =
             Number(
@@ -2062,14 +1848,11 @@
             ) ||
             0;
 
-
         refs.resultCount.textContent =
             `${filteredTotal} 个结果`;
 
-
         refs.grid.textContent =
             "";
-
 
         const items =
             Array.isArray(
@@ -2078,13 +1861,11 @@
                 ? data.items
                 : [];
 
-
         refs.empty.textContent =
             currentStatus ===
                 "trashed"
-                ? "回收站为空。"
-                : "没有找到符合条件的媒体。";
-
+                ? "你的回收站为空。"
+                : "你的媒体库里没有符合条件的内容。";
 
         refs.empty.classList.toggle(
             "hidden",
@@ -2092,27 +1873,21 @@
                 0
         );
 
-
         refs.grid.classList.toggle(
             "hidden",
             items.length ===
                 0
         );
 
-
-        for (
-            const item
-            of items
-        ) {
-
-            refs.grid.append(
-                createMediaCard(
-                    item
-                )
-            );
-
-        }
-
+        items.forEach(
+            item => {
+                refs.grid.append(
+                    createMediaCard(
+                        item
+                    )
+                );
+            }
+        );
 
         refs.pagination.classList.toggle(
             "hidden",
@@ -2120,87 +1895,62 @@
                 0
         );
 
-
         refs.pageText.textContent =
             `第 ${currentPage} / ${currentTotalPages} 页`;
-
 
         refs.previous.disabled =
             currentPage <=
             1;
 
-
         refs.next.disabled =
             currentPage >=
             currentTotalPages;
-
     }
 
 
     async function loadLibrary() {
-
         setLoading(
             true
         );
 
-
         try {
-
             const params =
-                new URLSearchParams();
+                new URLSearchParams({
+                    status:
+                        currentStatus,
 
+                    type:
+                        currentType,
 
-            params.set(
-                "status",
-                currentStatus
-            );
+                    page:
+                        String(
+                            currentPage
+                        ),
 
-
-            params.set(
-                "type",
-                currentType
-            );
-
-
-            params.set(
-                "page",
-                String(
-                    currentPage
-                )
-            );
-
-
-            params.set(
-                "pageSize",
-                String(
-                    currentPageSize
-                )
-            );
-
+                    pageSize:
+                        String(
+                            currentPageSize
+                        )
+                });
 
             const search =
                 refs.searchInput
                     .value
                     .trim();
 
-
             if (
                 search
             ) {
-
                 params.set(
                     "q",
                     search
                 );
-
             }
-
 
             const data =
                 await api(
-                    `/api/admin/media?${params.toString()}`
+                    `/api/library/media?${params.toString()}`
                 );
-
 
             renderData(
                 data
@@ -2209,259 +1959,35 @@
         } catch (
             error
         ) {
-
             console.error(
                 error
             );
 
-
-            showToast(
-                `媒体库读取失败：${humanError(error.code || error.message)}`
+            refs.grid.classList.add(
+                "hidden"
             );
 
-        } finally {
+            refs.empty.classList.remove(
+                "hidden"
+            );
 
+            refs.empty.textContent =
+                `媒体库读取失败：${humanError(error.code || error.message)}`;
+
+        } finally {
             setLoading(
                 false
             );
-
         }
-
-    }
-
-
-    function lockPage() {
-
-        document.body
-            .classList
-            .add(
-                "sheet-open"
-            );
-
-    }
-
-
-    function unlockPage() {
-
-        if (
-            refs.previewSheet
-                .classList
-                .contains(
-                    "hidden"
-                ) &&
-            refs.collectionSheet
-                .classList
-                .contains(
-                    "hidden"
-                )
-        ) {
-
-            document.body
-                .classList
-                .remove(
-                    "sheet-open"
-                );
-
-        }
-
-    }
-
-
-    function closePreview() {
-
-        refs.previewSheet
-            .classList
-            .add(
-                "hidden"
-            );
-
-
-        refs.previewBackdrop
-            .classList
-            .add(
-                "hidden"
-            );
-
-
-        refs.previewSheet
-            .setAttribute(
-                "aria-hidden",
-                "true"
-            );
-
-
-        refs.previewStage
-            .textContent =
-                "";
-
-
-        currentPreviewItem =
-            null;
-
-
-        unlockPage();
-
-    }
-
-
-    function openPreview(
-        item
-    ) {
-
-        if (
-            !item.url
-        ) {
-
-            showToast(
-                "这个媒体没有可用 CDN 地址"
-            );
-
-
-            return;
-
-        }
-
-
-        currentPreviewItem =
-            item;
-
-
-        refs.previewTitle.textContent =
-            mediaName(
-                item
-            );
-
-
-        refs.previewStage.textContent =
-            "";
-
-
-        if (
-            item.type ===
-            "image"
-        ) {
-
-            const image =
-                document.createElement(
-                    "img"
-                );
-
-
-            image.src =
-                item.url;
-
-
-            image.alt =
-                mediaName(
-                    item
-                );
-
-
-            refs.previewStage.append(
-                image
-            );
-
-        } else if (
-            item.type ===
-            "video"
-        ) {
-
-            const video =
-                document.createElement(
-                    "video"
-                );
-
-
-            video.src =
-                item.url;
-
-
-            video.controls =
-                true;
-
-
-            video.playsInline =
-                true;
-
-
-            video.preload =
-                "metadata";
-
-
-            refs.previewStage.append(
-                video
-            );
-
-        }
-
-
-        refs.previewInfo.textContent =
-            "";
-
-
-        refs.previewInfo.append(
-
-            metaRow(
-                "Media ID",
-                item.mediaId
-            ),
-
-            metaRow(
-                "类型",
-                item.type
-            ),
-
-            metaRow(
-                "大小",
-                formatBytes(
-                    item.sizeBytes
-                )
-            ),
-
-            metaRow(
-                "上传者",
-                item.uploader
-                    ?.displayName ||
-                "—"
-            )
-
-        );
-
-
-        refs.previewSheet
-            .classList
-            .remove(
-                "hidden"
-            );
-
-
-        refs.previewBackdrop
-            .classList
-            .remove(
-                "hidden"
-            );
-
-
-        refs.previewSheet
-            .setAttribute(
-                "aria-hidden",
-                "false"
-            );
-
-
-        lockPage();
-
     }
 
 
     function closeCollectionPicker() {
-
         refs.collectionSheet
             .classList
             .add(
                 "hidden"
             );
-
 
         refs.collectionBackdrop
             .classList
@@ -2469,29 +1995,22 @@
                 "hidden"
             );
 
-
         refs.collectionSheet
             .setAttribute(
                 "aria-hidden",
                 "true"
             );
 
-
-        refs.collectionPickerList
-            .textContent =
-                "";
-
+        refs.collectionPickerList.textContent =
+            "";
 
         refs.newCollectionName.value =
             "";
 
-
         collectionMedia =
             null;
 
-
         unlockPage();
-
     }
 
 
@@ -2500,21 +2019,10 @@
         item,
         button
     ) {
-
         button.disabled =
             true;
 
-
-        const oldText =
-            button.textContent;
-
-
-        button.textContent =
-            "加入中…";
-
-
         try {
-
             const data =
                 await api(
                     `/api/collections/${encodeURIComponent(collection.id)}/items`,
@@ -2530,53 +2038,24 @@
                     }
                 );
 
-
-            if (
+            button.textContent =
                 data.added ===
-                false
-            ) {
+                    false
+                    ? "已在分组中"
+                    : "已加入";
 
-                button.textContent =
-                    "已在分组中";
-
-
-                button.classList.add(
-                    "already-added"
-                );
-
-
-                showToast(
-                    `已经在「${collection.name}」中`
-                );
-
-            } else {
-
-                button.textContent =
-                    "已加入";
-
-
-                button.classList.add(
-                    "already-added"
-                );
-
-
-                showToast(
-                    `已加入「${collection.name}」`
-                );
-
-            }
+            showToast(
+                data.added ===
+                    false
+                    ? `已经在「${collection.name}」中`
+                    : `已加入「${collection.name}」`
+            );
 
         } catch (
             error
         ) {
-
             button.disabled =
                 false;
-
-
-            button.textContent =
-                oldText;
-
 
             showToast(
                 humanError(
@@ -2584,175 +2063,27 @@
                     error.message
                 )
             );
-
         }
-
-    }
-
-
-    function renderCollectionPicker(
-        collections,
-        item
-    ) {
-
-        refs.collectionPickerList
-            .textContent =
-                "";
-
-
-        refs.collectionPickerEmpty
-            .classList
-            .toggle(
-                "hidden",
-                collections.length >
-                    0
-            );
-
-
-        if (
-            collections.length ===
-            0
-        ) {
-
-            return;
-
-        }
-
-
-        for (
-            const collection
-            of collections
-        ) {
-
-            const row =
-                createElement(
-                    "div",
-                    "collection-picker-item"
-                );
-
-
-            const left =
-                createElement(
-                    "div",
-                    "collection-picker-copy"
-                );
-
-
-            const icon =
-                createElement(
-                    "span",
-                    "collection-picker-icon",
-                    COLLECTION_META[
-                        item.type
-                    ].icon
-                );
-
-
-            const copy =
-                createElement(
-                    "span"
-                );
-
-
-            copy.append(
-
-                createElement(
-                    "strong",
-                    "",
-                    collection.name
-                ),
-
-                createElement(
-                    "small",
-                    "",
-                    `${collection.itemCount || 0} 个媒体 · ${
-                        collection.visibility === "private"
-                            ? "仅自己"
-                            : "成员可见"
-                    }`
-                )
-
-            );
-
-
-            left.append(
-                icon,
-                copy
-            );
-
-
-            const add =
-                createElement(
-                    "button",
-                    "collection-picker-add",
-                    "加入"
-                );
-
-
-            add.type =
-                "button";
-
-
-            add.addEventListener(
-                "click",
-                () => {
-
-                    addMediaToCollection(
-                        collection,
-                        item,
-                        add
-                    );
-
-                }
-            );
-
-
-            row.append(
-                left,
-                add
-            );
-
-
-            refs.collectionPickerList
-                .append(
-                    row
-                );
-
-        }
-
     }
 
 
     async function loadCollectionPicker(
         item
     ) {
-
         refs.collectionPickerLoading
             .classList
             .remove(
                 "hidden"
             );
 
-
-        refs.collectionPickerEmpty
-            .classList
-            .add(
-                "hidden"
-            );
-
-
-        refs.collectionPickerList
-            .textContent =
-                "";
-
+        refs.collectionPickerList.textContent =
+            "";
 
         try {
-
             const data =
                 await api(
                     `/api/collections?type=${encodeURIComponent(item.type)}&page=1&pageSize=100`
                 );
-
 
             const collections =
                 Array.isArray(
@@ -2761,80 +2092,149 @@
                     ? data.collections
                     : [];
 
+            refs.collectionPickerEmpty
+                .classList
+                .toggle(
+                    "hidden",
+                    collections.length >
+                        0
+                );
 
-            renderCollectionPicker(
-                collections,
-                item
+            collections.forEach(
+                collection => {
+                    const row =
+                        createElement(
+                            "div",
+                            "collection-picker-item"
+                        );
+
+                    const left =
+                        createElement(
+                            "div",
+                            "collection-picker-copy"
+                        );
+
+                    left.append(
+                        createElement(
+                            "span",
+                            "collection-picker-icon",
+                            COLLECTION_META[
+                                item.type
+                            ].icon
+                        )
+                    );
+
+                    const copy =
+                        createElement(
+                            "span"
+                        );
+
+                    copy.append(
+                        createElement(
+                            "strong",
+                            "",
+                            collection.name
+                        ),
+
+                        createElement(
+                            "small",
+                            "",
+                            `${collection.itemCount || 0} 个媒体`
+                        )
+                    );
+
+                    left.append(
+                        copy
+                    );
+
+                    const add =
+                        createElement(
+                            "button",
+                            "collection-picker-add",
+                            "加入"
+                        );
+
+                    add.type =
+                        "button";
+
+                    add.addEventListener(
+                        "click",
+                        () => {
+                            addMediaToCollection(
+                                collection,
+                                item,
+                                add
+                            );
+                        }
+                    );
+
+                    row.append(
+                        left,
+                        add
+                    );
+
+                    refs.collectionPickerList.append(
+                        row
+                    );
+                }
             );
 
         } catch (
             error
         ) {
-
             showToast(
-                `分组读取失败：${humanError(error.code || error.message)}`
+                humanError(
+                    error.code ||
+                    error.message
+                )
             );
 
         } finally {
-
             refs.collectionPickerLoading
                 .classList
                 .add(
                     "hidden"
                 );
-
         }
-
     }
 
 
     async function openCollectionPicker(
         item
     ) {
-
         const meta =
             COLLECTION_META[
                 item.type
             ];
 
-
         if (
             !meta
         ) {
-
             return;
-
         }
-
 
         collectionMedia =
             item;
 
-
         refs.collectionKicker.textContent =
             meta.label.toUpperCase();
 
-
         refs.collectionTitle.textContent =
             meta.action;
-
 
         refs.collectionMediaName.textContent =
             mediaName(
                 item
             );
 
-
         refs.newCollectionName.placeholder =
             meta.placeholder;
-
 
         refs.collectionSheet
             .classList
             .remove(
                 "hidden"
             );
-
 
         refs.collectionBackdrop
             .classList
@@ -2842,76 +2242,46 @@
                 "hidden"
             );
 
-
         refs.collectionSheet
             .setAttribute(
                 "aria-hidden",
                 "false"
             );
 
-
         lockPage();
-
 
         await loadCollectionPicker(
             item
         );
-
     }
 
 
     async function createAndAddCollection() {
-
         if (
             !collectionMedia
         ) {
-
             return;
-
         }
-
 
         const name =
             refs.newCollectionName
                 .value
                 .trim();
 
-
         if (
             !name
         ) {
-
             showToast(
                 "请输入分组名称"
             );
 
-
-            refs.newCollectionName
-                .focus();
-
-
             return;
-
         }
 
-
-        refs.createCollectionButton
-            .disabled =
-                true;
-
-
-        const oldText =
-            refs.createCollectionButton
-                .textContent;
-
-
-        refs.createCollectionButton
-            .textContent =
-                "创建中…";
-
+        refs.createCollectionButton.disabled =
+            true;
 
         try {
-
             const created =
                 await api(
                     "/api/collections",
@@ -2935,13 +2305,8 @@
                     }
                 );
 
-
-            const collection =
-                created.collection;
-
-
             await api(
-                `/api/collections/${encodeURIComponent(collection.id)}/items`,
+                `/api/collections/${encodeURIComponent(created.collection.id)}/items`,
                 {
                     method:
                         "POST",
@@ -2954,15 +2319,12 @@
                 }
             );
 
-
             refs.newCollectionName.value =
                 "";
 
-
             showToast(
-                `已创建「${collection.name}」并加入媒体`
+                `已创建「${created.collection.name}」并加入媒体`
             );
-
 
             await loadCollectionPicker(
                 collectionMedia
@@ -2971,7 +2333,6 @@
         } catch (
             error
         ) {
-
             showToast(
                 humanError(
                     error.code ||
@@ -2980,116 +2341,70 @@
             );
 
         } finally {
-
-            refs.createCollectionButton
-                .disabled =
-                    false;
-
-
-            refs.createCollectionButton
-                .textContent =
-                    oldText;
-
+            refs.createCollectionButton.disabled =
+                false;
         }
-
-    }
-
-
-    function scrollToToolbar() {
-
-        refs.toolbar
-            ?.scrollIntoView({
-                behavior:
-                    "smooth",
-
-                block:
-                    "start"
-            });
-
     }
 
 
     function bindEvents() {
+        typeButtons.forEach(
+            button => {
+                button.addEventListener(
+                    "click",
+                    () => {
+                        currentType =
+                            button.dataset.type;
 
-        for (
-            const button
-            of typeButtons
-        ) {
+                        currentPage =
+                            1;
 
-            button.addEventListener(
-                "click",
-                () => {
+                        updateButtons();
 
-                    currentType =
-                        button.dataset.type;
-
-
-                    currentPage =
-                        1;
-
-
-                    updateTypeButtons();
-
-
-                    loadLibrary();
-
-                }
-            );
-
-        }
+                        loadLibrary();
+                    }
+                );
+            }
+        );
 
 
-        for (
-            const button
-            of modeButtons
-        ) {
+        modeButtons.forEach(
+            button => {
+                button.addEventListener(
+                    "click",
+                    () => {
+                        currentStatus =
+                            button.dataset.status;
 
-            button.addEventListener(
-                "click",
-                () => {
+                        currentPage =
+                            1;
 
-                    currentStatus =
-                        button.dataset.status;
+                        updateButtons();
 
-
-                    currentPage =
-                        1;
-
-
-                    updateModeButtons();
-
-
-                    loadLibrary();
-
-                }
-            );
-
-        }
+                        loadLibrary();
+                    }
+                );
+            }
+        );
 
 
         refs.searchInput.addEventListener(
             "input",
             () => {
-
                 clearTimeout(
                     searchTimer
                 );
 
-
                 searchTimer =
                     setTimeout(
                         () => {
-
                             currentPage =
                                 1;
 
-
                             loadLibrary();
-
                         },
-                        350
+                        300
                     );
-
             }
         );
 
@@ -3109,20 +2424,16 @@
         refs.pageSize.addEventListener(
             "change",
             () => {
-
                 currentPageSize =
                     Number(
                         refs.pageSize.value
                     ) ||
                     12;
 
-
                 currentPage =
                     1;
 
-
                 loadLibrary();
-
             }
         );
 
@@ -3130,26 +2441,22 @@
         refs.previous.addEventListener(
             "click",
             async () => {
-
                 if (
-                    currentPage <=
-                    1
+                    currentPage <= 1
                 ) {
-
                     return;
-
                 }
-
 
                 currentPage -=
                     1;
 
-
                 await loadLibrary();
 
-
-                scrollToToolbar();
-
+                refs.toolbar
+                    ?.scrollIntoView({
+                        block:
+                            "start"
+                    });
             }
         );
 
@@ -3157,26 +2464,23 @@
         refs.next.addEventListener(
             "click",
             async () => {
-
                 if (
                     currentPage >=
                     currentTotalPages
                 ) {
-
                     return;
-
                 }
-
 
                 currentPage +=
                     1;
 
-
                 await loadLibrary();
 
-
-                scrollToToolbar();
-
+                refs.toolbar
+                    ?.scrollIntoView({
+                        block:
+                            "start"
+                    });
             }
         );
 
@@ -3185,7 +2489,6 @@
             "click",
             closePreview
         );
-
 
         refs.previewBackdrop.addEventListener(
             "click",
@@ -3196,20 +2499,16 @@
         refs.previewOpen.addEventListener(
             "click",
             () => {
-
                 if (
                     currentPreviewItem
                         ?.url
                 ) {
-
                     window.open(
                         currentPreviewItem.url,
                         "_blank",
                         "noopener,noreferrer"
                     );
-
                 }
-
             }
         );
 
@@ -3217,13 +2516,11 @@
         refs.previewCopy.addEventListener(
             "click",
             () => {
-
                 copyText(
                     currentPreviewItem
                         ?.url,
                     "CDN 链接已复制"
                 );
-
             }
         );
 
@@ -3232,7 +2529,6 @@
             "click",
             closeCollectionPicker
         );
-
 
         refs.collectionBackdrop.addEventListener(
             "click",
@@ -3249,19 +2545,14 @@
         refs.newCollectionName.addEventListener(
             "keydown",
             event => {
-
                 if (
                     event.key ===
                     "Enter"
                 ) {
-
                     event.preventDefault();
 
-
                     createAndAddCollection();
-
                 }
-
             }
         );
 
@@ -3269,16 +2560,12 @@
         document.addEventListener(
             "keydown",
             event => {
-
                 if (
                     event.key !==
                     "Escape"
                 ) {
-
                     return;
-
                 }
-
 
                 if (
                     !refs.collectionSheet
@@ -3287,14 +2574,10 @@
                             "hidden"
                         )
                 ) {
-
                     closeCollectionPicker();
 
-
                     return;
-
                 }
-
 
                 if (
                     !refs.previewSheet
@@ -3303,83 +2586,60 @@
                             "hidden"
                         )
                 ) {
-
                     closePreview();
-
                 }
-
             }
         );
-
     }
 
 
     async function bootstrap() {
-
         bindEvents();
-
 
         const data =
             await api(
                 "/api/auth/me"
             );
 
-
         currentUser =
             data.user;
 
-
         if (
-            currentUser
-                ?.role !==
-                "owner" ||
-
-            currentUser
-                ?.status !==
-                "active" ||
-
-            currentUser
-                ?.permissions
-                ?.manageSystem !==
-                true
+            !currentUser ||
+            currentUser.status !==
+                "active"
         ) {
-
             location.href =
-                "/";
-
+                "/login";
 
             return;
-
         }
-
 
         renderIdentity();
 
-
-        updateTypeButtons();
-
-
-        updateModeButtons();
-
+        updateButtons();
 
         await loadLibrary();
-
     }
 
 
     bootstrap()
         .catch(
             error => {
-
                 console.error(
                     error
                 );
 
-
-                showToast(
-                    `媒体库初始化失败：${humanError(error.code || error.message)}`
+                refs.loading.classList.add(
+                    "hidden"
                 );
 
+                refs.empty.classList.remove(
+                    "hidden"
+                );
+
+                refs.empty.textContent =
+                    `媒体库初始化失败：${humanError(error.code || error.message)}`;
             }
         );
 
