@@ -2,10 +2,10 @@
   "version": 1,
   "worker": "jingyan-media-cdn",
   "baseURL": "https://jingyan-media-cdn.jingyancdn.workers.dev",
-  "updatedAt": "2026-08-20T11:21:46.161Z",
-  "lastPublishedAt": "2026-08-20T11:21:46.161Z",
-  "lastVersionId": "c3ca136d-832f-4982-9e3d-331924b9be4d",
-  "lastDeploymentId": "3cde22eb-66b9-4e19-b2b3-261584787d60",
+  "updatedAt": "2026-08-20T11:29:06.969Z",
+  "lastPublishedAt": "2026-08-20T11:29:06.969Z",
+  "lastVersionId": "e90a4eea-0cbf-4160-943b-658d22837251",
+  "lastDeploymentId": "33caa2f1-992f-45f6-a563-b7340e54104c",
   "assets": {
     "/audio/004-jingyan-test-004-mp3.mp3": {
       "hash": "6e41de8f8e42b9643d7f2a5bcc066aae",
@@ -266,6 +266,162 @@
         "path": "music/011-xing-fu-zhe-jian-xiao-shi-qing.mp3"
       },
       "addedAt": "2026-08-20T11:21:38.861Z"
+    },
+    "/audio/012-shou-tuo-shou.mp3": {
+      "hash": "514e2343081c16fee6619781aa380324",
+      "size": 6554839,
+      "sha256": "fcff100d57b6019e2b7df4e0f1aa58c623f69ece5ac437dc7bc8e65c7d7c22e1",
+      "type": "audio",
+      "mediaId": "music-000012",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/012-shou-tuo-shou.mp3"
+      },
+      "addedAt": "2026-08-20T11:25:29.941Z"
+    },
+    "/audio/013-si-ren-you.mp3": {
+      "hash": "e71080298b8f4546ca96e581507d9ed0",
+      "size": 9134597,
+      "sha256": "4d5e36f9806eb5b3a18d8f91dd9f22c26dbb2f5614430ed6bb3f48f1972eb216",
+      "type": "audio",
+      "mediaId": "music-000013",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/013-si-ren-you.mp3"
+      },
+      "addedAt": "2026-08-20T11:25:49.314Z"
+    },
+    "/audio/014-tuo-nan-dai-nue.mp3": {
+      "hash": "0a6cd677a84e50ff21b1c5700dde366f",
+      "size": 11782465,
+      "sha256": "f2bd0d8632e02ecb7273212e6b94eba5b34cb3dc71658c08bb9d82e68b689355",
+      "type": "audio",
+      "mediaId": "music-000014",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/014-tuo-nan-dai-nue.mp3"
+      },
+      "addedAt": "2026-08-20T11:26:10.242Z"
+    },
+    "/audio/015-su-li-zhen.mp3": {
+      "hash": "ab8be9b3b2e5e59170ae1e1bed03647c",
+      "size": 8686430,
+      "sha256": "cb540d6bc64a2cc33f382f3b0c4c584bddb479f20e38654200a7adbd364e92a2",
+      "type": "audio",
+      "mediaId": "music-000015",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/015-su-li-zhen.mp3"
+      },
+      "addedAt": "2026-08-20T11:26:30.115Z"
+    },
+    "/audio/016-shi-ren-de-qing-ren.mp3": {
+      "hash": "7eb2f690c742df8260018305261c9efe",
+      "size": 9263218,
+      "sha256": "1ca06f38215753fc14e17ff516671b0cc7f4397f702b4a30b5aac9a1142bc1a2",
+      "type": "audio",
+      "mediaId": "music-000016",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/016-shi-ren-de-qing-ren.mp3"
+      },
+      "addedAt": "2026-08-20T11:26:49.576Z"
+    },
+    "/audio/017-chun-feng-chui-zhi-chui-chui-fengmix.mp3": {
+      "hash": "c433c1432b7a927aa0eeb09ce6175cac",
+      "size": 8170265,
+      "sha256": "d1e7e7e0f5f397ebd59b9e0b8cc2620ad1e168a8216a40166e2ff500091c38ca",
+      "type": "audio",
+      "mediaId": "music-000017",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/017-chun-feng-chui-zhi-chui-chui-fengmix.mp3"
+      },
+      "addedAt": "2026-08-20T11:27:08.348Z"
+    },
+    "/audio/018-ai.mp3": {
+      "hash": "293ef8724d839b7d755c84e406cb4efa",
+      "size": 8830624,
+      "sha256": "31dfea3f590b44d71ad4805d929223cfd1cbedefd9916f1fe3e77784b6342f2d",
+      "type": "audio",
+      "mediaId": "music-000018",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/018-ai.mp3"
+      },
+      "addedAt": "2026-08-20T11:27:29.307Z"
+    },
+    "/audio/019-ai-ai-ai.mp3": {
+      "hash": "e9dc050edb927a05291ae9e3debedbc1",
+      "size": 8533875,
+      "sha256": "1e8b6266401067fd76c273b3c9fe855b338f37651db73521e0b95ab0e906a748",
+      "type": "audio",
+      "mediaId": "music-000019",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/019-ai-ai-ai.mp3"
+      },
+      "addedAt": "2026-08-20T11:27:47.744Z"
+    },
+    "/audio/020-tou-xiao.mp3": {
+      "hash": "b3f6ff5dac09cc21f93447240861013b",
+      "size": 9083490,
+      "sha256": "1475ba7d639a23a91737ca1137cd3fcec8cf12a13c6dfa636345f7d9c804a850",
+      "type": "audio",
+      "mediaId": "music-000020",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/020-tou-xiao.mp3"
+      },
+      "addedAt": "2026-08-20T11:28:05.593Z"
+    },
+    "/audio/021-ge-shou-yu-mo-te-er.mp3": {
+      "hash": "50ceb1f01a8567bc9bda20c581d0149e",
+      "size": 8871097,
+      "sha256": "e192849a9f08c12ba22a2aebdba1eaabbe4c97fb139579facc988b0acc1d0504",
+      "type": "audio",
+      "mediaId": "music-000021",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/021-ge-shou-yu-mo-te-er.mp3"
+      },
+      "addedAt": "2026-08-20T11:28:24.252Z"
+    },
+    "/audio/022-goodbye-melody-rose.mp3": {
+      "hash": "a11beb4a5cbe5acc73c3cdf9a06200b2",
+      "size": 7482324,
+      "sha256": "4504676fb18e8601f06aa44634a1104b4bae152c0850975786314436d41929d3",
+      "type": "audio",
+      "mediaId": "music-000022",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/022-goodbye-melody-rose.mp3"
+      },
+      "addedAt": "2026-08-20T11:28:42.256Z"
+    },
+    "/audio/023-if-you-leave-me-now.mp3": {
+      "hash": "0a3abd8d22d640c97ddf576a7413996c",
+      "size": 8922609,
+      "sha256": "d34b9186f9b5f05337c2ce2735ceb3f2b69bef6def2a463bcc88b75de818fa76",
+      "type": "audio",
+      "mediaId": "music-000023",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/023-if-you-leave-me-now.mp3"
+      },
+      "addedAt": "2026-08-20T11:29:01.131Z"
     }
   }
 }
