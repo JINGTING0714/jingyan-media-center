@@ -2139,3 +2139,35 @@ body.sheet-open {
     }
 
 }
+/* Personal Library V3 */
+
+.media-actions {
+    grid-template-columns:
+        repeat(
+            auto-fit,
+            minmax(
+                104px,
+                1fr
+            )
+        );
+}
+
+.media-actions .button.danger:last-child {
+    font-weight:
+        750;
+}
+
+@media (
+    max-width: 760px
+) {
+    .media-actions {
+        grid-template-columns:
+            repeat(
+                2,
+                minmax(
+                    0,
+                    1fr
+                )
+            );
+    }
+}
