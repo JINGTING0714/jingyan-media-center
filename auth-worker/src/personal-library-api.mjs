@@ -25,9 +25,15 @@ const TRASH_RETENTION_SECONDS =
   7 * 24 * 60 * 60;
 
 
+/* =========================================================
+ * Basic helpers
+ * ======================================================= */
+
+
 function nowSeconds() {
   return Math.floor(
-    Date.now() / 1000
+    Date.now() /
+    1000
   );
 }
 
@@ -37,7 +43,8 @@ function requireActiveUser(
 ) {
   if (
     !auth?.user ||
-    auth.user.status !== "active"
+    auth.user.status !==
+      "active"
   ) {
     throw new HttpError(
       403,
@@ -47,13 +54,26 @@ function requireActiveUser(
 }
 
 
+function isOwner(
+  auth
+) {
+  return (
+    auth?.user?.role ===
+    "owner"
+  );
+}
+
+
 function canDeleteMedia(
   auth
 ) {
   return Boolean(
-    auth?.user?.role === "owner" ||
+    isOwner(
+      auth
+    ) ||
     auth?.user?.permissions
-      ?.deleteMedia === true
+      ?.deleteMedia ===
+      true
   );
 }
 
@@ -85,6 +105,7 @@ function integerParam(
       value
     );
 
+
   if (
     !Number.isFinite(
       number
@@ -92,6 +113,7 @@ function integerParam(
   ) {
     return fallback;
   }
+
 
   return Math.min(
     max,
@@ -118,8 +140,10 @@ function parseType(
       .trim()
       .toLowerCase();
 
+
   if (
-    type !== "all" &&
+    type !==
+      "all" &&
     !ALLOWED_TYPES.has(
       type
     )
@@ -129,6 +153,7 @@ function parseType(
       "invalid_media_type_filter"
     );
   }
+
 
   return type;
 }
@@ -147,6 +172,7 @@ function parseStatus(
       .trim()
       .toLowerCase();
 
+
   if (
     !ALLOWED_STATUS.has(
       status
@@ -157,6 +183,7 @@ function parseStatus(
       "invalid_media_status_filter"
     );
   }
+
 
   return status;
 }
@@ -187,6 +214,7 @@ function parsePaging(
   url
 ) {
   return {
+
     page:
       integerParam(
         url.searchParams.get(
@@ -206,6 +234,7 @@ function parsePaging(
         12,
         48
       )
+
   };
 }
 
@@ -220,15 +249,18 @@ function validateMediaId(
     )
       .trim();
 
+
   if (
     !mediaId ||
-    mediaId.length > 80
+    mediaId.length >
+      80
   ) {
     throw new HttpError(
       400,
       "invalid_media_id"
     );
   }
+
 
   return mediaId;
 }
@@ -238,9 +270,11 @@ async function readJson(
   request
 ) {
   try {
+
     return await request.json();
 
   } catch {
+
     throw new HttpError(
       400,
       "invalid_json"
@@ -257,19 +291,105 @@ function toIso(
       seconds
     );
 
+
   if (
     !Number.isFinite(
       value
     ) ||
-    value <= 0
+    value <=
+      0
   ) {
     return null;
   }
 
+
   return new Date(
-    value * 1000
+    value *
+    1000
   ).toISOString();
 }
+
+
+/* =========================================================
+ * Ownership
+ *
+ * 普通成员：
+ *   uploader_user_id = 当前用户
+ *
+ * Owner：
+ *   1. uploader_user_id = Owner
+ *   2. 历史迁移媒体：
+ *      uploader_user_id IS NULL
+ *      first_upload_job_id IS NULL
+ *
+ * 第二种用于接回账户系统建立前的历史媒体。
+ *
+ * 特别注意：
+ * 永久删除用户后匿名化的现代媒体通常仍然保留
+ * first_upload_job_id，因此不会被误认成 Owner 历史媒体。
+ * ======================================================= */
+
+
+function ownershipScope(
+  auth
+) {
+  if (
+    isOwner(
+      auth
+    )
+  ) {
+    return {
+      sql: `
+        (
+          uploader_user_id = ?
+
+          OR
+
+          (
+            uploader_user_id IS NULL
+
+            AND
+
+            first_upload_job_id IS NULL
+          )
+        )
+      `,
+
+      bindings: [
+        auth.user.id
+      ]
+    };
+  }
+
+
+  return {
+    sql:
+      "uploader_user_id = ?",
+
+    bindings: [
+      auth.user.id
+    ]
+  };
+}
+
+
+function isLegacyOwnerMedia(
+  row,
+  auth
+) {
+  return Boolean(
+    isOwner(
+      auth
+    ) &&
+    !row.uploader_user_id &&
+    !row.first_upload_job_id
+  );
+}
+
+
+/* =========================================================
+ * Manifest
+ * ======================================================= */
 
 
 async function getManifestState(
@@ -278,12 +398,19 @@ async function getManifestState(
   const row =
     await env.MEDIA_DB
       .prepare(`
-        SELECT value
+        SELECT
+          value
+
         FROM sync_state
-        WHERE key = 'manifest_state'
+
+        WHERE
+          key =
+            'manifest_state'
+
         LIMIT 1
       `)
       .first();
+
 
   if (
     !row?.value
@@ -291,25 +418,40 @@ async function getManifestState(
     return {};
   }
 
+
   try {
+
     return JSON.parse(
       row.value
     );
 
   } catch {
+
     return {};
   }
 }
 
 
+/* =========================================================
+ * Media
+ * ======================================================= */
+
+
 async function getOwnedMediaRow(
   env,
-  userId,
+  auth,
   mediaId
 ) {
+  const scope =
+    ownershipScope(
+      auth
+    );
+
+
   return env.MEDIA_DB
     .prepare(`
       SELECT
+
         id,
         type,
         filename,
@@ -340,13 +482,15 @@ async function getOwnedMediaRow(
 
       WHERE
         id = ?
-        AND uploader_user_id = ?
+
+      AND
+        ${scope.sql}
 
       LIMIT 1
     `)
     .bind(
       mediaId,
-      userId
+      ...scope.bindings
     )
     .first();
 }
@@ -354,9 +498,17 @@ async function getOwnedMediaRow(
 
 function serializeMedia(
   row,
-  user
+  auth
 ) {
+  const legacyOwner =
+    isLegacyOwnerMedia(
+      row,
+      auth
+    );
+
+
   return {
+
     path:
       row.public_path,
 
@@ -401,7 +553,11 @@ function serializeMedia(
     status:
       row.status,
 
+    legacyOwnerMedia:
+      legacyOwner,
+
     source: {
+
       repository:
         row.source_repository,
 
@@ -410,16 +566,40 @@ function serializeMedia(
 
       path:
         row.source_path
+
     },
 
     uploader: {
+
       id:
-        user.id,
+        row.uploader_user_id ||
+        (
+          legacyOwner
+            ? auth.user.id
+            : null
+        ),
 
       displayName:
-        user.displayName ||
-        user.display_name ||
-        null
+        legacyOwner
+          ? (
+              auth.user.displayName ||
+              auth.user.display_name ||
+              "Owner"
+            )
+          : (
+              row.uploader_user_id ===
+                auth.user.id
+                ? (
+                    auth.user.displayName ||
+                    auth.user.display_name ||
+                    null
+                  )
+                : null
+            ),
+
+      legacy:
+        legacyOwner
+
     },
 
     addedAt:
@@ -441,8 +621,14 @@ function serializeMedia(
       toIso(
         row.trash_expires_at
       )
+
   };
 }
+
+
+/* =========================================================
+ * Audit
+ * ======================================================= */
 
 
 async function addMediaEvent(
@@ -457,12 +643,14 @@ async function addMediaEvent(
   await env.MEDIA_DB
     .prepare(`
       INSERT INTO media_events (
+
         id,
         media_id,
         actor_user_id,
         action,
         metadata_json,
         created_at
+
       )
 
       VALUES (
@@ -470,39 +658,66 @@ async function addMediaEvent(
       )
     `)
     .bind(
+
       `mevt_${crypto.randomUUID()}`,
+
       mediaId,
+
       actorUserId ||
         null,
+
       action,
+
       metadata
         ? JSON.stringify(
             metadata
           )
         : null,
+
       nowSeconds()
+
     )
     .run();
 }
 
 
+/* =========================================================
+ * Summary
+ * ======================================================= */
+
+
 async function getSummary(
   env,
-  userId,
+  auth,
   status
 ) {
+  const scope =
+    ownershipScope(
+      auth
+    );
+
+
   const row =
     await env.MEDIA_DB
       .prepare(`
         SELECT
+
           COUNT(*) AS total,
 
           COALESCE(
             SUM(
               CASE
-                WHEN type = 'image'
-                THEN 1
-                ELSE 0
+
+                WHEN
+                  type =
+                    'image'
+
+                THEN
+                  1
+
+                ELSE
+                  0
+
               END
             ),
             0
@@ -511,9 +726,17 @@ async function getSummary(
           COALESCE(
             SUM(
               CASE
-                WHEN type = 'audio'
-                THEN 1
-                ELSE 0
+
+                WHEN
+                  type =
+                    'audio'
+
+                THEN
+                  1
+
+                ELSE
+                  0
+
               END
             ),
             0
@@ -522,9 +745,17 @@ async function getSummary(
           COALESCE(
             SUM(
               CASE
-                WHEN type = 'video'
-                THEN 1
-                ELSE 0
+
+                WHEN
+                  type =
+                    'video'
+
+                THEN
+                  1
+
+                ELSE
+                  0
+
               END
             ),
             0
@@ -533,16 +764,20 @@ async function getSummary(
         FROM media
 
         WHERE
-          uploader_user_id = ?
-          AND status = ?
+          ${scope.sql}
+
+        AND
+          status = ?
       `)
       .bind(
-        userId,
+        ...scope.bindings,
         status
       )
       .first();
 
+
   return {
+
     total:
       Number(
         row?.total ||
@@ -566,8 +801,14 @@ async function getSummary(
         row?.video ||
         0
       )
+
   };
 }
+
+
+/* =========================================================
+ * List personal library
+ * ======================================================= */
 
 
 async function listPersonalLibrary(
@@ -579,25 +820,30 @@ async function listPersonalLibrary(
     auth
   );
 
+
   const url =
     new URL(
       request.url
     );
+
 
   const status =
     parseStatus(
       url
     );
 
+
   const type =
     parseType(
       url
     );
 
+
   const query =
     parseQuery(
       url
     );
+
 
   const {
     page,
@@ -607,27 +853,39 @@ async function listPersonalLibrary(
       url
     );
 
+
+  const scope =
+    ownershipScope(
+      auth
+    );
+
+
   const where = [
-    "uploader_user_id = ?",
+    scope.sql,
     "status = ?"
   ];
 
+
   const bindings = [
-    auth.user.id,
+    ...scope.bindings,
     status
   ];
 
+
   if (
-    type !== "all"
+    type !==
+      "all"
   ) {
     where.push(
       "type = ?"
     );
 
+
     bindings.push(
       type
     );
   }
+
 
   if (
     query
@@ -718,10 +976,13 @@ async function listPersonalLibrary(
       )
     `);
 
+
     for (
       let index = 0;
-      index < 7;
-      index += 1
+      index <
+        7;
+      index +=
+        1
     ) {
       bindings.push(
         query
@@ -729,10 +990,12 @@ async function listPersonalLibrary(
     }
   }
 
+
   const whereSql =
     where.join(
       "\nAND\n"
     );
+
 
   const [
     summary,
@@ -740,9 +1003,10 @@ async function listPersonalLibrary(
     manifest
   ] =
     await Promise.all([
+
       getSummary(
         env,
-        auth.user.id,
+        auth,
         status
       ),
 
@@ -764,13 +1028,16 @@ async function listPersonalLibrary(
       getManifestState(
         env
       )
+
     ]);
+
 
   const filteredTotal =
     Number(
       countRow?.count ||
       0
     );
+
 
   const totalPages =
     Math.max(
@@ -781,11 +1048,13 @@ async function listPersonalLibrary(
       )
     );
 
+
   const safePage =
     Math.min(
       page,
       totalPages
     );
+
 
   const offset =
     (
@@ -794,16 +1063,21 @@ async function listPersonalLibrary(
     ) *
     pageSize;
 
+
   const orderExpression =
     status ===
       "trashed"
+
       ? "COALESCE(trashed_at, updated_at)"
+
       : "COALESCE(added_at, created_at)";
+
 
   const result =
     await env.MEDIA_DB
       .prepare(`
         SELECT
+
           id,
           type,
           filename,
@@ -849,6 +1123,7 @@ async function listPersonalLibrary(
       )
       .all();
 
+
   const items =
     (
       result.results ||
@@ -858,18 +1133,28 @@ async function listPersonalLibrary(
         row =>
           serializeMedia(
             row,
-            auth.user
+            auth
           )
       );
 
+
   return jsonResponse({
+
     scope:
       "personal",
 
     ownerUserId:
       auth.user.id,
 
+    ownershipMode:
+      isOwner(
+        auth
+      )
+        ? "owner-plus-legacy"
+        : "personal-only",
+
     manifest: {
+
       version:
         manifest.version ??
         null,
@@ -895,23 +1180,33 @@ async function listPersonalLibrary(
       syncedAt:
         manifest.syncedAt ||
         null
+
     },
 
     summary,
 
     query: {
+
       status,
+
       type,
+
       q:
         query,
+
       page:
         safePage,
+
       pageSize,
+
       filteredTotal,
+
       totalPages
+
     },
 
     capabilities: {
+
       readMedia:
         true,
 
@@ -944,20 +1239,33 @@ async function listPersonalLibrary(
 
       editMedia:
         Boolean(
-          auth.user.role ===
-            "owner" ||
+          isOwner(
+            auth
+          ) ||
           auth.user.permissions
             ?.editMedia ===
             true
         ),
 
       personalLibrary:
-        true
+        true,
+
+      legacyOwnerMedia:
+        isOwner(
+          auth
+        )
+
     },
 
     items
+
   });
 }
+
+
+/* =========================================================
+ * Trash
+ * ======================================================= */
 
 
 async function trashMedia(
@@ -970,21 +1278,25 @@ async function trashMedia(
     request
   );
 
+
   requireDeletePermission(
     auth
   );
+
 
   const mediaId =
     validateMediaId(
       body.mediaId
     );
 
+
   const row =
     await getOwnedMediaRow(
       env,
-      auth.user.id,
+      auth,
       mediaId
     );
+
 
   if (
     !row
@@ -994,6 +1306,7 @@ async function trashMedia(
       "media_not_found"
     );
   }
+
 
   if (
     Boolean(
@@ -1006,11 +1319,13 @@ async function trashMedia(
     );
   }
 
+
   if (
     row.status ===
       "trashed"
   ) {
     return jsonResponse({
+
       ok:
         true,
 
@@ -1020,10 +1335,12 @@ async function trashMedia(
       item:
         serializeMedia(
           row,
-          auth.user
+          auth
         )
+
     });
   }
+
 
   if (
     row.status !==
@@ -1035,42 +1352,79 @@ async function trashMedia(
     );
   }
 
+
   const timestamp =
     nowSeconds();
+
 
   const expiresAt =
     timestamp +
     TRASH_RETENTION_SECONDS;
 
-  await env.MEDIA_DB
-    .prepare(`
-      UPDATE media
 
-      SET
-        status = 'trashed',
-        trashed_at = ?,
-        trash_expires_at = ?,
-        updated_at = ?
+  /*
+   * 已经通过 getOwnedMediaRow 完成权限确认。
+   * 这里按 media id 更新，
+   * 这样历史媒体 uploader_user_id = NULL 也能操作。
+   */
+  const result =
+    await env.MEDIA_DB
+      .prepare(`
+        UPDATE media
 
-      WHERE
-        id = ?
-        AND uploader_user_id = ?
-        AND status = 'published'
-        AND is_protected = 0
-    `)
-    .bind(
-      timestamp,
-      expiresAt,
-      timestamp,
-      mediaId,
-      auth.user.id
-    )
-    .run();
+        SET
+          status =
+            'trashed',
+
+          trashed_at =
+            ?,
+
+          trash_expires_at =
+            ?,
+
+          updated_at =
+            ?
+
+        WHERE
+          id = ?
+
+        AND
+          status =
+            'published'
+
+        AND
+          is_protected =
+            0
+      `)
+      .bind(
+        timestamp,
+        expiresAt,
+        timestamp,
+        mediaId
+      )
+      .run();
+
+
+  if (
+    Number(
+      result?.meta?.changes ||
+      0
+    ) !==
+      1
+  ) {
+    throw new HttpError(
+      409,
+      "media_trash_failed"
+    );
+  }
+
 
   await addMediaEvent(
     env,
     {
+
       mediaId,
+
       actorUserId:
         auth.user.id,
 
@@ -1078,33 +1432,51 @@ async function trashMedia(
         "media.trash",
 
       metadata: {
+
         scope:
           "personal",
 
+        legacyOwnerMedia:
+          isLegacyOwnerMedia(
+            row,
+            auth
+          ),
+
         retentionDays:
           7
+
       }
+
     }
   );
+
 
   const updated =
     await getOwnedMediaRow(
       env,
-      auth.user.id,
+      auth,
       mediaId
     );
 
+
   return jsonResponse({
+
     ok:
       true,
 
     item:
       serializeMedia(
         updated,
-        auth.user
+        auth
       )
+
   });
 }
+
+
+/* =========================================================
+ * Restore
+ * ======================================================= */
 
 
 async function restoreMedia(
@@ -1117,9 +1489,11 @@ async function restoreMedia(
     request
   );
 
+
   requireDeletePermission(
     auth
   );
+
 
   if (
     body.action !==
@@ -1131,17 +1505,20 @@ async function restoreMedia(
     );
   }
 
+
   const mediaId =
     validateMediaId(
       body.mediaId
     );
 
+
   const row =
     await getOwnedMediaRow(
       env,
-      auth.user.id,
+      auth,
       mediaId
     );
+
 
   if (
     !row
@@ -1152,11 +1529,13 @@ async function restoreMedia(
     );
   }
 
+
   if (
     row.status ===
       "published"
   ) {
     return jsonResponse({
+
       ok:
         true,
 
@@ -1166,10 +1545,12 @@ async function restoreMedia(
       item:
         serializeMedia(
           row,
-          auth.user
+          auth
         )
+
     });
   }
+
 
   if (
     row.status !==
@@ -1181,36 +1562,66 @@ async function restoreMedia(
     );
   }
 
+
   const timestamp =
     nowSeconds();
 
-  await env.MEDIA_DB
-    .prepare(`
-      UPDATE media
 
-      SET
-        status = 'published',
-        trashed_at = NULL,
-        trash_expires_at = NULL,
-        deleted_at = NULL,
-        updated_at = ?
+  const result =
+    await env.MEDIA_DB
+      .prepare(`
+        UPDATE media
 
-      WHERE
-        id = ?
-        AND uploader_user_id = ?
-        AND status = 'trashed'
-    `)
-    .bind(
-      timestamp,
-      mediaId,
-      auth.user.id
-    )
-    .run();
+        SET
+          status =
+            'published',
+
+          trashed_at =
+            NULL,
+
+          trash_expires_at =
+            NULL,
+
+          deleted_at =
+            NULL,
+
+          updated_at =
+            ?
+
+        WHERE
+          id = ?
+
+        AND
+          status =
+            'trashed'
+      `)
+      .bind(
+        timestamp,
+        mediaId
+      )
+      .run();
+
+
+  if (
+    Number(
+      result?.meta?.changes ||
+      0
+    ) !==
+      1
+  ) {
+    throw new HttpError(
+      409,
+      "media_restore_failed"
+    );
+  }
+
 
   await addMediaEvent(
     env,
     {
+
       mediaId,
+
       actorUserId:
         auth.user.id,
 
@@ -1218,30 +1629,48 @@ async function restoreMedia(
         "media.restore",
 
       metadata: {
+
         scope:
-          "personal"
+          "personal",
+
+        legacyOwnerMedia:
+          isLegacyOwnerMedia(
+            row,
+            auth
+          )
+
       }
+
     }
   );
+
 
   const updated =
     await getOwnedMediaRow(
       env,
-      auth.user.id,
+      auth,
       mediaId
     );
 
+
   return jsonResponse({
+
     ok:
       true,
 
     item:
       serializeMedia(
         updated,
-        auth.user
+        auth
       )
+
   });
 }
+
+
+/* =========================================================
+ * GitHub permanent purge dispatch
+ * ======================================================= */
 
 
 async function dispatchMediaPurge(
@@ -1254,6 +1683,7 @@ async function dispatchMediaPurge(
       ""
     );
 
+
   if (
     !token
   ) {
@@ -1262,21 +1692,25 @@ async function dispatchMediaPurge(
     );
   }
 
+
   const owner =
     encodeURIComponent(
       env.GITHUB_OWNER
     );
+
 
   const repo =
     encodeURIComponent(
       env.GITHUB_REPO
     );
 
+
   const workflow =
     encodeURIComponent(
       env.GITHUB_MEDIA_DELETE_WORKFLOW ||
       "media-delete.yml"
     );
+
 
   if (
     !row.source_repository ||
@@ -1289,14 +1723,19 @@ async function dispatchMediaPurge(
     );
   }
 
+
   const response =
     await fetch(
+
       `https://api.github.com/repos/${owner}/${repo}/actions/workflows/${workflow}/dispatches`,
+
       {
+
         method:
           "POST",
 
         headers: {
+
           Accept:
             "application/vnd.github+json",
 
@@ -1311,15 +1750,18 @@ async function dispatchMediaPurge(
 
           "User-Agent":
             "jingyan-media-app"
+
         },
 
         body:
           JSON.stringify({
+
             ref:
               env.GITHUB_UPLOAD_REF ||
               "main",
 
             inputs: {
+
               media_id:
                 String(
                   row.id
@@ -1350,10 +1792,15 @@ async function dispatchMediaPurge(
                 String(
                   row.public_path
                 )
+
             }
+
           })
+
       }
+
     );
+
 
   if (
     !response.ok
@@ -1367,11 +1814,17 @@ async function dispatchMediaPurge(
           600
         );
 
+
     throw new Error(
       `Media purge dispatch failed (${response.status}): ${text}`
     );
   }
 }
+
+
+/* =========================================================
+ * Permanent delete
+ * ======================================================= */
 
 
 async function permanentDeleteMedia(
@@ -1384,21 +1837,25 @@ async function permanentDeleteMedia(
     request
   );
 
+
   requireDeletePermission(
     auth
   );
+
 
   const mediaId =
     validateMediaId(
       body.mediaId
     );
 
+
   const row =
     await getOwnedMediaRow(
       env,
-      auth.user.id,
+      auth,
       mediaId
     );
+
 
   if (
     !row
@@ -1408,6 +1865,7 @@ async function permanentDeleteMedia(
       "media_not_found"
     );
   }
+
 
   if (
     Boolean(
@@ -1420,18 +1878,22 @@ async function permanentDeleteMedia(
     );
   }
 
+
   if (
     row.status ===
       "deleted"
   ) {
     return jsonResponse({
+
       ok:
         true,
 
       alreadyDeleted:
         true
+
     });
   }
+
 
   if (
     row.status !==
@@ -1445,10 +1907,13 @@ async function permanentDeleteMedia(
     );
   }
 
+
   const timestamp =
     nowSeconds();
 
+
   const previous = {
+
     status:
       row.status,
 
@@ -1460,32 +1925,69 @@ async function permanentDeleteMedia(
 
     deletedAt:
       row.deleted_at
+
   };
 
-  await env.MEDIA_DB
-    .prepare(`
-      UPDATE media
 
-      SET
-        status = 'deleted',
-        deleted_at = ?,
-        trashed_at = NULL,
-        trash_expires_at = NULL,
-        updated_at = ?
+  /*
+   * 先在媒体索引里标记 deleted，
+   * 避免用户重复触发永久删除。
+   */
+  const marked =
+    await env.MEDIA_DB
+      .prepare(`
+        UPDATE media
 
-      WHERE
-        id = ?
-        AND uploader_user_id = ?
-    `)
-    .bind(
-      timestamp,
-      timestamp,
-      mediaId,
-      auth.user.id
-    )
-    .run();
+        SET
+          status =
+            'deleted',
 
+          deleted_at =
+            ?,
+
+          trashed_at =
+            NULL,
+
+          trash_expires_at =
+            NULL,
+
+          updated_at =
+            ?
+
+        WHERE
+          id = ?
+      `)
+      .bind(
+        timestamp,
+        timestamp,
+        mediaId
+      )
+      .run();
+
+
+  if (
+    Number(
+      marked?.meta?.changes ||
+      0
+    ) !==
+      1
+  ) {
+    throw new HttpError(
+      409,
+      "media_delete_failed"
+    );
+  }
+
+
+  /*
+   * 启动 GitHub + CDN 的真正删除。
+   *
+   * 如果连 Workflow 都无法启动，
+   * 就把 MEDIA_DB 状态恢复，
+   * 不留半删除状态。
+   */
   try {
+
     await dispatchMediaPurge(
       env,
       row
@@ -1494,20 +1996,29 @@ async function permanentDeleteMedia(
   } catch (
     error
   ) {
+
     await env.MEDIA_DB
       .prepare(`
         UPDATE media
 
         SET
-          status = ?,
-          trashed_at = ?,
-          trash_expires_at = ?,
-          deleted_at = ?,
-          updated_at = ?
+          status =
+            ?,
+
+          trashed_at =
+            ?,
+
+          trash_expires_at =
+            ?,
+
+          deleted_at =
+            ?,
+
+          updated_at =
+            ?
 
         WHERE
           id = ?
-          AND uploader_user_id = ?
       `)
       .bind(
         previous.status,
@@ -1515,15 +2026,16 @@ async function permanentDeleteMedia(
         previous.trashExpiresAt,
         previous.deletedAt,
         nowSeconds(),
-        mediaId,
-        auth.user.id
+        mediaId
       )
       .run();
+
 
     console.error(
       "Permanent media purge dispatch failed:",
       error
     );
+
 
     throw new HttpError(
       502,
@@ -1531,50 +2043,76 @@ async function permanentDeleteMedia(
     );
   }
 
+
+  /*
+   * 清理媒体和个人功能之间的关系。
+   */
   await env.MEDIA_DB
     .batch([
+
       env.MEDIA_DB
         .prepare(`
           UPDATE collections
-          SET cover_media_id = NULL
-          WHERE cover_media_id = ?
+
+          SET
+            cover_media_id =
+              NULL
+
+          WHERE
+            cover_media_id = ?
         `)
         .bind(
           mediaId
         ),
 
+
       env.MEDIA_DB
         .prepare(`
-          DELETE FROM collection_items
-          WHERE media_id = ?
+          DELETE FROM
+            collection_items
+
+          WHERE
+            media_id = ?
         `)
         .bind(
           mediaId
         ),
 
+
       env.MEDIA_DB
         .prepare(`
-          DELETE FROM media_favorites
-          WHERE media_id = ?
+          DELETE FROM
+            media_favorites
+
+          WHERE
+            media_id = ?
         `)
         .bind(
           mediaId
         ),
 
+
       env.MEDIA_DB
         .prepare(`
-          DELETE FROM media_tags
-          WHERE media_id = ?
+          DELETE FROM
+            media_tags
+
+          WHERE
+            media_id = ?
         `)
         .bind(
           mediaId
         )
+
     ]);
+
 
   await addMediaEvent(
     env,
     {
+
       mediaId,
+
       actorUserId:
         auth.user.id,
 
@@ -1582,8 +2120,15 @@ async function permanentDeleteMedia(
         "media.delete_permanent",
 
       metadata: {
+
         scope:
           "personal",
+
+        legacyOwnerMedia:
+          isLegacyOwnerMedia(
+            row,
+            auth
+          ),
 
         sourceRepository:
           row.source_repository,
@@ -1596,11 +2141,15 @@ async function permanentDeleteMedia(
 
         purgeQueued:
           true
+
       }
+
     }
   );
 
+
   return jsonResponse({
+
     ok:
       true,
 
@@ -1611,8 +2160,14 @@ async function permanentDeleteMedia(
 
     purgeQueued:
       true
+
   });
 }
+
+
+/* =========================================================
+ * Router
+ * ======================================================= */
 
 
 export async function handlePersonalLibraryRequest(
@@ -1624,12 +2179,15 @@ export async function handlePersonalLibraryRequest(
     auth
   );
 
+
   const method =
     request.method
       .toUpperCase();
 
+
   if (
-    method === "GET"
+    method ===
+      "GET"
   ) {
     return listPersonalLibrary(
       request,
@@ -1638,16 +2196,20 @@ export async function handlePersonalLibraryRequest(
     );
   }
 
+
   if (
-    method === "DELETE"
+    method ===
+      "DELETE"
   ) {
     const body =
       await readJson(
         request
       );
 
+
     if (
-      body.permanent === true
+      body.permanent ===
+        true
     ) {
       return permanentDeleteMedia(
         request,
@@ -1657,6 +2219,7 @@ export async function handlePersonalLibraryRequest(
       );
     }
 
+
     return trashMedia(
       request,
       env,
@@ -1665,13 +2228,16 @@ export async function handlePersonalLibraryRequest(
     );
   }
 
+
   if (
-    method === "POST"
+    method ===
+      "POST"
   ) {
     const body =
       await readJson(
         request
       );
+
 
     return restoreMedia(
       request,
@@ -1680,6 +2246,7 @@ export async function handlePersonalLibraryRequest(
       body
     );
   }
+
 
   return methodNotAllowed([
     "GET",
