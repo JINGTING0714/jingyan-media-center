@@ -2,10 +2,10 @@
   "version": 1,
   "worker": "jingyan-media-cdn",
   "baseURL": "https://jingyan-media-cdn.jingyancdn.workers.dev",
-  "updatedAt": "2026-08-21T03:37:30.347Z",
-  "lastPublishedAt": "2026-08-21T03:37:30.347Z",
-  "lastVersionId": "81479f76-9db6-42dd-bc73-e0e3b27ead37",
-  "lastDeploymentId": "654b7f7c-2254-48c2-95f5-c128cb503c54",
+  "updatedAt": "2026-08-21T03:42:12.781Z",
+  "lastPublishedAt": "2026-08-21T03:42:12.781Z",
+  "lastVersionId": "b0b700fe-1991-46c7-8e15-862158da5fbc",
+  "lastDeploymentId": "8ca017af-fbce-47b0-bc01-bec4be125040",
   "assets": {
     "/audio/004-jingyan-test-004-mp3.mp3": {
       "hash": "6e41de8f8e42b9643d7f2a5bcc066aae",
@@ -435,6 +435,45 @@
         "path": "image/018-yue-shen-shi-yong-di-wen.jpg"
       },
       "addedAt": "2026-08-21T03:37:26.255Z"
+    },
+    "/audio/024-fang-da-tong-mei-sha-hao-shuo.mp3": {
+      "hash": "bd8c4e9e0ca01c2e192af3e74f95bf9e",
+      "size": 8423448,
+      "sha256": "e1dec50b877b88d57e4015fc0141576c214d897ab02d699428b9552c53f47ea2",
+      "type": "audio",
+      "mediaId": "music-000024",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/024-fang-da-tong-mei-sha-hao-shuo.mp3"
+      },
+      "addedAt": "2026-08-21T03:41:27.044Z"
+    },
+    "/audio/025-fang-da-tong-hui-liu.mp3": {
+      "hash": "45d4c44add5ddd4affd846e16d711ac4",
+      "size": 9484242,
+      "sha256": "a8883be709a1d45953e6b2cd020b131dbe0ee32ce63dc931fc8c16b1059a8494",
+      "type": "audio",
+      "mediaId": "music-000025",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/025-fang-da-tong-hui-liu.mp3"
+      },
+      "addedAt": "2026-08-21T03:41:41.891Z"
+    },
+    "/audio/026-fang-da-tong-cai-er-shi-san.mp3": {
+      "hash": "88e21ca3bc6dbb053ece6a0ac3fd9c5c",
+      "size": 9010966,
+      "sha256": "2f537a280395c06d78b2b0bc22aa1f2589026b697fbdf8776d4c661369230665",
+      "type": "audio",
+      "mediaId": "music-000026",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/026-fang-da-tong-cai-er-shi-san.mp3"
+      },
+      "addedAt": "2026-08-21T03:41:57.294Z"
     }
   }
 }
