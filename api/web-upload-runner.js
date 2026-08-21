@@ -1,12 +1,8 @@
-const fs =
-    require("fs");
+"use strict";
 
-const path =
-    require("path");
-
-const crypto =
-    require("crypto");
-
+const fs = require("fs");
+const path = require("path");
+const crypto = require("crypto");
 
 const {
     run
@@ -18,14 +14,41 @@ const APP_URL =
         process.env.APP_URL ||
         "https://jingyan-media-app.jingyancdn.workers.dev"
     )
-    .replace(
-        /\/+$/,
-        ""
-    );
+        .replace(
+            /\/+$/,
+            ""
+        );
 
 
 const AUDIENCE =
     "jingyan-media-upload";
+
+
+const SOURCE_ATTEMPTS =
+    24;
+
+
+const SOURCE_RETRY_MS =
+    5000;
+
+
+const CALLBACK_ATTEMPTS =
+    6;
+
+
+function sleep(
+    milliseconds
+) {
+
+    return new Promise(
+        resolve =>
+            setTimeout(
+                resolve,
+                milliseconds
+            )
+    );
+
+}
 
 
 function resultPath(
@@ -38,11 +61,8 @@ function resultPath(
 
 
     return path.join(
-
         temp,
-
         `jingyan-web-upload-${jobId}.json`
-
     );
 
 }
@@ -54,17 +74,14 @@ function writeResult(
 ) {
 
     fs.writeFileSync(
-
         resultPath(
             jobId
         ),
-
         JSON.stringify(
             data,
             null,
             2
         ) + "\n"
-
     );
 
 }
@@ -87,9 +104,7 @@ function readResult(
     ) {
 
         return {
-            ok:
-                false,
-
+            ok: false,
             error:
                 "web_upload_result_missing"
         };
@@ -109,9 +124,7 @@ function readResult(
     } catch {
 
         return {
-            ok:
-                false,
-
+            ok: false,
             error:
                 "web_upload_result_invalid"
         };
@@ -153,21 +166,18 @@ async function getOidcToken() {
 
     const response =
         await fetch(
-
             requestUrl +
             separator +
             "audience=" +
             encodeURIComponent(
                 AUDIENCE
             ),
-
             {
                 headers: {
                     Authorization:
                         `Bearer ${requestToken}`
                 }
             }
-
         );
 
 
@@ -220,23 +230,51 @@ async function downloadSource(
 
     for (
         let attempt = 1;
-        attempt <= 24;
-        attempt++
+        attempt <= SOURCE_ATTEMPTS;
+        attempt += 1
     ) {
 
-        const response =
-            await fetch(
+        let response;
 
-                url,
 
-                {
-                    headers: {
-                        Authorization:
-                            `Bearer ${token}`
+        try {
+
+            response =
+                await fetch(
+                    url,
+                    {
+                        headers: {
+                            Authorization:
+                                `Bearer ${token}`
+                        }
                     }
-                }
+                );
 
-            );
+        } catch (
+            error
+        ) {
+
+            lastError =
+                error;
+
+
+            if (
+                attempt <
+                SOURCE_ATTEMPTS
+            ) {
+
+                await sleep(
+                    SOURCE_RETRY_MS
+                );
+
+                continue;
+
+            }
+
+
+            throw error;
+
+        }
 
 
         if (
@@ -287,8 +325,7 @@ async function downloadSource(
 
             if (
                 !filename ||
-                filename ===
-                    ".gitkeep"
+                filename === ".gitkeep"
             ) {
 
                 throw new Error(
@@ -316,10 +353,10 @@ async function downloadSource(
             (
                 await response.text()
             )
-            .slice(
-                0,
-                300
-            );
+                .slice(
+                    0,
+                    300
+                );
 
 
         lastError =
@@ -331,11 +368,14 @@ async function downloadSource(
         if (
             ![
                 404,
-                409
-            ]
-            .includes(
+                409,
+                425,
+                429
+            ].includes(
                 response.status
-            )
+            ) &&
+            response.status <
+                500
         ) {
 
             throw lastError;
@@ -345,15 +385,11 @@ async function downloadSource(
 
         if (
             attempt <
-            24
+            SOURCE_ATTEMPTS
         ) {
 
-            await new Promise(
-                resolve =>
-                    setTimeout(
-                        resolve,
-                        5000
-                    )
+            await sleep(
+                SOURCE_RETRY_MS
             );
 
         }
@@ -361,10 +397,12 @@ async function downloadSource(
     }
 
 
-    throw lastError ||
+    throw (
+        lastError ||
         new Error(
             "Unable to retrieve staged upload"
-        );
+        )
+    );
 
 }
 
@@ -382,31 +420,24 @@ function preserveUploadFolder(
     fs.mkdirSync(
         uploadDir,
         {
-            recursive:
-                true
+            recursive: true
         }
     );
 
 
     const preserveDir =
         path.join(
-
             process.env.RUNNER_TEMP ||
             process.cwd(),
-
             `preserved-upload-${jobId}`
-
         );
 
 
     fs.rmSync(
         preserveDir,
         {
-            recursive:
-                true,
-
-            force:
-                true
+            recursive: true,
+            force: true
         }
     );
 
@@ -414,8 +445,7 @@ function preserveUploadFolder(
     fs.mkdirSync(
         preserveDir,
         {
-            recursive:
-                true
+            recursive: true
         }
     );
 
@@ -467,9 +497,6 @@ function preserveUploadFolder(
 
 
         moved.push({
-            name:
-                entry.name,
-
             preserved:
                 destination,
 
@@ -584,11 +611,8 @@ async function runWebUpload(
 
         localFile =
             path.join(
-
                 preserved.uploadDir,
-
                 staged.filename
-
             );
 
 
@@ -616,7 +640,9 @@ async function runWebUpload(
             );
 
 
-        if (!result) {
+        if (
+            !result
+        ) {
 
             throw new Error(
                 "Media pipeline completed without matching upload result"
@@ -628,9 +654,7 @@ async function runWebUpload(
         writeResult(
             jobId,
             {
-                ok:
-                    true,
-
+                ok: true,
                 result
             }
         );
@@ -640,23 +664,24 @@ async function runWebUpload(
             `Web upload completed: ${result.id}`
         );
 
-    } catch (error) {
+    } catch (
+        error
+    ) {
 
         writeResult(
             jobId,
             {
-                ok:
-                    false,
+                ok: false,
 
                 error:
                     String(
                         error?.message ||
                         error
                     )
-                    .slice(
-                        0,
-                        500
-                    )
+                        .slice(
+                            0,
+                            500
+                        )
             }
         );
 
@@ -690,6 +715,188 @@ async function runWebUpload(
 }
 
 
+function callbackDelay(
+    attempt
+) {
+
+    return [
+        0,
+        1200,
+        2500,
+        5000,
+        9000,
+        15000
+    ][
+        Math.min(
+            attempt - 1,
+            5
+        )
+    ];
+
+}
+
+
+function callbackRetryable(
+    status
+) {
+
+    return (
+        status === 408 ||
+        status === 409 ||
+        status === 425 ||
+        status === 429 ||
+        status >= 500
+    );
+
+}
+
+
+async function postCallback(
+    jobId,
+    data
+) {
+
+    let lastError =
+        null;
+
+
+    for (
+        let attempt = 1;
+        attempt <= CALLBACK_ATTEMPTS;
+        attempt += 1
+    ) {
+
+        const delay =
+            callbackDelay(
+                attempt
+            );
+
+
+        if (
+            delay > 0
+        ) {
+
+            await sleep(
+                delay
+            );
+
+        }
+
+
+        try {
+
+            /*
+             * 每次尝试重新申请 OIDC Token。
+             * 避免第一次 Token/网络异常把已经完成的媒体
+             * 永久留在 queued / processing。
+             */
+            const token =
+                await getOidcToken();
+
+
+            const response =
+                await fetch(
+                    `${APP_URL}/api/internal/uploads/${encodeURIComponent(jobId)}/callback`,
+                    {
+                        method:
+                            "POST",
+
+                        headers: {
+                            Authorization:
+                                `Bearer ${token}`,
+
+                            "Content-Type":
+                                "application/json"
+                        },
+
+                        body:
+                            JSON.stringify(
+                                data
+                            )
+                    }
+                );
+
+
+            if (
+                response.ok
+            ) {
+
+                console.log(
+                    `Upload callback accepted for ${jobId} on attempt ${attempt}`
+                );
+
+
+                return;
+
+            }
+
+
+            const text =
+                (
+                    await response.text()
+                )
+                    .slice(
+                        0,
+                        500
+                    );
+
+
+            lastError =
+                new Error(
+                    `Upload callback failed (${response.status}): ${text}`
+                );
+
+
+            if (
+                !callbackRetryable(
+                    response.status
+                )
+            ) {
+
+                throw lastError;
+
+            }
+
+        } catch (
+            error
+        ) {
+
+            lastError =
+                error;
+
+
+            if (
+                attempt ===
+                CALLBACK_ATTEMPTS
+            ) {
+
+                break;
+
+            }
+
+
+            console.warn(
+                `Upload callback attempt ${attempt} failed: ${String(
+                    error?.message ||
+                    error
+                )}`
+            );
+
+        }
+
+    }
+
+
+    throw (
+        lastError ||
+        new Error(
+            "Upload callback failed"
+        )
+    );
+
+}
+
+
 async function callback(
     jobId
 ) {
@@ -705,7 +912,7 @@ async function callback(
             process.env.PIPELINE_OK ||
             ""
         )
-        .toLowerCase() !==
+            .toLowerCase() !==
         "true"
     ) {
 
@@ -725,62 +932,9 @@ async function callback(
     }
 
 
-    const token =
-        await getOidcToken();
-
-
-    const response =
-        await fetch(
-
-            `${APP_URL}/api/internal/uploads/${encodeURIComponent(jobId)}/callback`,
-
-            {
-                method:
-                    "POST",
-
-                headers: {
-
-                    Authorization:
-                        `Bearer ${token}`,
-
-                    "Content-Type":
-                        "application/json"
-
-                },
-
-                body:
-                    JSON.stringify(
-                        data
-                    )
-
-            }
-
-        );
-
-
-    if (
-        !response.ok
-    ) {
-
-        const text =
-            (
-                await response.text()
-            )
-            .slice(
-                0,
-                500
-            );
-
-
-        throw new Error(
-            `Upload callback failed (${response.status}): ${text}`
-        );
-
-    }
-
-
-    console.log(
-        `Upload callback accepted for ${jobId}`
+    await postCallback(
+        jobId,
+        data
     );
 
 }
@@ -856,7 +1010,9 @@ if (
                     error
                 );
 
-                process.exit(1);
+                process.exit(
+                    1
+                );
 
             }
         );
