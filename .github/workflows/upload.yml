@@ -112,26 +112,33 @@ jobs:
           node --check api/storage-registry.js
           node --check api/github.js
           node --check api/repository.js
+          node --check api/database.js
+          node --check api/cloudflare.js
           node --check api/upload.js
           node --check api/web-upload-runner.js
           node --check api/batch-upload-runner.js
+          node --check api/media-index-sync.js
 
           node -e "JSON.parse(require('fs').readFileSync('config.json','utf8'))"
           node -e "JSON.parse(require('fs').readFileSync('data/storage-registry.json','utf8'))"
+          node -e "JSON.parse(require('fs').readFileSync('data/cdn-manifest.json','utf8'))"
 
 
-      - name: Restore NPM Download Cache
+      - name: Restore Runtime Cache
         if: steps.check.outputs.skip == 'false'
+        id: runtime_cache
         uses: actions/cache@v4
         with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node22-npm-${{ hashFiles('package.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node22-npm-
+          path: |
+            node_modules
+            ~/.npm
+          key: ${{ runner.os }}-node22-runtime-${{ hashFiles('package.json') }}
 
 
       - name: Install Dependencies
-        if: steps.check.outputs.skip == 'false'
+        if: >
+          steps.check.outputs.skip == 'false' &&
+          steps.runtime_cache.outputs.cache-hit != 'true'
         run: |
           npm install \
             --omit=dev \
@@ -139,6 +146,20 @@ jobs:
             --prefer-offline \
             --no-audit \
             --no-fund
+
+
+      - name: Verify Cached Dependencies
+        if: >
+          steps.check.outputs.skip == 'false' &&
+          steps.runtime_cache.outputs.cache-hit == 'true'
+        shell: bash
+        run: |
+          set -e
+
+          node -e "require('cloudflare')"
+          node -e "require('pinyin-pro')"
+
+          echo "Runtime dependency cache ready."
 
 
       - name: Run Web Batch Upload
@@ -175,7 +196,9 @@ jobs:
 
       - name: Run Standard Media Upload
         id: standard_upload
-        if: steps.check.outputs.mode == 'standard' && steps.check.outputs.skip == 'false'
+        if: >
+          steps.check.outputs.mode == 'standard' &&
+          steps.check.outputs.skip == 'false'
 
         env:
           GH_TOKEN: ${{ secrets.MEDIA_TOKEN }}
@@ -191,14 +214,15 @@ jobs:
 
       - name: Save Automation State
         id: save_state
-        if: always() && steps.check.outputs.skip == 'false'
+        if: >
+          always() &&
+          steps.check.outputs.skip == 'false'
 
         shell: bash
         run: |
           set -e
 
           git config user.name "github-actions[bot]"
-
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
           git add \
@@ -244,8 +268,9 @@ jobs:
 
       - name: Report Web Batch Result
         id: report_batch
-
-        if: always() && steps.check.outputs.mode == 'web_batch'
+        if: >
+          always() &&
+          steps.check.outputs.mode == 'web_batch'
 
         env:
           PIPELINE_OK: ${{ steps.batch_upload.outcome == 'success' && steps.save_state.outcome == 'success' }}
@@ -256,8 +281,9 @@ jobs:
 
       - name: Report Web Upload Result
         id: report_web
-
-        if: always() && steps.check.outputs.mode == 'web'
+        if: >
+          always() &&
+          steps.check.outputs.mode == 'web'
 
         env:
           PIPELINE_OK: ${{ steps.web_upload.outcome == 'success' && steps.save_state.outcome == 'success' }}
@@ -276,8 +302,31 @@ jobs:
 
         continue-on-error: true
 
+        shell: bash
         run: |
-          node api/media-index-sync.js upload "$WEB_JOB_ID"
+          set +e
+
+          for attempt in 1 2 3; do
+            echo "Media index attempt: $attempt"
+
+            node api/media-index-sync.js upload "$WEB_JOB_ID"
+
+            status=$?
+
+            if [ "$status" -eq 0 ]; then
+              echo "Media index updated."
+
+              exit 0
+            fi
+
+            if [ "$attempt" -lt 3 ]; then
+              sleep $((attempt * 3))
+            fi
+          done
+
+          echo "Media index did not finish after retries."
+
+          exit 1
 
 
       - name: Sync Batch Media Index
@@ -289,8 +338,31 @@ jobs:
 
         continue-on-error: true
 
+        shell: bash
         run: |
-          node api/media-index-sync.js full
+          set +e
+
+          for attempt in 1 2 3; do
+            echo "Batch media index attempt: $attempt"
+
+            node api/media-index-sync.js full
+
+            status=$?
+
+            if [ "$status" -eq 0 ]; then
+              echo "Batch media index synchronized."
+
+              exit 0
+            fi
+
+            if [ "$attempt" -lt 3 ]; then
+              sleep $((attempt * 3))
+            fi
+          done
+
+          echo "Batch media index did not finish after retries."
+
+          exit 1
 
 
       - name: Sync Media Index
@@ -304,5 +376,6 @@ jobs:
             )
           )
 
+        shell: bash
         run: |
           node api/media-index-sync.js full
