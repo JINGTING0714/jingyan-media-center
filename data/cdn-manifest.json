@@ -2,10 +2,10 @@
   "version": 1,
   "worker": "jingyan-media-cdn",
   "baseURL": "https://jingyan-media-cdn.jingyancdn.workers.dev",
-  "updatedAt": "2026-08-20T11:29:06.969Z",
-  "lastPublishedAt": "2026-08-20T11:29:06.969Z",
-  "lastVersionId": "e90a4eea-0cbf-4160-943b-658d22837251",
-  "lastDeploymentId": "33caa2f1-992f-45f6-a563-b7340e54104c",
+  "updatedAt": "2026-08-21T03:37:30.347Z",
+  "lastPublishedAt": "2026-08-21T03:37:30.347Z",
+  "lastVersionId": "81479f76-9db6-42dd-bc73-e0e3b27ead37",
+  "lastDeploymentId": "654b7f7c-2254-48c2-95f5-c128cb503c54",
   "assets": {
     "/audio/004-jingyan-test-004-mp3.mp3": {
       "hash": "6e41de8f8e42b9643d7f2a5bcc066aae",
@@ -422,6 +422,19 @@
         "path": "music/023-if-you-leave-me-now.mp3"
       },
       "addedAt": "2026-08-20T11:29:01.131Z"
+    },
+    "/image/018-yue-shen-shi-yong-di-wen.jpg": {
+      "hash": "becf8fd6fb136066b59dc4335a154c09",
+      "size": 2958175,
+      "sha256": "aa02f1f1bfad05bcd7a3d85a74181c01e32ab320fa8011eb1ef643bed555524d",
+      "type": "image",
+      "mediaId": "image-000018",
+      "source": {
+        "repo": "JINGTING0714/jingyan-image-01",
+        "branch": "main",
+        "path": "image/018-yue-shen-shi-yong-di-wen.jpg"
+      },
+      "addedAt": "2026-08-21T03:37:26.255Z"
     }
   }
 }
