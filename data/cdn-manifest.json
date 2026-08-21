@@ -2,10 +2,10 @@
   "version": 1,
   "worker": "jingyan-media-cdn",
   "baseURL": "https://jingyan-media-cdn.jingyancdn.workers.dev",
-  "updatedAt": "2026-08-21T03:42:12.781Z",
-  "lastPublishedAt": "2026-08-21T03:42:12.781Z",
-  "lastVersionId": "b0b700fe-1991-46c7-8e15-862158da5fbc",
-  "lastDeploymentId": "8ca017af-fbce-47b0-bc01-bec4be125040",
+  "updatedAt": "2026-08-21T03:44:23.140Z",
+  "lastPublishedAt": "2026-08-21T03:44:23.140Z",
+  "lastVersionId": "3d65a717-83cd-49a0-b94d-64f1ab6d1dfa",
+  "lastDeploymentId": "093f23f4-11e4-4e7a-bd0c-ed2dd7fefc91",
   "assets": {
     "/audio/004-jingyan-test-004-mp3.mp3": {
       "hash": "6e41de8f8e42b9643d7f2a5bcc066aae",
@@ -474,6 +474,19 @@
         "path": "music/026-fang-da-tong-cai-er-shi-san.mp3"
       },
       "addedAt": "2026-08-21T03:41:57.294Z"
+    },
+    "/audio/027-fang-da-tong-lights-up.mp3": {
+      "hash": "39312c8b47ac1f0352b6e17b107c1209",
+      "size": 12106959,
+      "sha256": "ffd511f4d44b2a2747b1108e3d365064faaded6bbbe3cecb27eef69e994b0cf4",
+      "type": "audio",
+      "mediaId": "music-000027",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/027-fang-da-tong-lights-up.mp3"
+      },
+      "addedAt": "2026-08-21T03:44:14.553Z"
     }
   }
 }
