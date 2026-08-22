@@ -53,13 +53,13 @@
           "sizeMB": 36.773,
           "fileCount": 65,
           "firstMediaId": "image-000002",
-          "lastMediaId": "image-000074",
+          "lastMediaId": "image-000075",
           "state": "active",
           "layout": "legacy-flat",
           "bucketSize": null,
           "createdAt": "2026-08-17T05:47:20.260Z",
           "sealedAt": null,
-          "updatedAt": "2026-08-22T06:10:34.014Z",
+          "updatedAt": "2026-08-22T06:17:29.028Z",
           "health": "healthy"
         },
         {
@@ -81,7 +81,7 @@
           "bucketSize": 1000,
           "createdAt": "2026-08-18T05:38:40.219Z",
           "sealedAt": null,
-          "updatedAt": "2026-08-22T06:10:15.513Z",
+          "updatedAt": "2026-08-22T06:17:13.151Z",
           "health": "healthy"
         }
       ],
@@ -185,7 +185,7 @@
     }
   },
   "counters": {
-    "image": 74,
+    "image": 75,
     "audio": 64,
     "video": 1
   },
