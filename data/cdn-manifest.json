@@ -2,10 +2,10 @@
   "version": 1,
   "worker": "jingyan-media-cdn",
   "baseURL": "https://jingyan-media-cdn.jingyancdn.workers.dev",
-  "updatedAt": "2026-08-22T05:42:15.481Z",
-  "lastPublishedAt": "2026-08-22T05:42:15.480Z",
-  "lastVersionId": "b7e16e88-437b-4ae4-8912-4507f9f4655d",
-  "lastDeploymentId": "fb50673a-c02a-4314-9bc0-502595e00ba8",
+  "updatedAt": "2026-08-22T05:48:20.847Z",
+  "lastPublishedAt": "2026-08-22T05:48:20.847Z",
+  "lastVersionId": "cd13584e-d866-44ad-969d-8c64fa018ad3",
+  "lastDeploymentId": "e92d6a20-4db5-43f8-bccb-1aecca5f34d3",
   "assets": {
     "/audio/004-jingyan-test-004-mp3.mp3": {
       "hash": "6e41de8f8e42b9643d7f2a5bcc066aae",
@@ -1436,6 +1436,136 @@
         "path": "music/054-beng-beng.flac"
       },
       "addedAt": "2026-08-22T05:38:22.593Z"
+    },
+    "/audio/055-bu-jie-yi.mp3": {
+      "hash": "bfc707b00276a28956d10f0b6841dbfe",
+      "size": 7988459,
+      "sha256": "46faafcc4f366f8e1f0bd8e60f0c297f1365c81cdbbab12324b770fba9e38c42",
+      "type": "audio",
+      "mediaId": "music-000055",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/055-bu-jie-yi.mp3"
+      },
+      "addedAt": "2026-08-22T05:45:31.758Z"
+    },
+    "/audio/056-la-mian-gong-zi.mp3": {
+      "hash": "8e3ced6d5bb4a047d6b93ea758acdaf6",
+      "size": 11797114,
+      "sha256": "55d424ab524c5d9a45d83b0bb926697e1219c97776b736f59cd1c3835bc8dc18",
+      "type": "audio",
+      "mediaId": "music-000056",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/056-la-mian-gong-zi.mp3"
+      },
+      "addedAt": "2026-08-22T05:45:46.783Z"
+    },
+    "/audio/057-hai-bu-xiang-shui.mp3": {
+      "hash": "6ea7ea8690a03846d4ac227988ef8d22",
+      "size": 7717665,
+      "sha256": "61b4568b5db8305e948cb4da6e3c60c1722bc4d8afb65d585441f2d291588145",
+      "type": "audio",
+      "mediaId": "music-000057",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/057-hai-bu-xiang-shui.mp3"
+      },
+      "addedAt": "2026-08-22T05:46:01.570Z"
+    },
+    "/audio/058-classy.mp3": {
+      "hash": "18d56fe51d809c3a9e510499bd03ef96",
+      "size": 9047991,
+      "sha256": "ab63fc4561d2ef58d7c7cc63eb597b7bdd3acbaa383fa87677b73b453e1abe5e",
+      "type": "audio",
+      "mediaId": "music-000058",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/058-classy.mp3"
+      },
+      "addedAt": "2026-08-22T05:46:16.746Z"
+    },
+    "/audio/059-natural-ability.mp3": {
+      "hash": "ada3f98c058c91d35ef76f04f70e514f",
+      "size": 11438340,
+      "sha256": "7a4d30e292c7a63965c69448d2b6875794e722286905abadd7a48efdb7dcc03d",
+      "type": "audio",
+      "mediaId": "music-000059",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/059-natural-ability.mp3"
+      },
+      "addedAt": "2026-08-22T05:46:32.566Z"
+    },
+    "/audio/060-princess.mp3": {
+      "hash": "1f70fdc7dc8b35f4a9ac500929f7ad16",
+      "size": 8543309,
+      "sha256": "461fdff61aff9bc5674058973bf175fee60a971393fb86cd37e3090ea2888151",
+      "type": "audio",
+      "mediaId": "music-000060",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/060-princess.mp3"
+      },
+      "addedAt": "2026-08-22T05:46:46.947Z"
+    },
+    "/audio/061-pain-hasn-t-hit-me.mp3": {
+      "hash": "f65f392c9f04cdd3cfd2ca0605795796",
+      "size": 10522366,
+      "sha256": "ebbe32ee7d51c6e0a35101002426fc313dd19df5d6444279cd66d8d2bf585b5e",
+      "type": "audio",
+      "mediaId": "music-000061",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/061-pain-hasn-t-hit-me.mp3"
+      },
+      "addedAt": "2026-08-22T05:47:00.468Z"
+    },
+    "/audio/062-the-dragon-song-feat-ozi.mp3": {
+      "hash": "16de716e43a574dc0ef8f3adfd8756b7",
+      "size": 12565889,
+      "sha256": "734ffd549e042fd3e02926aae005fa91314431a774d91ab90e294a2e56bf6991",
+      "type": "audio",
+      "mediaId": "music-000062",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/062-the-dragon-song-feat-ozi.mp3"
+      },
+      "addedAt": "2026-08-22T05:47:15.624Z"
+    },
+    "/audio/063-unique-design.mp3": {
+      "hash": "67eab807c15251d650d87532a1f8e8df",
+      "size": 9138552,
+      "sha256": "e279f2ebbfe17ffae43ef40d6143d7146b15436eb4af406139d40ff6cb73fe06",
+      "type": "audio",
+      "mediaId": "music-000063",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/063-unique-design.mp3"
+      },
+      "addedAt": "2026-08-22T05:47:29.738Z"
+    },
+    "/audio/064-up-in-the-clouds.mp3": {
+      "hash": "91e033e8cb5b8c8fefbdc6652e84e8d2",
+      "size": 17210754,
+      "sha256": "a8bf16e589bd4890fd7a450f7d8992241283920883d188a73ca9915692c88366",
+      "type": "audio",
+      "mediaId": "music-000064",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/064-up-in-the-clouds.mp3"
+      },
+      "addedAt": "2026-08-22T05:47:45.149Z"
     }
   }
 }
