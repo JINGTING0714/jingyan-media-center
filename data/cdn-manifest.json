@@ -2,10 +2,10 @@
   "version": 1,
   "worker": "jingyan-media-cdn",
   "baseURL": "https://jingyan-media-cdn.jingyancdn.workers.dev",
-  "updatedAt": "2026-08-22T04:55:08.191Z",
-  "lastPublishedAt": "2026-08-22T04:55:08.191Z",
-  "lastVersionId": "8be121d8-bb61-4249-906f-b15f66ce4c67",
-  "lastDeploymentId": "860b3e89-3d90-41b2-8503-9df572458a26",
+  "updatedAt": "2026-08-22T05:00:27.446Z",
+  "lastPublishedAt": "2026-08-22T05:00:27.446Z",
+  "lastVersionId": "4b0faa78-bf43-48d0-a26f-8a7b71dc6d3e",
+  "lastDeploymentId": "b900501a-3964-4838-811b-e6450a5e73e3",
   "assets": {
     "/audio/004-jingyan-test-004-mp3.mp3": {
       "hash": "6e41de8f8e42b9643d7f2a5bcc066aae",
@@ -1137,6 +1137,97 @@
         "path": "music/037-shen-ye-dian-ying.mp3"
       },
       "addedAt": "2026-08-22T04:54:33.561Z"
+    },
+    "/audio/038-bu-gai-bu-gai-u300a-xiang-nong-li-de-na-jian-shu-dian-u300b-hua-shi-ou-xiang-ju-pian-tou-qu.mp3": {
+      "hash": "e87dee38d429696a7bb293db14db8538",
+      "size": 10800267,
+      "sha256": "7cb55fa6ec9679ddfe01ffe05ccd3c76056893c96a0c2cb5b9dfed423507982c",
+      "type": "audio",
+      "mediaId": "music-000038",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/038-bu-gai-bu-gai-u300a-xiang-nong-li-de-na-jian-shu-dian-u300b-hua-shi-ou-xiang-ju-pian-tou-qu.mp3"
+      },
+      "addedAt": "2026-08-22T04:58:38.172Z"
+    },
+    "/audio/039-xi-you-heng-wen.mp3": {
+      "hash": "d17543baf478c4451d818794318bb51f",
+      "size": 19418162,
+      "sha256": "9a582313fb671453300cbfbb1cf4946769e16b7563912473e05ba06014ab2e15",
+      "type": "audio",
+      "mediaId": "music-000039",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/039-xi-you-heng-wen.mp3"
+      },
+      "addedAt": "2026-08-22T04:58:54.304Z"
+    },
+    "/audio/040-heng-wen-u300a-xiang-nong-li-de-na-jia-shu-dian-u300b-hua-shi-ou-xiang-ju-cha-qu.mp3": {
+      "hash": "5505eafe597181e3724ede5b442f8ad3",
+      "size": 10428277,
+      "sha256": "5c864c29aa1dd2680c6b2211d26603564a72bbdd16969c73ac21faad40c06f16",
+      "type": "audio",
+      "mediaId": "music-000040",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/040-heng-wen-u300a-xiang-nong-li-de-na-jia-shu-dian-u300b-hua-shi-ou-xiang-ju-cha-qu.mp3"
+      },
+      "addedAt": "2026-08-22T04:59:07.433Z"
+    },
+    "/audio/041-feng-qi-lai.mp3": {
+      "hash": "fb59c3303a42519ed09b756d79af8e42",
+      "size": 7251790,
+      "sha256": "b7d446d578b807a629fe0c07524627a91e6996c9f350c948e4839e68ace77a30",
+      "type": "audio",
+      "mediaId": "music-000041",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/041-feng-qi-lai.mp3"
+      },
+      "addedAt": "2026-08-22T04:59:19.228Z"
+    },
+    "/audio/042-girls.mp3": {
+      "hash": "19c235087b2e4f513e9b5b15df8e13ee",
+      "size": 10891173,
+      "sha256": "d68c6d9a78752f897166b73e79382bc6842b9eca065ca7f367d898f644822a02",
+      "type": "audio",
+      "mediaId": "music-000042",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/042-girls.mp3"
+      },
+      "addedAt": "2026-08-22T04:59:32.337Z"
+    },
+    "/audio/043-gen-ni-zhu-u300a-nue-ren30-qing-ding-shui-wu-jian-u300b-san-li-ou-xiang-ju-cha-qu.mp3": {
+      "hash": "f20692788395ba96e35d21420d750644",
+      "size": 10604867,
+      "sha256": "f6759ce1b8b53f5b94c425f76f5c526669cc0091ce9f76af21aabf69fc6214d0",
+      "type": "audio",
+      "mediaId": "music-000043",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/043-gen-ni-zhu-u300a-nue-ren30-qing-ding-shui-wu-jian-u300b-san-li-ou-xiang-ju-cha-qu.mp3"
+      },
+      "addedAt": "2026-08-22T04:59:45.367Z"
+    },
+    "/audio/044-yes-i-do.mp3": {
+      "hash": "c76082115fb234f769a127dd5d4ff8f2",
+      "size": 9040667,
+      "sha256": "d0ee5ad9ae640065c6d84307df0264b54c4ab1a5a5f7d102c50efb4f9563c710",
+      "type": "audio",
+      "mediaId": "music-000044",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/044-yes-i-do.mp3"
+      },
+      "addedAt": "2026-08-22T04:59:57.791Z"
     }
   }
 }
