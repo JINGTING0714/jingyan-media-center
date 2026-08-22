@@ -329,7 +329,7 @@ async function serveLibrary(
         ) {
           element.setAttribute(
             "src",
-            "/library.js?v=20260820-personal-v3"
+            "/library.js?v=20260822-owner-libraries-v1"
           );
         }
       }
@@ -343,7 +343,7 @@ async function serveLibrary(
         ) {
           element.setAttribute(
             "href",
-            "/library.css?v=20260820-personal-v3"
+            "/library.css?v=20260822-owner-libraries-v1"
           );
         }
       }

@@ -412,44 +412,133 @@ async function getUploadOwnerMap(
         );
 
 
-    const result =
-      await env.AUTH_DB
-        .prepare(
-          `
-          SELECT
+    /*
+     * A published media item may have come from either upload path:
+     *
+     *   - upload_jobs: single-file uploads
+     *   - upload_batch_items + upload_batches: batch uploads
+     *
+     * The original implementation only consulted upload_jobs. Every batch
+     * item therefore lost its uploader during a full manifest sync and was
+     * subsequently treated as legacy Owner media by the personal library.
+     */
+    const [
+      singleResult,
+      batchResult
+    ] =
+      await Promise.all([
 
-            media_id,
-            user_id,
-            id,
-            original_name,
-            completed_at
+        env.AUTH_DB
+          .prepare(
+            `
+            SELECT
 
-          FROM upload_jobs
+              media_id,
+              user_id,
+              id,
+              original_name,
+              completed_at
 
-          WHERE
-            status = 'complete'
+            FROM upload_jobs
 
-          AND
-            media_id IN (
-              ${placeholders}
+            WHERE
+              status = 'complete'
+
+            AND
+              media_id IN (
+                ${placeholders}
+              )
+            `
+          )
+          .bind(
+            ...group
+          )
+          .all(),
+
+
+        env.AUTH_DB
+          .prepare(
+            `
+            SELECT
+
+              item.media_id AS media_id,
+              batch.user_id AS user_id,
+              item.id AS id,
+              item.original_name AS original_name,
+              item.completed_at AS completed_at
+
+            FROM upload_batch_items AS item
+
+            INNER JOIN upload_batches AS batch
+              ON batch.id = item.batch_id
+
+            WHERE
+              item.status = 'complete'
+
+            AND
+              item.media_id IN (
+                ${placeholders}
+              )
+            `
+          )
+          .bind(
+            ...group
+          )
+          .all()
+
+      ]);
+
+
+    const candidates = [
+      ...(
+        singleResult.results ||
+        []
+      ),
+      ...(
+        batchResult.results ||
+        []
+      )
+    ]
+      .sort(
+        (
+          left,
+          right
+        ) => {
+          const completed =
+            Number(
+              left.completed_at ||
+              0
+            ) -
+            Number(
+              right.completed_at ||
+              0
+            );
+
+
+          if (
+            completed !==
+            0
+          ) {
+            return completed;
+          }
+
+
+          return String(
+            left.id ||
+            ""
+          ).localeCompare(
+            String(
+              right.id ||
+              ""
             )
-
-          ORDER BY
-            completed_at ASC
-          `
-        )
-        .bind(
-          ...group
-        )
-        .all();
+          );
+        }
+      );
 
 
     for (
       const row
-      of (
-        result.results ||
-        []
-      )
+      of candidates
     ) {
 
       if (

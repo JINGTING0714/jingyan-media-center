@@ -21,6 +21,10 @@ const ALLOWED_STATUS =
   ]);
 
 
+const UNASSIGNED_LIBRARY_ID =
+  "__unassigned__";
+
+
 const TRASH_RETENTION_SECONDS =
   7 * 24 * 60 * 60;
 
@@ -124,6 +128,34 @@ function integerParam(
       )
     )
   );
+}
+
+
+function splitIntoChunks(
+  values,
+  size = 80
+) {
+  const chunks = [];
+
+
+  for (
+    let index = 0;
+    index <
+      values.length;
+    index +=
+      size
+  ) {
+    chunks.push(
+      values.slice(
+        index,
+        index +
+          size
+      )
+    );
+  }
+
+
+  return chunks;
 }
 
 
@@ -330,13 +362,123 @@ function toIso(
  * ======================================================= */
 
 
-function ownershipScope(
+function normalizeLibraryId(
+  value,
   auth
+) {
+  const requested =
+    String(
+      value ||
+      "self"
+    )
+      .trim();
+
+
+  if (
+    requested ===
+      "self" ||
+    requested ===
+      auth.user.id
+  ) {
+    return auth.user.id;
+  }
+
+
+  if (
+    !isOwner(
+      auth
+    )
+  ) {
+    throw new HttpError(
+      403,
+      "library_scope_denied"
+    );
+  }
+
+
+  if (
+    requested ===
+      UNASSIGNED_LIBRARY_ID
+  ) {
+    return UNASSIGNED_LIBRARY_ID;
+  }
+
+
+  if (
+    !requested ||
+    requested.length >
+      120 ||
+    /[\u0000-\u001f\u007f]/.test(
+      requested
+    )
+  ) {
+    throw new HttpError(
+      400,
+      "invalid_library_owner"
+    );
+  }
+
+
+  return requested;
+}
+
+
+function requestedLibraryId(
+  url,
+  auth
+) {
+  return normalizeLibraryId(
+    url.searchParams.get(
+      "owner"
+    ),
+    auth
+  );
+}
+
+
+function mutationLibraryId(
+  body,
+  auth
+) {
+  return normalizeLibraryId(
+    body?.libraryOwnerId,
+    auth
+  );
+}
+
+
+function ownershipScope(
+  auth,
+  libraryUserId =
+    auth?.user?.id
 ) {
   if (
     isOwner(
       auth
-    )
+    ) &&
+    libraryUserId ===
+      UNASSIGNED_LIBRARY_ID
+  ) {
+    return {
+      sql: `
+        uploader_user_id IS NULL
+
+        AND
+
+        first_upload_job_id IS NOT NULL
+      `,
+
+      bindings: []
+    };
+  }
+
+
+  if (
+    isOwner(
+      auth
+    ) &&
+    libraryUserId ===
+      auth.user.id
   ) {
     return {
       sql: `
@@ -367,7 +509,11 @@ function ownershipScope(
       "uploader_user_id = ?",
 
     bindings: [
-      auth.user.id
+      isOwner(
+        auth
+      )
+        ? libraryUserId
+        : auth.user.id
     ]
   };
 }
@@ -383,6 +529,516 @@ function isLegacyOwnerMedia(
     ) &&
     !row.uploader_user_id &&
     !row.first_upload_job_id
+  );
+}
+
+
+async function resolveLibrarySelection(
+  env,
+  auth,
+  libraryUserId
+) {
+  if (
+    libraryUserId ===
+      auth.user.id
+  ) {
+    return {
+      id:
+        auth.user.id,
+
+      userId:
+        auth.user.id,
+
+      displayName:
+        auth.user.displayName ||
+        auth.user.display_name ||
+        "我的媒体",
+
+      kind:
+        "self",
+
+      isSelf:
+        true,
+
+      status:
+        auth.user.status ||
+        "active"
+    };
+  }
+
+
+  if (
+    libraryUserId ===
+      UNASSIGNED_LIBRARY_ID
+  ) {
+    return {
+      id:
+        UNASSIGNED_LIBRARY_ID,
+
+      userId:
+        null,
+
+      displayName:
+        "已移除用户",
+
+      kind:
+        "unassigned",
+
+      isSelf:
+        false,
+
+      status:
+        "removed"
+    };
+  }
+
+
+  const user =
+    await env.AUTH_DB
+      .prepare(`
+        SELECT
+          id,
+          display_name,
+          status
+
+        FROM users
+
+        WHERE id = ?
+
+        LIMIT 1
+      `)
+      .bind(
+        libraryUserId
+      )
+      .first();
+
+
+  return {
+    id:
+      libraryUserId,
+
+    userId:
+      libraryUserId,
+
+    displayName:
+      user?.display_name ||
+      "已移除用户",
+
+    kind:
+      user
+        ? "member"
+        : "removed",
+
+    isSelf:
+      false,
+
+    status:
+      user?.status ||
+      "removed"
+  };
+}
+
+
+async function getLibraryDirectory(
+  env,
+  auth,
+  status
+) {
+  if (
+    !isOwner(
+      auth
+    )
+  ) {
+    return [];
+  }
+
+
+  const result =
+    await env.MEDIA_DB
+      .prepare(`
+        SELECT
+
+          CASE
+            WHEN
+              uploader_user_id IS NULL
+              AND
+              first_upload_job_id IS NULL
+
+            THEN ?
+
+            WHEN
+              uploader_user_id IS NULL
+
+            THEN ?
+
+            ELSE
+              uploader_user_id
+          END AS library_user_id,
+
+          COALESCE(
+            SUM(
+              CASE
+                WHEN status = ?
+                THEN 1
+                ELSE 0
+              END
+            ),
+            0
+          ) AS total,
+
+          COALESCE(
+            SUM(
+              CASE
+                WHEN
+                  status = ?
+                  AND
+                  type = 'image'
+                THEN 1
+                ELSE 0
+              END
+            ),
+            0
+          ) AS image,
+
+          COALESCE(
+            SUM(
+              CASE
+                WHEN
+                  status = ?
+                  AND
+                  type = 'audio'
+                THEN 1
+                ELSE 0
+              END
+            ),
+            0
+          ) AS audio,
+
+          COALESCE(
+            SUM(
+              CASE
+                WHEN
+                  status = ?
+                  AND
+                  type = 'video'
+                THEN 1
+                ELSE 0
+              END
+            ),
+            0
+          ) AS video
+
+        FROM media
+
+        WHERE status IN (
+          'published',
+          'trashed'
+        )
+
+        GROUP BY
+          library_user_id
+      `)
+      .bind(
+        auth.user.id,
+        UNASSIGNED_LIBRARY_ID,
+        status,
+        status,
+        status,
+        status
+      )
+      .all();
+
+
+  const rows =
+    result.results ||
+    [];
+
+
+  const userIds =
+    [
+      ...new Set(
+        rows
+          .map(
+            row =>
+              row.library_user_id
+          )
+          .filter(
+            value =>
+              value &&
+              value !==
+                auth.user.id &&
+              value !==
+                UNASSIGNED_LIBRARY_ID
+          )
+      )
+    ];
+
+
+  const userMap =
+    new Map();
+
+
+  for (
+    const group
+    of splitIntoChunks(
+      userIds
+    )
+  ) {
+    if (
+      group.length ===
+        0
+    ) {
+      continue;
+    }
+
+
+    const placeholders =
+      group
+        .map(
+          () =>
+            "?"
+        )
+        .join(
+          ","
+        );
+
+
+    const users =
+      await env.AUTH_DB
+        .prepare(`
+          SELECT
+            id,
+            display_name,
+            status
+
+          FROM users
+
+          WHERE id IN (
+            ${placeholders}
+          )
+        `)
+        .bind(
+          ...group
+        )
+        .all();
+
+
+    for (
+      const user
+      of (
+        users.results ||
+        []
+      )
+    ) {
+      userMap.set(
+        user.id,
+        user
+      );
+    }
+  }
+
+
+  const directory =
+    rows.map(
+      row => {
+        const id =
+          row.library_user_id;
+
+
+        const self =
+          id ===
+          auth.user.id;
+
+
+        const unassigned =
+          id ===
+          UNASSIGNED_LIBRARY_ID;
+
+
+        const user =
+          userMap.get(
+            id
+          );
+
+
+        return {
+          id,
+
+          userId:
+            unassigned
+              ? null
+              : id,
+
+          displayName:
+            self
+              ? (
+                  auth.user.displayName ||
+                  auth.user.display_name ||
+                  "Owner"
+                )
+              : (
+                  unassigned
+                    ? "已移除用户"
+                    : (
+                        user?.display_name ||
+                        "已移除用户"
+                      )
+                ),
+
+          label:
+            self
+              ? "我的媒体"
+              : (
+                  unassigned
+                    ? "已移除用户"
+                    : (
+                        user?.display_name ||
+                        "已移除用户"
+                      )
+                ),
+
+          kind:
+            self
+              ? "self"
+              : (
+                  unassigned
+                    ? "unassigned"
+                    : (
+                        user
+                          ? "member"
+                          : "removed"
+                      )
+                ),
+
+          status:
+            self
+              ? auth.user.status
+              : (
+                  unassigned
+                    ? "removed"
+                    : (
+                        user?.status ||
+                        "removed"
+                      )
+                ),
+
+          summary: {
+            total:
+              Number(
+                row.total ||
+                0
+              ),
+
+            image:
+              Number(
+                row.image ||
+                0
+              ),
+
+            audio:
+              Number(
+                row.audio ||
+                0
+              ),
+
+            video:
+              Number(
+                row.video ||
+                0
+              )
+          }
+        };
+      }
+    );
+
+
+  if (
+    !directory.some(
+      item =>
+        item.id ===
+        auth.user.id
+    )
+  ) {
+    directory.push({
+      id:
+        auth.user.id,
+
+      userId:
+        auth.user.id,
+
+      displayName:
+        auth.user.displayName ||
+        auth.user.display_name ||
+        "Owner",
+
+      label:
+        "我的媒体",
+
+      kind:
+        "self",
+
+      status:
+        auth.user.status,
+
+      summary: {
+        total:
+          0,
+
+        image:
+          0,
+
+        audio:
+          0,
+
+        video:
+          0
+      }
+    });
+  }
+
+
+  return directory.sort(
+    (
+      left,
+      right
+    ) => {
+      if (
+        left.kind ===
+          "self"
+      ) {
+        return -1;
+      }
+
+
+      if (
+        right.kind ===
+          "self"
+      ) {
+        return 1;
+      }
+
+
+      if (
+        left.kind ===
+          "unassigned"
+      ) {
+        return 1;
+      }
+
+
+      if (
+        right.kind ===
+          "unassigned"
+      ) {
+        return -1;
+      }
+
+
+      return left.displayName.localeCompare(
+        right.displayName,
+        "zh-CN"
+      );
+    }
   );
 }
 
@@ -440,11 +1096,14 @@ async function getManifestState(
 async function getOwnedMediaRow(
   env,
   auth,
-  mediaId
+  mediaId,
+  libraryUserId =
+    auth.user.id
 ) {
   const scope =
     ownershipScope(
-      auth
+      auth,
+      libraryUserId
     );
 
 
@@ -498,7 +1157,8 @@ async function getOwnedMediaRow(
 
 function serializeMedia(
   row,
-  auth
+  auth,
+  library = null
 ) {
   const legacyOwner =
     isLegacyOwnerMedia(
@@ -537,13 +1197,25 @@ function serializeMedia(
       ),
 
     sha256:
-      row.sha256,
+      isOwner(
+        auth
+      )
+        ? row.sha256
+        : null,
 
     cloudflareHash:
-      row.cloudflare_hash,
+      isOwner(
+        auth
+      )
+        ? row.cloudflare_hash
+        : null,
 
     cdnShard:
-      row.cdn_shard,
+      isOwner(
+        auth
+      )
+        ? row.cdn_shard
+        : null,
 
     protected:
       Boolean(
@@ -556,18 +1228,23 @@ function serializeMedia(
     legacyOwnerMedia:
       legacyOwner,
 
-    source: {
+    source:
+      isOwner(
+        auth
+      )
+        ? {
 
-      repository:
-        row.source_repository,
+            repository:
+              row.source_repository,
 
-      branch:
-        row.source_branch,
+            branch:
+              row.source_branch,
 
-      path:
-        row.source_path
+            path:
+              row.source_path
 
-    },
+          }
+        : null,
 
     uploader: {
 
@@ -587,14 +1264,30 @@ function serializeMedia(
               "Owner"
             )
           : (
-              row.uploader_user_id ===
-                auth.user.id
+              library &&
+              (
+                row.uploader_user_id ===
+                  library.userId ||
+                (
+                  !row.uploader_user_id &&
+                  library.id ===
+                    UNASSIGNED_LIBRARY_ID
+                )
+              )
                 ? (
-                    auth.user.displayName ||
-                    auth.user.display_name ||
+                    library.displayName ||
                     null
                   )
-                : null
+                : (
+                    row.uploader_user_id ===
+                      auth.user.id
+                      ? (
+                          auth.user.displayName ||
+                          auth.user.display_name ||
+                          null
+                        )
+                      : null
+                  )
             ),
 
       legacy:
@@ -689,11 +1382,13 @@ async function addMediaEvent(
 async function getSummary(
   env,
   auth,
+  libraryUserId,
   status
 ) {
   const scope =
     ownershipScope(
-      auth
+      auth,
+      libraryUserId
     );
 
 
@@ -827,6 +1522,21 @@ async function listPersonalLibrary(
     );
 
 
+  const libraryUserId =
+    requestedLibraryId(
+      url,
+      auth
+    );
+
+
+  const library =
+    await resolveLibrarySelection(
+      env,
+      auth,
+      libraryUserId
+    );
+
+
   const status =
     parseStatus(
       url
@@ -856,7 +1566,8 @@ async function listPersonalLibrary(
 
   const scope =
     ownershipScope(
-      auth
+      auth,
+      libraryUserId
     );
 
 
@@ -1000,13 +1711,15 @@ async function listPersonalLibrary(
   const [
     summary,
     countRow,
-    manifest
+    manifest,
+    libraries
   ] =
     await Promise.all([
 
       getSummary(
         env,
         auth,
+        libraryUserId,
         status
       ),
 
@@ -1027,6 +1740,12 @@ async function listPersonalLibrary(
 
       getManifestState(
         env
+      ),
+
+      getLibraryDirectory(
+        env,
+        auth,
+        status
       )
 
     ]);
@@ -1133,7 +1852,8 @@ async function listPersonalLibrary(
         row =>
           serializeMedia(
             row,
-            auth
+            auth,
+            library
           )
       );
 
@@ -1141,17 +1861,30 @@ async function listPersonalLibrary(
   return jsonResponse({
 
     scope:
-      "personal",
+      library.isSelf
+        ? "personal"
+        : "owner-selected",
 
     ownerUserId:
+      library.userId,
+
+    viewerUserId:
       auth.user.id,
 
+    library,
+
+    libraries,
+
     ownershipMode:
-      isOwner(
+      !isOwner(
         auth
       )
-        ? "owner-plus-legacy"
-        : "personal-only",
+        ? "personal-only"
+        : (
+            library.isSelf
+              ? "owner-plus-legacy"
+              : "owner-selected-library"
+          ),
 
     manifest: {
 
@@ -1251,6 +1984,14 @@ async function listPersonalLibrary(
         true,
 
       legacyOwnerMedia:
+        Boolean(
+          isOwner(
+            auth
+          ) &&
+          library.isSelf
+        ),
+
+      ownerLibraryDirectory:
         isOwner(
           auth
         )
@@ -1290,11 +2031,27 @@ async function trashMedia(
     );
 
 
+  const libraryUserId =
+    mutationLibraryId(
+      body,
+      auth
+    );
+
+
+  const library =
+    await resolveLibrarySelection(
+      env,
+      auth,
+      libraryUserId
+    );
+
+
   const row =
     await getOwnedMediaRow(
       env,
       auth,
-      mediaId
+      mediaId,
+      libraryUserId
     );
 
 
@@ -1335,7 +2092,8 @@ async function trashMedia(
       item:
         serializeMedia(
           row,
-          auth
+          auth,
+          library
         )
 
     });
@@ -1434,7 +2192,12 @@ async function trashMedia(
       metadata: {
 
         scope:
-          "personal",
+          library.isSelf
+            ? "personal"
+            : "owner-selected",
+
+        libraryOwnerId:
+          library.userId,
 
         legacyOwnerMedia:
           isLegacyOwnerMedia(
@@ -1455,7 +2218,8 @@ async function trashMedia(
     await getOwnedMediaRow(
       env,
       auth,
-      mediaId
+      mediaId,
+      libraryUserId
     );
 
 
@@ -1467,7 +2231,8 @@ async function trashMedia(
     item:
       serializeMedia(
         updated,
-        auth
+        auth,
+        library
       )
 
   });
@@ -1512,11 +2277,27 @@ async function restoreMedia(
     );
 
 
+  const libraryUserId =
+    mutationLibraryId(
+      body,
+      auth
+    );
+
+
+  const library =
+    await resolveLibrarySelection(
+      env,
+      auth,
+      libraryUserId
+    );
+
+
   const row =
     await getOwnedMediaRow(
       env,
       auth,
-      mediaId
+      mediaId,
+      libraryUserId
     );
 
 
@@ -1545,7 +2326,8 @@ async function restoreMedia(
       item:
         serializeMedia(
           row,
-          auth
+          auth,
+          library
         )
 
     });
@@ -1631,7 +2413,12 @@ async function restoreMedia(
       metadata: {
 
         scope:
-          "personal",
+          library.isSelf
+            ? "personal"
+            : "owner-selected",
+
+        libraryOwnerId:
+          library.userId,
 
         legacyOwnerMedia:
           isLegacyOwnerMedia(
@@ -1649,7 +2436,8 @@ async function restoreMedia(
     await getOwnedMediaRow(
       env,
       auth,
-      mediaId
+      mediaId,
+      libraryUserId
     );
 
 
@@ -1661,7 +2449,8 @@ async function restoreMedia(
     item:
       serializeMedia(
         updated,
-        auth
+        auth,
+        library
       )
 
   });
@@ -1849,11 +2638,27 @@ async function permanentDeleteMedia(
     );
 
 
+  const libraryUserId =
+    mutationLibraryId(
+      body,
+      auth
+    );
+
+
+  const library =
+    await resolveLibrarySelection(
+      env,
+      auth,
+      libraryUserId
+    );
+
+
   const row =
     await getOwnedMediaRow(
       env,
       auth,
-      mediaId
+      mediaId,
+      libraryUserId
     );
 
 
@@ -2122,7 +2927,12 @@ async function permanentDeleteMedia(
       metadata: {
 
         scope:
-          "personal",
+          library.isSelf
+            ? "personal"
+            : "owner-selected",
+
+        libraryOwnerId:
+          library.userId,
 
         legacyOwnerMedia:
           isLegacyOwnerMedia(

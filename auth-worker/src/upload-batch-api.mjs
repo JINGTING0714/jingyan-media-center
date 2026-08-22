@@ -45,6 +45,27 @@ const TERMINAL_ITEM_STATUSES =
   ]);
 
 
+function batchStatusRank(
+  status
+) {
+
+  return {
+    created: 0,
+    staging: 1,
+    ready: 2,
+    queued: 3,
+    processing: 4,
+    complete: 5,
+    partial: 5,
+    failed: 5,
+    cancelled: 6
+  }[
+    status
+  ] ?? 0;
+
+}
+
+
 const MEDIA_RULES =
   Object.freeze({
 
@@ -326,7 +347,8 @@ function parseResultJson(
 
 
 function publicItem(
-  row
+  row,
+  includeWorkflow = false
 ) {
 
   if (
@@ -375,21 +397,35 @@ function publicItem(
       row.final_filename,
 
     repository:
-      row.source_repository,
+      includeWorkflow
+        ? row.source_repository
+        : null,
 
     sha256:
-      row.sha256,
+      includeWorkflow
+        ? row.sha256
+        : null,
 
     cdnUrl:
       row.cdn_url,
 
     error:
-      row.error_message,
+      !includeWorkflow &&
+      /github/i.test(
+        String(
+          row.error_message ||
+          ""
+        )
+      )
+        ? "background_dispatch_failed"
+        : row.error_message,
 
     result:
-      parseResultJson(
-        row.result_json
-      ),
+      includeWorkflow
+        ? parseResultJson(
+            row.result_json
+          )
+        : null,
 
     createdAt:
       Number(
@@ -416,7 +452,8 @@ function publicItem(
 
 function publicBatch(
   row,
-  items = []
+  items = [],
+  includeWorkflow = false
 ) {
 
   if (
@@ -470,18 +507,29 @@ function publicBatch(
       ),
 
     githubRunId:
-      row.github_run_id ===
+      includeWorkflow &&
+      row.github_run_id !==
         null
-        ? null
-        : Number(
+        ? Number(
             row.github_run_id
-          ),
+          )
+        : null,
 
     githubRunUrl:
-      row.github_run_url,
+      includeWorkflow
+        ? row.github_run_url
+        : null,
 
     error:
-      row.error_message,
+      !includeWorkflow &&
+      /github/i.test(
+        String(
+          row.error_message ||
+          ""
+        )
+      )
+        ? "background_dispatch_failed"
+        : row.error_message,
 
     createdAt:
       Number(
@@ -511,7 +559,11 @@ function publicBatch(
 
     items:
       items.map(
-        publicItem
+        item =>
+          publicItem(
+            item,
+            includeWorkflow
+          )
       )
 
   };
@@ -702,6 +754,9 @@ function deriveBatchSummary(
       "processing";
 
   } else if (
+    batch.status ===
+      "queued" ||
+
     items.some(
       item =>
         item.status ===
@@ -821,6 +876,20 @@ async function syncBatchSummary(
 
       WHERE
         id = ?
+
+      AND
+        CASE status
+          WHEN 'created' THEN 0
+          WHEN 'staging' THEN 1
+          WHEN 'ready' THEN 2
+          WHEN 'queued' THEN 3
+          WHEN 'processing' THEN 4
+          WHEN 'complete' THEN 5
+          WHEN 'partial' THEN 5
+          WHEN 'failed' THEN 5
+          WHEN 'cancelled' THEN 6
+          ELSE 0
+        END <= ?
     `)
     .bind(
       summary.status,
@@ -837,7 +906,11 @@ async function syncBatchSummary(
 
       completedAt,
 
-      batch.id
+      batch.id,
+
+      batchStatusRank(
+        summary.status
+      )
     )
     .run();
 
@@ -925,6 +998,33 @@ async function findActiveBatch(
           'queued',
           'processing'
         )
+
+      ORDER BY
+        created_at DESC
+
+      LIMIT 1
+    `)
+    .bind(
+      userId
+    )
+    .first();
+
+}
+
+
+async function findLatestBatch(
+  env,
+  userId
+) {
+
+  return env.AUTH_DB
+    .prepare(`
+      SELECT *
+
+      FROM upload_batches
+
+      WHERE
+        user_id = ?
 
       ORDER BY
         created_at DESC
@@ -1314,7 +1414,9 @@ async function createBatch(
       batch:
         publicBatch(
           loaded.batch,
-          loaded.items
+          loaded.items,
+          auth.user.role ===
+            "owner"
         )
     },
     201
@@ -1328,7 +1430,7 @@ async function getCurrentBatch(
   auth
 ) {
 
-  const current =
+  let current =
     await findActiveBatch(
       env,
       auth.user.id
@@ -1339,10 +1441,23 @@ async function getCurrentBatch(
     !current
   ) {
 
-    return jsonResponse({
-      batch:
-        null
-    });
+    current =
+      await findLatestBatch(
+        env,
+        auth.user.id
+      );
+
+
+    if (
+      !current
+    ) {
+
+      return jsonResponse({
+        batch:
+          null
+      });
+
+    }
 
   }
 
@@ -1359,7 +1474,9 @@ async function getCurrentBatch(
     batch:
       publicBatch(
         loaded.batch,
-        loaded.items
+        loaded.items,
+        auth.user.role ===
+          "owner"
       )
   });
 
@@ -1384,7 +1501,9 @@ async function getBatchById(
     batch:
       publicBatch(
         loaded.batch,
-        loaded.items
+        loaded.items,
+        auth.user.role ===
+          "owner"
       )
   });
 

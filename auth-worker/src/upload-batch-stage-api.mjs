@@ -294,6 +294,9 @@ async function refreshBatchCounters(
         "processing";
 
     } else if (
+      batch.status ===
+        "queued" ||
+
       items.some(
         item =>
           item.status ===
@@ -360,6 +363,20 @@ async function refreshBatchCounters(
         completed_at = ?
 
       WHERE id = ?
+
+      AND
+        CASE status
+          WHEN 'created' THEN 0
+          WHEN 'staging' THEN 1
+          WHEN 'ready' THEN 2
+          WHEN 'queued' THEN 3
+          WHEN 'processing' THEN 4
+          WHEN 'complete' THEN 5
+          WHEN 'partial' THEN 5
+          WHEN 'failed' THEN 5
+          WHEN 'cancelled' THEN 6
+          ELSE 0
+        END <= ?
     `)
     .bind(
       status,
@@ -381,7 +398,11 @@ async function refreshBatchCounters(
           )
         : null,
 
-      batchId
+      batchId,
+
+      batchStatusRank(
+        status
+      )
     )
     .run();
 
@@ -398,7 +419,8 @@ async function stageItem(
   env,
   auth,
   batchId,
-  itemId
+  itemId,
+  ctx
 ) {
   requireSameOrigin(
     request
@@ -418,22 +440,6 @@ async function stageItem(
   );
 
 
-  if (
-    ![
-      "created",
-      "staging",
-      "ready"
-    ].includes(
-      batch.status
-    )
-  ) {
-    throw new HttpError(
-      409,
-      "upload_batch_not_stageable"
-    );
-  }
-
-
   const item =
     await getItem(
       env,
@@ -448,6 +454,87 @@ async function stageItem(
     throw new HttpError(
       404,
       "upload_batch_item_not_found"
+    );
+  }
+
+
+  if (
+    [
+      "staged",
+      "queued",
+      "processing",
+      "complete"
+    ].includes(
+      item.status
+    )
+  ) {
+    const currentBatch =
+      await refreshBatchCounters(
+        env,
+        batchId
+      );
+
+
+    return jsonResponse({
+      ok:
+        true,
+
+      alreadyStaged:
+        true,
+
+      batch: {
+        id:
+          currentBatch.id,
+
+        status:
+          currentBatch.status,
+
+        stagedCount:
+          Number(
+            currentBatch.staged_count
+          ),
+
+        totalCount:
+          Number(
+            currentBatch.total_count
+          ),
+
+        handoff:
+          [
+            "queued",
+            "processing",
+            "complete",
+            "partial"
+          ].includes(
+            currentBatch.status
+          )
+            ? "server_queued"
+            : "already_staged"
+      },
+
+      item: {
+        id:
+          item.id,
+
+        status:
+          item.status
+      }
+    });
+  }
+
+
+  if (
+    ![
+      "created",
+      "staging",
+      "ready"
+    ].includes(
+      batch.status
+    )
+  ) {
+    throw new HttpError(
+      409,
+      "upload_batch_not_stageable"
     );
   }
 
@@ -582,7 +669,7 @@ async function stageItem(
   }
 
 
-  const updatedBatch =
+  let updatedBatch =
     await refreshBatchCounters(
       env,
       batchId
@@ -595,6 +682,70 @@ async function stageItem(
       batchId,
       itemId
     );
+
+
+  let handoff =
+    "waiting_for_files";
+
+
+  if (
+    updatedBatch.status ===
+    "ready"
+  ) {
+    handoff =
+      "server_queued";
+
+
+    const takeover =
+      queueReadyBatchWithRetry(
+        env,
+        batchId
+      );
+
+
+    if (
+      typeof ctx?.waitUntil ===
+      "function"
+    ) {
+      ctx.waitUntil(
+        takeover.catch(
+          error => {
+            console.error(
+              "Automatic batch handoff failed:",
+              batchId,
+              error
+            );
+          }
+        )
+      );
+    }
+
+
+    try {
+      updatedBatch =
+        await takeover;
+
+    } catch (
+      error
+    ) {
+      handoff =
+        "retry_required";
+
+
+      console.error(
+        "Batch handoff will remain retryable:",
+        batchId,
+        error
+      );
+
+
+      updatedBatch =
+        await getBatch(
+          env,
+          batchId
+        );
+    }
+  }
 
 
   return jsonResponse({
@@ -616,7 +767,9 @@ async function stageItem(
       totalCount:
         Number(
           updatedBatch.total_count
-        )
+        ),
+
+      handoff
     },
 
     item: {
@@ -785,17 +938,10 @@ async function dispatchBatchWorkflow(
 }
 
 
-async function startBatch(
-  request,
+async function queueReadyBatch(
   env,
-  auth,
   batchId
 ) {
-  requireSameOrigin(
-    request
-  );
-
-
   let batch =
     await getBatch(
       env,
@@ -803,10 +949,14 @@ async function startBatch(
     );
 
 
-  assertOwner(
-    auth,
-    batch
-  );
+  if (
+    !batch
+  ) {
+    throw new HttpError(
+      404,
+      "upload_batch_not_found"
+    );
+  }
 
 
   batch =
@@ -814,6 +964,22 @@ async function startBatch(
       env,
       batchId
     );
+
+
+  if (
+    [
+      "queued",
+      "processing",
+      "complete",
+      "partial",
+      "failed",
+      "cancelled"
+    ].includes(
+      batch.status
+    )
+  ) {
+    return batch;
+  }
 
 
   if (
@@ -891,6 +1057,30 @@ async function startBatch(
     ) !==
     1
   ) {
+    const current =
+      await getBatch(
+        env,
+        batchId
+      );
+
+
+    if (
+      current &&
+      [
+        "queued",
+        "processing",
+        "complete",
+        "partial",
+        "failed",
+        "cancelled"
+      ].includes(
+        current.status
+      )
+    ) {
+      return current;
+    }
+
+
     throw new HttpError(
       409,
       "upload_batch_start_conflict"
@@ -911,7 +1101,8 @@ async function startBatch(
   } catch (
     error
   ) {
-    await env.AUTH_DB
+    const released =
+      await env.AUTH_DB
       .prepare(`
         UPDATE upload_batches
 
@@ -923,6 +1114,12 @@ async function startBatch(
 
         WHERE
           id = ?
+
+        AND
+          status = 'queued'
+
+        AND
+          github_run_id IS NULL
       `)
       .bind(
         String(
@@ -939,6 +1136,37 @@ async function startBatch(
         batchId
       )
       .run();
+
+
+    if (
+      changes(
+        released
+      ) !==
+      1
+    ) {
+      const current =
+        await getBatch(
+          env,
+          batchId
+        );
+
+
+      if (
+        current &&
+        [
+          "queued",
+          "processing",
+          "complete",
+          "partial",
+          "failed",
+          "cancelled"
+        ].includes(
+          current.status
+        )
+      ) {
+        return current;
+      }
+    }
 
 
     throw new HttpError(
@@ -1002,6 +1230,103 @@ async function startBatch(
     );
 
 
+  return batch;
+}
+
+
+function batchStatusRank(
+  status
+) {
+  return {
+    created: 0,
+    staging: 1,
+    ready: 2,
+    queued: 3,
+    processing: 4,
+    complete: 5,
+    partial: 5,
+    failed: 5,
+    cancelled: 6
+  }[
+    status
+  ] ?? 0;
+}
+
+
+async function queueReadyBatchWithRetry(
+  env,
+  batchId,
+  attempts = 2
+) {
+  let lastError =
+    null;
+
+
+  for (
+    let attempt = 0;
+    attempt < attempts;
+    attempt += 1
+  ) {
+    try {
+      return await queueReadyBatch(
+        env,
+        batchId
+      );
+
+    } catch (
+      error
+    ) {
+      lastError =
+        error;
+
+
+      if (
+        error?.code !==
+          "github_batch_dispatch_failed" ||
+        attempt ===
+          attempts - 1
+      ) {
+        throw error;
+      }
+    }
+  }
+
+
+  throw lastError;
+}
+
+
+async function startBatch(
+  request,
+  env,
+  auth,
+  batchId
+) {
+  requireSameOrigin(
+    request
+  );
+
+
+  const existing =
+    await getBatch(
+      env,
+      batchId
+    );
+
+
+  assertOwner(
+    auth,
+    existing
+  );
+
+
+  const batch =
+    await queueReadyBatchWithRetry(
+      env,
+      batchId
+    );
+
+
   return jsonResponse({
     ok:
       true,
@@ -1014,15 +1339,20 @@ async function startBatch(
         batch.status,
 
       githubRunId:
-        batch.github_run_id ===
+        auth?.user?.role ===
+          "owner" &&
+        batch.github_run_id !==
           null
-          ? null
-          : Number(
+          ? Number(
               batch.github_run_id
-            ),
+            )
+          : null,
 
       githubRunUrl:
-        batch.github_run_url
+        auth?.user?.role ===
+          "owner"
+          ? batch.github_run_url
+          : null
     }
   });
 }
@@ -1951,7 +2281,8 @@ export function isUserUploadBatchStagePath(
 export async function handleUserUploadBatchStageRequest(
   request,
   env,
-  auth
+  auth,
+  ctx
 ) {
   const url =
     new URL(
@@ -1998,7 +2329,9 @@ export async function handleUserUploadBatchStageRequest(
 
       decodeURIComponent(
         contentMatch[2]
-      )
+      ),
+
+      ctx
     );
   }
 

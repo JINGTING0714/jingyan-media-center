@@ -275,6 +275,100 @@
     }
 
 
+    function isOwnerUser() {
+
+        return currentUser
+            ?.role ===
+            "owner";
+
+    }
+
+
+    async function copyText(
+        value
+    ) {
+
+        if (
+            !value
+        ) {
+
+            throw new Error(
+                "copy_value_missing"
+            );
+
+        }
+
+
+        if (
+            navigator.clipboard
+                ?.writeText
+        ) {
+
+            await navigator.clipboard
+                .writeText(
+                    value
+                );
+
+
+            return;
+
+        }
+
+
+        const textarea =
+            createElement(
+                "textarea"
+            );
+
+
+        textarea.value =
+            value;
+
+
+        textarea.setAttribute(
+            "readonly",
+            ""
+        );
+
+
+        textarea.style.position =
+            "fixed";
+
+
+        textarea.style.opacity =
+            "0";
+
+
+        document.body.append(
+            textarea
+        );
+
+
+        textarea.select();
+
+
+        const copied =
+            document.execCommand(
+                "copy"
+            );
+
+
+        textarea.remove();
+
+
+        if (
+            !copied
+        ) {
+
+            throw new Error(
+                "copy_failed"
+            );
+
+        }
+
+    }
+
+
     async function readResponse(
         response
     ) {
@@ -616,7 +710,12 @@
                 "这个批次已经开始发布。",
 
             github_batch_dispatch_failed:
-                "GitHub 批量发布任务启动失败，可以稍后再次启动。",
+                isOwnerUser()
+                    ? "GitHub 批量发布任务启动失败，可以稍后再次启动。"
+                    : "后台发布任务启动失败，可以稍后再次启动。",
+
+            background_dispatch_failed:
+                "后台发布任务启动失败，可以稍后再次启动。",
 
             pipeline_state_not_saved:
                 "媒体可能已经处理，但最终状态没有安全保存。请先检查媒体库，不要盲目重传。",
@@ -690,7 +789,9 @@
                 "已暂存",
 
             queued:
-                "GitHub 排队",
+                isOwnerUser()
+                    ? "GitHub 排队"
+                    : "后台排队",
 
             processing:
                 "发布中",
@@ -731,10 +832,14 @@
                 "准备启动发布",
 
             queued:
-                "GitHub 已接收整批任务",
+                isOwnerUser()
+                    ? "GitHub 已接收整批任务"
+                    : "已交给后台处理",
 
             processing:
-                "GitHub 正在发布",
+                isOwnerUser()
+                    ? "GitHub 正在发布"
+                    : "正在发布",
 
             partial:
                 "部分完成",
@@ -1060,7 +1165,9 @@
                 batchAgeText();
 
 
-            return `整个批次只对应 1 个 GitHub Workflow。当前已等待 ${age || "0 秒"}。`;
+            return isOwnerUser()
+                ? `整个批次只对应 1 个 GitHub Workflow。当前已等待 ${age || "0 秒"}。`
+                : `整批文件已安全交给后台，当前已等待 ${age || "0 秒"}。现在可以离开此页。`;
 
         }
 
@@ -1070,7 +1177,9 @@
             "processing"
         ) {
 
-            return "GitHub 正在逐个处理这一批文件。单个文件失败不会让整批文件重新上传。";
+            return isOwnerUser()
+                ? "GitHub 正在逐个处理这一批文件。单个文件失败不会让整批文件重新上传。"
+                : "后台正在逐个发布这一批文件。单个文件失败不会让整批文件重新上传。";
 
         }
 
@@ -1231,13 +1340,17 @@
             createElement(
                 "h3",
                 "",
-                "批量上传 V2"
+                isOwnerUser()
+                    ? "批量上传 V2"
+                    : "批量上传"
             ),
 
             createElement(
                 "p",
                 "",
-                `最多 ${MAX_FILES} 个文件 · 临时上传并发 ${STAGING_CONCURRENCY} · 整批只启动 1 个 GitHub Workflow`
+                isOwnerUser()
+                    ? `最多 ${MAX_FILES} 个文件 · 临时上传并发 ${STAGING_CONCURRENCY} · 整批只启动 1 个 GitHub Workflow`
+                    : `最多 ${MAX_FILES} 个文件 · 文件进入云端后由后台继续发布`
             )
 
         );
@@ -1271,15 +1384,24 @@
                 batchStatusText(
                     batch.status
                 )
-            ),
-
-            createElement(
-                "span",
-                "",
-                `Batch ${batch.id}`
             )
 
         );
+
+
+        if (
+            isOwnerUser()
+        ) {
+
+            statusLine.append(
+                createElement(
+                    "span",
+                    "",
+                    `Batch ${batch.id}`
+                )
+            );
+
+        }
 
 
         const progress =
@@ -1374,6 +1496,73 @@
                 "div",
                 "batch-v1-actions"
             );
+
+
+        const completedUrls =
+            items
+                .filter(
+                    item =>
+                        item.status ===
+                            "complete" &&
+                        item.cdnUrl
+                )
+                .map(
+                    item =>
+                        item.cdnUrl
+                );
+
+
+        if (
+            completedUrls.length >
+            0
+        ) {
+
+            const copyAll =
+                createElement(
+                    "button",
+                    "primary",
+                    `复制全部 CDN (${completedUrls.length})`
+                );
+
+
+            copyAll.type =
+                "button";
+
+
+            copyAll.addEventListener(
+                "click",
+                async () => {
+
+                    try {
+
+                        await copyText(
+                            completedUrls.join(
+                                "\n\n"
+                            )
+                        );
+
+
+                        showToast(
+                            `已复制 ${completedUrls.length} 条 CDN 链接，每条之间空一行`
+                        );
+
+                    } catch {
+
+                        showToast(
+                            "复制失败，请重试"
+                        );
+
+                    }
+
+                }
+            );
+
+
+            actions.append(
+                copyAll
+            );
+
+        }
 
 
         const missing =
@@ -1520,6 +1709,7 @@
 
 
         if (
+            isOwnerUser() &&
             batch.githubRunUrl
         ) {
 
@@ -1681,11 +1871,9 @@
 
                         try {
 
-                            await navigator
-                                .clipboard
-                                .writeText(
-                                    item.cdnUrl
-                                );
+                            await copyText(
+                                item.cdnUrl
+                            );
 
 
                             showToast(
@@ -2219,7 +2407,9 @@
 
 
             showToast(
-                `整批 ${batch.totalCount} 个文件已交给 GitHub`
+                isOwnerUser()
+                    ? `整批 ${batch.totalCount} 个文件已交给 GitHub`
+                    : `整批 ${batch.totalCount} 个文件已交给后台，现在可以离开此页`
             );
 
 

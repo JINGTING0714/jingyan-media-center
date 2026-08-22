@@ -26,7 +26,7 @@ const AUTH_UX_SCRIPT =
 
 
 const UPLOAD_STATUS_SCRIPT =
-  `<script src="/upload-status-v2.js?v=20260820-upload-status-v2" defer></script>`;
+  `<script src="/upload-status-v2.js?v=20260822-member-ui-v1" defer></script>`;
 
 
 /*

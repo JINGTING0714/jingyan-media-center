@@ -64,6 +64,21 @@
                 "manifestUpdated"
             ),
 
+        ownerLibraryDirectory:
+            document.getElementById(
+                "ownerLibraryDirectory"
+            ),
+
+        ownerLibraryDescription:
+            document.getElementById(
+                "ownerLibraryDescription"
+            ),
+
+        ownerLibraryList:
+            document.getElementById(
+                "ownerLibraryList"
+            ),
+
         countAll:
             document.getElementById(
                 "countAll"
@@ -268,6 +283,12 @@
     let currentCapabilities =
         {};
 
+    let currentLibraryOwner =
+        "self";
+
+    let currentLibrary =
+        null;
+
     let currentType =
         "all";
 
@@ -360,6 +381,12 @@
 
             permission_denied:
                 "你没有删除媒体的权限",
+
+            library_scope_denied:
+                "你只能查看自己的媒体库",
+
+            invalid_library_owner:
+                "媒体库选择无效",
 
             media_not_found:
                 "找不到这个媒体，或它不属于当前账户",
@@ -828,6 +855,131 @@
     }
 
 
+    function renderLibraryDirectory(
+        libraries,
+        selectedLibrary
+    ) {
+        const isOwnerViewer =
+            currentUser
+                ?.role ===
+            "owner";
+
+        refs.ownerLibraryDirectory
+            ?.classList
+            .toggle(
+                "hidden",
+                !isOwnerViewer
+            );
+
+        if (
+            !isOwnerViewer ||
+            !refs.ownerLibraryList
+        ) {
+            return;
+        }
+
+        refs.ownerLibraryList.textContent =
+            "";
+
+        const entries =
+            Array.isArray(
+                libraries
+            )
+                ? libraries
+                : [];
+
+        const selectedName =
+            selectedLibrary
+                ?.isSelf
+                ? "我的媒体"
+                : (
+                    selectedLibrary
+                        ?.displayName ||
+                    "当前成员"
+                );
+
+        if (
+            refs.ownerLibraryDescription
+        ) {
+            refs.ownerLibraryDescription.textContent =
+                `当前：${selectedName}。每个账户的文件独立显示，不会混在一起。`;
+        }
+
+        entries.forEach(
+            entry => {
+                const button =
+                    createElement(
+                        "button",
+                        entry.id ===
+                            selectedLibrary
+                                ?.id
+                            ? "owner-library-button active"
+                            : "owner-library-button"
+                    );
+
+                button.type =
+                    "button";
+
+                button.setAttribute(
+                    "aria-pressed",
+                    entry.id ===
+                        selectedLibrary
+                            ?.id
+                        ? "true"
+                        : "false"
+                );
+
+                const summary =
+                    entry.summary ||
+                    {};
+
+                button.append(
+                    createElement(
+                        "strong",
+                        "",
+                        entry.label ||
+                            entry.displayName ||
+                            "未命名媒体库"
+                    ),
+
+                    createElement(
+                        "span",
+                        "",
+                        `共 ${Number(summary.total || 0)} · 图片 ${Number(summary.image || 0)} · 音频 ${Number(summary.audio || 0)} · 视频 ${Number(summary.video || 0)}`
+                    )
+                );
+
+                button.addEventListener(
+                    "click",
+                    () => {
+                        if (
+                            entry.id ===
+                            currentLibraryOwner
+                        ) {
+                            return;
+                        }
+
+                        closePreview();
+                        closeCollectionPicker();
+
+                        currentLibraryOwner =
+                            entry.id;
+
+                        currentPage =
+                            1;
+
+                        loadLibrary();
+                    }
+                );
+
+                refs.ownerLibraryList.append(
+                    button
+                );
+            }
+        );
+    }
+
+
     function metaRow(
         label,
         value,
@@ -1218,7 +1370,10 @@
                     body:
                         JSON.stringify({
                             mediaId:
-                                item.mediaId
+                                item.mediaId,
+
+                            libraryOwnerId:
+                                currentLibraryOwner
                         })
                 }
             );
@@ -1266,7 +1421,10 @@
                                 "restore",
 
                             mediaId:
-                                item.mediaId
+                                item.mediaId,
+
+                            libraryOwnerId:
+                                currentLibraryOwner
                         })
                 }
             );
@@ -1296,7 +1454,13 @@
         const confirmed =
             confirm(
                 `永久删除「${mediaName(item)}」？\n\n` +
-                "这会删除媒体记录，并启动 GitHub 源文件与 CDN 清理。\n" +
+                (
+                    currentUser
+                        ?.role ===
+                        "owner"
+                        ? "这会删除媒体记录，并启动 GitHub 源文件与 CDN 清理。\n"
+                        : "这会删除媒体记录，并启动源文件与 CDN 清理。\n"
+                ) +
                 "此操作不能恢复。"
             );
 
@@ -1330,7 +1494,10 @@
                                 item.mediaId,
 
                             permanent:
-                                true
+                                true,
+
+                            libraryOwnerId:
+                                currentLibraryOwner
                         })
                 }
             );
@@ -1676,37 +1843,50 @@
                 "—",
                 item.originalName ||
                 ""
-            ),
+            )
+        );
 
-            metaRow(
-                "SHA256",
-                shortHash(
-                    item.sha256
+
+        if (
+            currentUser
+                ?.role ===
+            "owner"
+        ) {
+            advanced.append(
+                metaRow(
+                    "SHA256",
+                    shortHash(
+                        item.sha256
+                    ),
+                    item.sha256 ||
+                    ""
                 ),
-                item.sha256 ||
-                ""
-            ),
 
-            metaRow(
-                "源仓库",
-                item.source
-                    ?.repository ||
-                "—"
-            ),
+                metaRow(
+                    "源仓库",
+                    item.source
+                        ?.repository ||
+                    "—"
+                ),
 
-            metaRow(
-                "源分支",
-                item.source
-                    ?.branch ||
-                "—"
-            ),
+                metaRow(
+                    "源分支",
+                    item.source
+                        ?.branch ||
+                    "—"
+                ),
 
-            metaRow(
-                "源路径",
-                item.source
-                    ?.path ||
-                "—"
-            ),
+                metaRow(
+                    "源路径",
+                    item.source
+                        ?.path ||
+                    "—"
+                )
+            );
+        }
+
+
+        advanced.append(
 
             metaRow(
                 "发布时间",
@@ -1767,8 +1947,18 @@
         refs.searchInput.placeholder =
             currentStatus ===
                 "trashed"
-                ? "搜索我的回收站…"
-                : "搜索我的文件名、Media ID、SHA256、仓库…";
+                ? (
+                    currentLibrary
+                        ?.isSelf
+                        ? "搜索我的回收站…"
+                        : "搜索当前成员的回收站…"
+                )
+                : (
+                    currentLibrary
+                        ?.isSelf
+                        ? "搜索我的文件名、Media ID、SHA256、仓库…"
+                        : "搜索当前成员的文件名、Media ID、SHA256、仓库…"
+                );
     }
 
 
@@ -1791,6 +1981,24 @@
         currentCapabilities =
             data.capabilities ||
             {};
+
+        currentLibrary =
+            data.library ||
+            null;
+
+        currentLibraryOwner =
+            currentLibrary
+                ?.id ||
+            currentUser
+                ?.id ||
+            "self";
+
+        renderLibraryDirectory(
+            data.libraries,
+            currentLibrary
+        );
+
+        updateButtons();
 
         const summary =
             data.summary ||
@@ -1849,7 +2057,7 @@
             0;
 
         refs.resultCount.textContent =
-            `${filteredTotal} 个结果`;
+            `${currentLibrary?.isSelf ? "我的媒体" : (currentLibrary?.displayName || "当前媒体库")} · ${filteredTotal} 个结果`;
 
         refs.grid.textContent =
             "";
@@ -1864,8 +2072,18 @@
         refs.empty.textContent =
             currentStatus ===
                 "trashed"
-                ? "你的回收站为空。"
-                : "你的媒体库里没有符合条件的内容。";
+                ? (
+                    currentLibrary
+                        ?.isSelf
+                        ? "你的回收站为空。"
+                        : "这个成员的回收站为空。"
+                )
+                : (
+                    currentLibrary
+                        ?.isSelf
+                        ? "你的媒体库里没有符合条件的内容。"
+                        : "这个成员的媒体库里没有符合条件的内容。"
+                );
 
         refs.empty.classList.toggle(
             "hidden",
@@ -1916,6 +2134,9 @@
         try {
             const params =
                 new URLSearchParams({
+                    owner:
+                        currentLibraryOwner,
+
                     status:
                         currentStatus,
 

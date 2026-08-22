@@ -13,6 +13,7 @@ jobs:
 
     permissions:
       contents: read
+      actions: write
 
     steps:
       - name: Checkout
@@ -54,6 +55,10 @@ jobs:
             node --check "$file"
           done
 
+          for file in auth-worker/public/*.js; do
+            node --check "$file"
+          done
+
           node --check api/media-index-sync.js
 
           node -e "const p=require('./package.json'); if(p.version!=='11.0.0') throw new Error('Unexpected application version');"
@@ -87,3 +92,9 @@ jobs:
         run: |
           npx --yes wrangler@4.116.0 deploy \
             --config auth-worker/wrangler.jsonc
+
+      - name: Repair And Refresh Media Ownership
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh workflow run media-index-sync.yml --ref main

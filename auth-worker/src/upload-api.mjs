@@ -278,7 +278,8 @@ function parseResultJson(
 
 
 function publicJob(
-  row
+  row,
+  includeWorkflow = false
 ) {
 
   if (!row) {
@@ -314,15 +315,18 @@ function publicJob(
       row.status,
 
     githubRunId:
-      row.github_run_id ===
+      includeWorkflow &&
+      row.github_run_id !==
         null
-        ? null
-        : Number(
+        ? Number(
             row.github_run_id
-          ),
+          )
+        : null,
 
     githubRunUrl:
-      row.github_run_url,
+      includeWorkflow
+        ? row.github_run_url
+        : null,
 
     mediaId:
       row.media_id,
@@ -331,21 +335,35 @@ function publicJob(
       row.final_filename,
 
     repository:
-      row.source_repository,
+      includeWorkflow
+        ? row.source_repository
+        : null,
 
     sha256:
-      row.sha256,
+      includeWorkflow
+        ? row.sha256
+        : null,
 
     cdnUrl:
       row.cdn_url,
 
     error:
-      row.error_message,
+      !includeWorkflow &&
+      /github/i.test(
+        String(
+          row.error_message ||
+          ""
+        )
+      )
+        ? "background_dispatch_failed"
+        : row.error_message,
 
     result:
-      parseResultJson(
-        row.result_json
-      ),
+      includeWorkflow
+        ? parseResultJson(
+            row.result_json
+          )
+        : null,
 
     createdAt:
       Number(
@@ -997,7 +1015,9 @@ async function createUploadJob(
 
       job:
         publicJob(
-          job
+          job,
+          auth.user.role ===
+            "owner"
         )
     },
     201
@@ -1042,7 +1062,12 @@ async function listUploadJobs(
         []
       )
         .map(
-          publicJob
+          row =>
+            publicJob(
+              row,
+              auth.user.role ===
+                "owner"
+            )
         )
 
   });
@@ -1082,7 +1107,9 @@ async function getUploadJob(
   return jsonResponse({
     job:
       publicJob(
-        job
+        job,
+        auth.user.role ===
+          "owner"
       )
   });
 
@@ -1411,7 +1438,9 @@ async function stageUploadContent(
 
     job:
       publicJob(
-        updated
+        updated,
+        auth.user.role ===
+          "owner"
       )
   });
 
@@ -1868,7 +1897,8 @@ async function internalCallback(
 
       job:
         publicJob(
-          job
+          job,
+          true
         )
     });
 
@@ -2096,7 +2126,8 @@ async function internalCallback(
 
     job:
       publicJob(
-        updated
+        updated,
+        true
       )
   });
 

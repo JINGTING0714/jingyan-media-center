@@ -1003,7 +1003,8 @@ async function handleAuthenticatedBatchApi(
         return handleUserUploadBatchStageRequest(
           request,
           env,
-          auth
+          auth,
+          ctx
         );
 
       }

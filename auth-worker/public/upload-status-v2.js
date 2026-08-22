@@ -93,6 +93,34 @@
     }
 
 
+    function uploadErrorText(
+        error
+    ) {
+
+        const value =
+            String(
+                error ||
+                ""
+            );
+
+
+        return {
+            background_dispatch_failed:
+                "后台发布任务启动失败，请稍后重试。",
+
+            pipeline_state_not_saved:
+                "发布结果尚未安全保存，请先检查媒体库。",
+
+            staging_not_ready:
+                "云端文件尚未准备完成。"
+        }[
+            value
+        ] ||
+        value;
+
+    }
+
+
     function formatBytes(
         bytes
     ) {
@@ -457,7 +485,9 @@
             createElement(
                 "span",
                 "",
-                job.error
+                uploadErrorText(
+                    job.error
+                )
             );
 
 
