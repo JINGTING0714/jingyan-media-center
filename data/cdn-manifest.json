@@ -2,10 +2,10 @@
   "version": 1,
   "worker": "jingyan-media-cdn",
   "baseURL": "https://jingyan-media-cdn.jingyancdn.workers.dev",
-  "updatedAt": "2026-08-22T05:33:04.437Z",
-  "lastPublishedAt": "2026-08-22T05:33:04.436Z",
-  "lastVersionId": "5fa8eb85-2c3e-40bc-a1d0-264e101cc01e",
-  "lastDeploymentId": "6704e687-6d75-468e-8cc4-1c1bcb4a0678",
+  "updatedAt": "2026-08-22T05:38:34.042Z",
+  "lastPublishedAt": "2026-08-22T05:38:34.042Z",
+  "lastVersionId": "8060fae3-9f13-4da7-917d-c52c77ba5d6a",
+  "lastDeploymentId": "49a68ee2-fd7e-43ca-a1f4-818ff749def9",
   "assets": {
     "/audio/004-jingyan-test-004-mp3.mp3": {
       "hash": "6e41de8f8e42b9643d7f2a5bcc066aae",
@@ -1449,6 +1449,19 @@
         "path": "image/068-img-2865.jpeg"
       },
       "addedAt": "2026-08-22T05:32:55.570Z"
+    },
+    "/audio/054-beng-beng.flac": {
+      "hash": "82cbd764e8549f7bdd273c0e8a2f219b",
+      "size": 22656725,
+      "sha256": "ba41066a987e4188af2d6473d1973de2724853cdbb9b1ca78930fd9e030879bf",
+      "type": "audio",
+      "mediaId": "music-000054",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/054-beng-beng.flac"
+      },
+      "addedAt": "2026-08-22T05:38:22.593Z"
     }
   }
 }
