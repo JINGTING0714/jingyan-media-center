@@ -2,10 +2,10 @@
   "version": 1,
   "worker": "jingyan-media-cdn",
   "baseURL": "https://jingyan-media-cdn.jingyancdn.workers.dev",
-  "updatedAt": "2026-08-22T05:05:49.022Z",
-  "lastPublishedAt": "2026-08-22T05:05:49.022Z",
-  "lastVersionId": "15c0789f-d139-4569-8335-3b5c530faab9",
-  "lastDeploymentId": "7e3fd9de-d7b7-4eba-b1a3-48cb5de669f1",
+  "updatedAt": "2026-08-22T05:18:36.864Z",
+  "lastPublishedAt": "2026-08-22T05:18:36.864Z",
+  "lastVersionId": "c1327467-b0d9-40c1-a5e6-79589466fea2",
+  "lastDeploymentId": "81623655-da84-4f62-bbfd-b545f2b3be58",
   "assets": {
     "/audio/004-jingyan-test-004-mp3.mp3": {
       "hash": "6e41de8f8e42b9643d7f2a5bcc066aae",
@@ -1345,6 +1345,45 @@
         "path": "music/053-yoyoyoyo.mp3"
       },
       "addedAt": "2026-08-22T05:05:18.019Z"
+    },
+    "/image/061-img-2858.jpeg": {
+      "hash": "98c8d3e6572ec06c320992430d351d9d",
+      "size": 54877,
+      "sha256": "d804583cde3e26ef29fdca2118fe45f6a6ca96c6109916c49bd68df877750ac4",
+      "type": "image",
+      "mediaId": "image-000061",
+      "source": {
+        "repo": "JINGTING0714/jingyan-image-01",
+        "branch": "main",
+        "path": "image/061-img-2858.jpeg"
+      },
+      "addedAt": "2026-08-22T05:18:09.697Z"
+    },
+    "/image/062-img-2859.jpeg": {
+      "hash": "1e72d99110a705d18f3c95c924eaecb7",
+      "size": 144750,
+      "sha256": "efda572450aff2ecc49801c179d85ffe074197b4b888806950f4371a6e2ed125",
+      "type": "image",
+      "mediaId": "image-000062",
+      "source": {
+        "repo": "JINGTING0714/jingyan-image-01",
+        "branch": "main",
+        "path": "image/062-img-2859.jpeg"
+      },
+      "addedAt": "2026-08-22T05:18:20.157Z"
+    },
+    "/image/063-img-2860.jpeg": {
+      "hash": "a589c7e33ae98563d640fd2a70ca8f1a",
+      "size": 111011,
+      "sha256": "9c648adfa0506fec3826b30daa9884c644b0113237a3801bcdb00b2d99fd5b00",
+      "type": "image",
+      "mediaId": "image-000063",
+      "source": {
+        "repo": "JINGTING0714/jingyan-image-01",
+        "branch": "main",
+        "path": "image/063-img-2860.jpeg"
+      },
+      "addedAt": "2026-08-22T05:18:30.165Z"
     }
   }
 }
