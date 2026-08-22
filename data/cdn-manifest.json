@@ -2,10 +2,10 @@
   "version": 1,
   "worker": "jingyan-media-cdn",
   "baseURL": "https://jingyan-media-cdn.jingyancdn.workers.dev",
-  "updatedAt": "2026-08-22T04:33:26.794Z",
-  "lastPublishedAt": "2026-08-22T04:33:26.794Z",
-  "lastVersionId": "f032e18a-814f-4ce9-93d9-57bc9a49d5db",
-  "lastDeploymentId": "95a8af0b-d453-483e-8d99-ebf4ea602a66",
+  "updatedAt": "2026-08-22T04:55:08.191Z",
+  "lastPublishedAt": "2026-08-22T04:55:08.191Z",
+  "lastVersionId": "8be121d8-bb61-4249-906f-b15f66ce4c67",
+  "lastDeploymentId": "860b3e89-3d90-41b2-8503-9df572458a26",
   "assets": {
     "/audio/004-jingyan-test-004-mp3.mp3": {
       "hash": "6e41de8f8e42b9643d7f2a5bcc066aae",
@@ -1007,6 +1007,136 @@
         "path": "image/060-img-2805.jpeg"
       },
       "addedAt": "2026-08-22T04:33:15.636Z"
+    },
+    "/audio/028-yi-fen-zhi-er.mp3": {
+      "hash": "707c883b5a97360c24b3f0750b8c74b9",
+      "size": 11314363,
+      "sha256": "f538a7dd53ceb143b4121b9c99afc1dde38dbd0af1028be82717942b613a6a2e",
+      "type": "audio",
+      "mediaId": "music-000028",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/028-yi-fen-zhi-er.mp3"
+      },
+      "addedAt": "2026-08-22T04:52:16.798Z"
+    },
+    "/audio/029-yu-shi-ne.mp3": {
+      "hash": "76c427cc3412a2fa9f6c5a30dc48e5f1",
+      "size": 7546449,
+      "sha256": "5c58328479e2927741234730b24e50a74b5d49b95b967e2792dff5f323a69507",
+      "type": "audio",
+      "mediaId": "music-000029",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/029-yu-shi-ne.mp3"
+      },
+      "addedAt": "2026-08-22T04:52:33.336Z"
+    },
+    "/audio/030-bu-yao-rang-wo-hou-hui.mp3": {
+      "hash": "e0cbdfd7e9451d02c7955488e207645b",
+      "size": 10768942,
+      "sha256": "23c445c62766458941d173103e842f43d0cbceb1a66526f0af810d4ada39a72d",
+      "type": "audio",
+      "mediaId": "music-000030",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/030-bu-yao-rang-wo-hou-hui.mp3"
+      },
+      "addedAt": "2026-08-22T04:52:48.982Z"
+    },
+    "/audio/031-na-wo-xian.mp3": {
+      "hash": "131cfffa59b3e6cf505e2dcdbaac56ce",
+      "size": 9966440,
+      "sha256": "89412daa3b298dae406fdc4f4a850fb2072abad3e7f870263f7fe59f0eb1a380",
+      "type": "audio",
+      "mediaId": "music-000031",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/031-na-wo-xian.mp3"
+      },
+      "addedAt": "2026-08-22T04:53:03.320Z"
+    },
+    "/audio/032-hai-bu-gou.mp3": {
+      "hash": "c5aa9090d774f8bf1ba79252d99469fc",
+      "size": 7718857,
+      "sha256": "ffd5898d777e947d03f11f5f66eeec9f0c12cda722b13f48e669e3274eb93922",
+      "type": "audio",
+      "mediaId": "music-000032",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/032-hai-bu-gou.mp3"
+      },
+      "addedAt": "2026-08-22T04:53:18.314Z"
+    },
+    "/audio/033-cha-wu-ci-qu.mp3": {
+      "hash": "82fcb3cd98f7b0f260a9f35688d37db7",
+      "size": 10590239,
+      "sha256": "61d9b3aeb80b6abcca772ac5398292167563f48a6351bea88daf2fb877830157",
+      "type": "audio",
+      "mediaId": "music-000033",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/033-cha-wu-ci-qu.mp3"
+      },
+      "addedAt": "2026-08-22T04:53:34.577Z"
+    },
+    "/audio/034-la-li-la-ta.mp3": {
+      "hash": "79338f703d857118b32f02419818eb04",
+      "size": 6742924,
+      "sha256": "da3a650590fd276378385111533cebeab78be2b9537d6bda642143795f77cc7a",
+      "type": "audio",
+      "mediaId": "music-000034",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/034-la-li-la-ta.mp3"
+      },
+      "addedAt": "2026-08-22T04:53:48.664Z"
+    },
+    "/audio/035-qian-fu-qi.mp3": {
+      "hash": "928a4f2cb0ddc6706f385f7f613478a2",
+      "size": 10268408,
+      "sha256": "2266f7b29f60406d7cfe9fb787755c1ae80b7676678e78eef004726098fc6b85",
+      "type": "audio",
+      "mediaId": "music-000035",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/035-qian-fu-qi.mp3"
+      },
+      "addedAt": "2026-08-22T04:54:03.809Z"
+    },
+    "/audio/036-give-it-to-me.mp3": {
+      "hash": "4454e51e4bf4afea44dfb2bc23dacad8",
+      "size": 6943563,
+      "sha256": "5ba7bf5680273ac7026331ba3c37ef21fb82948b0519c7b424385dda5f9716ed",
+      "type": "audio",
+      "mediaId": "music-000036",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/036-give-it-to-me.mp3"
+      },
+      "addedAt": "2026-08-22T04:54:18.139Z"
+    },
+    "/audio/037-shen-ye-dian-ying.mp3": {
+      "hash": "4a288a57a6b3f2b0ad9eaada5479a848",
+      "size": 9631022,
+      "sha256": "75e25c02af0930541e33b00fbe4870d83b5a493e49bc6cb884ac0298d1337afe",
+      "type": "audio",
+      "mediaId": "music-000037",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/037-shen-ye-dian-ying.mp3"
+      },
+      "addedAt": "2026-08-22T04:54:33.561Z"
     }
   }
 }
