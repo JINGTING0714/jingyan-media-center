@@ -2,10 +2,10 @@
   "version": 1,
   "worker": "jingyan-media-cdn",
   "baseURL": "https://jingyan-media-cdn.jingyancdn.workers.dev",
-  "updatedAt": "2026-08-22T05:00:27.446Z",
-  "lastPublishedAt": "2026-08-22T05:00:27.446Z",
-  "lastVersionId": "4b0faa78-bf43-48d0-a26f-8a7b71dc6d3e",
-  "lastDeploymentId": "b900501a-3964-4838-811b-e6450a5e73e3",
+  "updatedAt": "2026-08-22T05:05:49.022Z",
+  "lastPublishedAt": "2026-08-22T05:05:49.022Z",
+  "lastVersionId": "15c0789f-d139-4569-8335-3b5c530faab9",
+  "lastDeploymentId": "7e3fd9de-d7b7-4eba-b1a3-48cb5de669f1",
   "assets": {
     "/audio/004-jingyan-test-004-mp3.mp3": {
       "hash": "6e41de8f8e42b9643d7f2a5bcc066aae",
@@ -1228,6 +1228,123 @@
         "path": "music/044-yes-i-do.mp3"
       },
       "addedAt": "2026-08-22T04:59:57.791Z"
+    },
+    "/audio/045-imagine.mp3": {
+      "hash": "e48984a6f68f2f4b585c7a4224d73308",
+      "size": 10014512,
+      "sha256": "f9755c74f5dbbb4030894087fe5c52222e73f08bedd52cdbef24fff98ab460bc",
+      "type": "audio",
+      "mediaId": "music-000045",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/045-imagine.mp3"
+      },
+      "addedAt": "2026-08-22T05:03:14.628Z"
+    },
+    "/audio/046-like-you.mp3": {
+      "hash": "c2ee31056b269acd7e44e9217509f8a5",
+      "size": 10488895,
+      "sha256": "2ba9e5cd4f4570bd7f4ca968b6f9396d098684a2fcac857e0a20cbca0309be30",
+      "type": "audio",
+      "mediaId": "music-000046",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/046-like-you.mp3"
+      },
+      "addedAt": "2026-08-22T05:03:29.370Z"
+    },
+    "/audio/047-might-be-wrong.mp3": {
+      "hash": "dfe7fc8b37a0c83d170a4c4cd5805031",
+      "size": 10791916,
+      "sha256": "b89899719dfefdb2acd7ffc819c38e674c21d4a2b16458629af6640300746185",
+      "type": "audio",
+      "mediaId": "music-000047",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/047-might-be-wrong.mp3"
+      },
+      "addedAt": "2026-08-22T05:03:44.929Z"
+    },
+    "/audio/048-my-shit.mp3": {
+      "hash": "8671124db2b8543053c0e6a1ad2c1634",
+      "size": 7518251,
+      "sha256": "d1280b98c1aa33dad66ef4a560682a031793c1a34367848c1fc2dd960a718027",
+      "type": "audio",
+      "mediaId": "music-000048",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/048-my-shit.mp3"
+      },
+      "addedAt": "2026-08-22T05:03:59.030Z"
+    },
+    "/audio/049-painkiller-ft-karencici.mp3": {
+      "hash": "f15eb7fc8ee363c90029fe566f22a90e",
+      "size": 11024928,
+      "sha256": "bc885173bc5087eb51d3aaa510b124c7761a116de32a59312d6fd6e92c99caae",
+      "type": "audio",
+      "mediaId": "music-000049",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/049-painkiller-ft-karencici.mp3"
+      },
+      "addedAt": "2026-08-22T05:04:15.864Z"
+    },
+    "/audio/050-really-mean-it.mp3": {
+      "hash": "e54b8e3c3ce392ce6346418716f895e5",
+      "size": 9550577,
+      "sha256": "a0e2791ef4e74996c422031db62f7b9091d3f6cca22d84f2a726b4dedff99acf",
+      "type": "audio",
+      "mediaId": "music-000050",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/050-really-mean-it.mp3"
+      },
+      "addedAt": "2026-08-22T05:04:30.950Z"
+    },
+    "/audio/051-steak-and-lobster.mp3": {
+      "hash": "2e2c6ab92fb6b9a048ca24c8cbfa2012",
+      "size": 9688504,
+      "sha256": "ce803c9d18146b7b4cae185bd735f79653f2de8fb8db97b8a3eae114387a533d",
+      "type": "audio",
+      "mediaId": "music-000051",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/051-steak-and-lobster.mp3"
+      },
+      "addedAt": "2026-08-22T05:04:45.265Z"
+    },
+    "/audio/052-white-noise-ft-dan-bao-soft-lipa.mp3": {
+      "hash": "7bd6493c6fd03322954577578b265a68",
+      "size": 9705222,
+      "sha256": "a1db6fc0472eb6f03c883c817220fe84175f7d74ea2be8e72e499d1c5444d312",
+      "type": "audio",
+      "mediaId": "music-000052",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/052-white-noise-ft-dan-bao-soft-lipa.mp3"
+      },
+      "addedAt": "2026-08-22T05:05:01.652Z"
+    },
+    "/audio/053-yoyoyoyo.mp3": {
+      "hash": "539b922f42a67597b718181c2373472e",
+      "size": 8816014,
+      "sha256": "28cc8ae5f33a86c394075a4c5ad1704aaadb17126dd39c19d31681a231129491",
+      "type": "audio",
+      "mediaId": "music-000053",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/053-yoyoyoyo.mp3"
+      },
+      "addedAt": "2026-08-22T05:05:18.019Z"
     }
   }
 }
