@@ -2,10 +2,10 @@
   "version": 1,
   "worker": "jingyan-media-cdn",
   "baseURL": "https://jingyan-media-cdn.jingyancdn.workers.dev",
-  "updatedAt": "2026-08-22T05:40:10.948Z",
-  "lastPublishedAt": "2026-08-22T05:40:10.948Z",
-  "lastVersionId": "6c4e369e-5f7e-4d41-8778-88150989a1d7",
-  "lastDeploymentId": "d8122c1e-cfcc-44e8-93b5-3d103e400729",
+  "updatedAt": "2026-08-22T05:42:15.481Z",
+  "lastPublishedAt": "2026-08-22T05:42:15.480Z",
+  "lastVersionId": "b7e16e88-437b-4ae4-8912-4507f9f4655d",
+  "lastDeploymentId": "fb50673a-c02a-4314-9bc0-502595e00ba8",
   "assets": {
     "/audio/004-jingyan-test-004-mp3.mp3": {
       "hash": "6e41de8f8e42b9643d7f2a5bcc066aae",
@@ -45,19 +45,6 @@
         "path": "image/002-image_1777572329655.png"
       },
       "addedAt": "2026-08-17T06:22:36.150Z"
-    },
-    "/image/005-website-test.jpg": {
-      "hash": "7ca11999834c6b61149e7b895a506a4f",
-      "size": 2041597,
-      "sha256": "738752e7c5a8bf2583555302e522afec028fcf32c86ea90a84e7a0c567038679",
-      "type": "image",
-      "mediaId": "image-000005",
-      "source": {
-        "repo": "JINGTING0714/jingyan-image-01",
-        "branch": "main",
-        "path": "image/005-website-test.jpg"
-      },
-      "addedAt": "2026-08-17T11:22:47.936Z"
     },
     "/audio/005-hito-rie-sleepwalk.mp3": {
       "hash": "3f3e22032f3e896a9aa92ecf146db516",
