@@ -2,10 +2,10 @@
   "version": 1,
   "worker": "jingyan-media-cdn",
   "baseURL": "https://jingyan-media-cdn.jingyancdn.workers.dev",
-  "updatedAt": "2026-08-22T01:36:08.592Z",
-  "lastPublishedAt": "2026-08-22T01:36:08.592Z",
-  "lastVersionId": "7b2ced8a-cd28-415d-b814-16e64e3c2adf",
-  "lastDeploymentId": "bd5bdb51-06f8-49ec-a69f-23d02d1428bd",
+  "updatedAt": "2026-08-22T04:18:37.469Z",
+  "lastPublishedAt": "2026-08-22T04:18:37.469Z",
+  "lastVersionId": "94b1bbcb-4840-4fb2-a9d7-9ccd6c97e1e5",
+  "lastDeploymentId": "3646e703-142a-4d7e-acf8-67fa460266ba",
   "assets": {
     "/audio/004-jingyan-test-004-mp3.mp3": {
       "hash": "6e41de8f8e42b9643d7f2a5bcc066aae",
@@ -162,19 +162,6 @@
         "path": "image/014-yue-shen-shi-yong-shui-yin.jpg"
       },
       "addedAt": "2026-08-18T13:27:35.919Z"
-    },
-    "/image/016-file-0000000002cc8211a03a078e23004aa4.png": {
-      "hash": "a2a011a52d3cc6ab2ac3209475cc041b",
-      "size": 1684997,
-      "sha256": "3eb8f6d209b85c18ee7e838e4e2d6e840f7ff60aee86b1063e3ab4dc7e5fecd1",
-      "type": "image",
-      "mediaId": "image-000016",
-      "source": {
-        "repo": "JINGTING0714/jingyan-image-01",
-        "branch": "main",
-        "path": "image/016-file-0000000002cc8211a03a078e23004aa4.png"
-      },
-      "addedAt": "2026-08-20T04:35:21.363Z"
     },
     "/audio/006-funny-sh.mp3": {
       "hash": "c1bf3c733b9f098db9b026fcb2e2df2d",
