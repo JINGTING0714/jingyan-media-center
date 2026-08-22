@@ -2,10 +2,10 @@
   "version": 1,
   "worker": "jingyan-media-cdn",
   "baseURL": "https://jingyan-media-cdn.jingyancdn.workers.dev",
-  "updatedAt": "2026-08-22T04:18:37.469Z",
-  "lastPublishedAt": "2026-08-22T04:18:37.469Z",
-  "lastVersionId": "94b1bbcb-4840-4fb2-a9d7-9ccd6c97e1e5",
-  "lastDeploymentId": "3646e703-142a-4d7e-acf8-67fa460266ba",
+  "updatedAt": "2026-08-22T04:33:26.794Z",
+  "lastPublishedAt": "2026-08-22T04:33:26.794Z",
+  "lastVersionId": "f032e18a-814f-4ce9-93d9-57bc9a49d5db",
+  "lastDeploymentId": "95a8af0b-d453-483e-8d99-ebf4ea602a66",
   "assets": {
     "/audio/004-jingyan-test-004-mp3.mp3": {
       "hash": "6e41de8f8e42b9643d7f2a5bcc066aae",
@@ -747,6 +747,266 @@
         "path": "image/040-img-2827.jpeg"
       },
       "addedAt": "2026-08-22T01:35:58.868Z"
+    },
+    "/image/041-img-2826.jpeg": {
+      "hash": "1f72343babbc9a7acee061d8af5b6ad8",
+      "size": 55344,
+      "sha256": "e64de36a923a3dd9a5c73a40bf05f104f7e4f6d18dff6eeb96abdbbcc4aa1400",
+      "type": "image",
+      "mediaId": "image-000041",
+      "source": {
+        "repo": "JINGTING0714/jingyan-image-01",
+        "branch": "main",
+        "path": "image/041-img-2826.jpeg"
+      },
+      "addedAt": "2026-08-22T04:29:17.964Z"
+    },
+    "/image/042-img-2825.jpeg": {
+      "hash": "65bcbdc6337669978b2883bc31bc0528",
+      "size": 51318,
+      "sha256": "909cc169d22ff093b214847767e8bd435d311be78eca2a54bd973b30df12d6ef",
+      "type": "image",
+      "mediaId": "image-000042",
+      "source": {
+        "repo": "JINGTING0714/jingyan-image-01",
+        "branch": "main",
+        "path": "image/042-img-2825.jpeg"
+      },
+      "addedAt": "2026-08-22T04:29:30.633Z"
+    },
+    "/image/043-img-2824.jpeg": {
+      "hash": "f06d372fcccad54be49f1a7a16e831b5",
+      "size": 123071,
+      "sha256": "4bc6563e5cafa0bc4fdd6edafaf333aec4cf0b0e0cdb464ac374173bbebf3b86",
+      "type": "image",
+      "mediaId": "image-000043",
+      "source": {
+        "repo": "JINGTING0714/jingyan-image-01",
+        "branch": "main",
+        "path": "image/043-img-2824.jpeg"
+      },
+      "addedAt": "2026-08-22T04:29:43.061Z"
+    },
+    "/image/044-img-2823.jpeg": {
+      "hash": "4884c89819969771ff5048dc52e36a08",
+      "size": 95594,
+      "sha256": "8abdd6b7efe027f9bbc3477d931c0db95cfd53d38cc69e30538be73da549fbbc",
+      "type": "image",
+      "mediaId": "image-000044",
+      "source": {
+        "repo": "JINGTING0714/jingyan-image-01",
+        "branch": "main",
+        "path": "image/044-img-2823.jpeg"
+      },
+      "addedAt": "2026-08-22T04:29:55.198Z"
+    },
+    "/image/045-img-2822.jpeg": {
+      "hash": "c168e7032177a7ac05775493b3e6aeb2",
+      "size": 110290,
+      "sha256": "260b90f2d7a94c2517e82bebd915323d7199d29b54834f7d3041ea1ad276a8c0",
+      "type": "image",
+      "mediaId": "image-000045",
+      "source": {
+        "repo": "JINGTING0714/jingyan-image-01",
+        "branch": "main",
+        "path": "image/045-img-2822.jpeg"
+      },
+      "addedAt": "2026-08-22T04:30:07.323Z"
+    },
+    "/image/046-img-2820.jpeg": {
+      "hash": "b16c0c5514a1374284e271a6ddbab0b5",
+      "size": 37070,
+      "sha256": "84d2dd81b94488b89291d508c40196b756675bab52cb582e2c5adbcaea30ff00",
+      "type": "image",
+      "mediaId": "image-000046",
+      "source": {
+        "repo": "JINGTING0714/jingyan-image-01",
+        "branch": "main",
+        "path": "image/046-img-2820.jpeg"
+      },
+      "addedAt": "2026-08-22T04:30:19.979Z"
+    },
+    "/image/047-img-2818.jpeg": {
+      "hash": "9a247cfa28d54dee6fc2a73c4e44f189",
+      "size": 19678,
+      "sha256": "1b94e9b33253cfa6f04e8e0e7e08da25f9353171bf232160fc0cc7a27903d3a1",
+      "type": "image",
+      "mediaId": "image-000047",
+      "source": {
+        "repo": "JINGTING0714/jingyan-image-01",
+        "branch": "main",
+        "path": "image/047-img-2818.jpeg"
+      },
+      "addedAt": "2026-08-22T04:30:32.591Z"
+    },
+    "/image/048-img-2817.jpeg": {
+      "hash": "64f0c34eb0152ae730c2d01b75e341f5",
+      "size": 26617,
+      "sha256": "f55efe9c071e28392bbcdc9756476f4e027e941708abcfcd00cce4c1ea60214e",
+      "type": "image",
+      "mediaId": "image-000048",
+      "source": {
+        "repo": "JINGTING0714/jingyan-image-01",
+        "branch": "main",
+        "path": "image/048-img-2817.jpeg"
+      },
+      "addedAt": "2026-08-22T04:30:44.921Z"
+    },
+    "/image/049-img-2816.jpeg": {
+      "hash": "ce53ed5021508d356191f68112dceb94",
+      "size": 22899,
+      "sha256": "3eb4ce63671c45b605a6b4e1b0f8cb9c576fc7d610757a11f5dd0a3cbb43561a",
+      "type": "image",
+      "mediaId": "image-000049",
+      "source": {
+        "repo": "JINGTING0714/jingyan-image-01",
+        "branch": "main",
+        "path": "image/049-img-2816.jpeg"
+      },
+      "addedAt": "2026-08-22T04:30:57.197Z"
+    },
+    "/image/050-img-2815.jpeg": {
+      "hash": "810a461d6b4f2b9b435dde4f53b05e8b",
+      "size": 27634,
+      "sha256": "9f59ab2cc8c0e768d14b2a03870e1cf196a1fc9da4681bcd7b64542daeeb9b9c",
+      "type": "image",
+      "mediaId": "image-000050",
+      "source": {
+        "repo": "JINGTING0714/jingyan-image-01",
+        "branch": "main",
+        "path": "image/050-img-2815.jpeg"
+      },
+      "addedAt": "2026-08-22T04:31:09.930Z"
+    },
+    "/image/051-img-2814.jpeg": {
+      "hash": "f7d7663fdab3b264e8546acf0eabc883",
+      "size": 31118,
+      "sha256": "ee66f0be8a384ba5cc58319014405d98ef921aaf14a435c660e385bc21a3d5c4",
+      "type": "image",
+      "mediaId": "image-000051",
+      "source": {
+        "repo": "JINGTING0714/jingyan-image-01",
+        "branch": "main",
+        "path": "image/051-img-2814.jpeg"
+      },
+      "addedAt": "2026-08-22T04:31:22.624Z"
+    },
+    "/image/052-img-2813.jpeg": {
+      "hash": "eaae2c086f840962381af10deee19d0e",
+      "size": 26031,
+      "sha256": "8aeb6842d8a00976b8105db1699910f5d8801dd359b40756c136a52c4aae6963",
+      "type": "image",
+      "mediaId": "image-000052",
+      "source": {
+        "repo": "JINGTING0714/jingyan-image-01",
+        "branch": "main",
+        "path": "image/052-img-2813.jpeg"
+      },
+      "addedAt": "2026-08-22T04:31:34.946Z"
+    },
+    "/image/053-img-2812.jpeg": {
+      "hash": "db5c1952ce6c67433bdcaad64771a1ff",
+      "size": 26435,
+      "sha256": "5da7c29798a747bbc46c21996c0d4bc3a6c4afbcb9dc54f95c4be56063c32f06",
+      "type": "image",
+      "mediaId": "image-000053",
+      "source": {
+        "repo": "JINGTING0714/jingyan-image-01",
+        "branch": "main",
+        "path": "image/053-img-2812.jpeg"
+      },
+      "addedAt": "2026-08-22T04:31:47.924Z"
+    },
+    "/image/054-img-2811.jpeg": {
+      "hash": "72cd21831b0370f774416b088b113d7f",
+      "size": 23426,
+      "sha256": "5742eef0385e75f513bdb6bf0c862e2709cb29804e305b681a01f5c8fdcbbda2",
+      "type": "image",
+      "mediaId": "image-000054",
+      "source": {
+        "repo": "JINGTING0714/jingyan-image-01",
+        "branch": "main",
+        "path": "image/054-img-2811.jpeg"
+      },
+      "addedAt": "2026-08-22T04:32:00.365Z"
+    },
+    "/image/055-img-2810.jpeg": {
+      "hash": "8688a5de0f4c9d27feff152665a1b581",
+      "size": 24075,
+      "sha256": "0754f0517bbfd115390d4aad22ec16fd6c06a4bce6dbde059fd811abaf68c609",
+      "type": "image",
+      "mediaId": "image-000055",
+      "source": {
+        "repo": "JINGTING0714/jingyan-image-01",
+        "branch": "main",
+        "path": "image/055-img-2810.jpeg"
+      },
+      "addedAt": "2026-08-22T04:32:12.904Z"
+    },
+    "/image/056-img-2809.jpeg": {
+      "hash": "9e3df7e483ecab0926a11aab2dd18e15",
+      "size": 22530,
+      "sha256": "47d48d8d10c465a683bbb757a77b245400a9d9ece6048992e0b45186da8b4f5d",
+      "type": "image",
+      "mediaId": "image-000056",
+      "source": {
+        "repo": "JINGTING0714/jingyan-image-01",
+        "branch": "main",
+        "path": "image/056-img-2809.jpeg"
+      },
+      "addedAt": "2026-08-22T04:32:25.441Z"
+    },
+    "/image/057-img-2808.jpeg": {
+      "hash": "c4bb3e661770fe2ed4c85867b30c07ff",
+      "size": 115075,
+      "sha256": "b9db3458d365ed426b6f121ddca1d8e41eb771f9c49e11d6bbec1922dff49778",
+      "type": "image",
+      "mediaId": "image-000057",
+      "source": {
+        "repo": "JINGTING0714/jingyan-image-01",
+        "branch": "main",
+        "path": "image/057-img-2808.jpeg"
+      },
+      "addedAt": "2026-08-22T04:32:37.977Z"
+    },
+    "/image/058-img-2807.jpeg": {
+      "hash": "3598a6bd8ab6b106fd1cf107840d18c1",
+      "size": 152839,
+      "sha256": "af3ee2e9a99083e8bb656d74fdfead2bcd0373241ce70427e159b82ceeb289c9",
+      "type": "image",
+      "mediaId": "image-000058",
+      "source": {
+        "repo": "JINGTING0714/jingyan-image-01",
+        "branch": "main",
+        "path": "image/058-img-2807.jpeg"
+      },
+      "addedAt": "2026-08-22T04:32:50.264Z"
+    },
+    "/image/059-img-2806.jpeg": {
+      "hash": "937e097ecd3917b8b659d9a7313ac111",
+      "size": 125057,
+      "sha256": "932291a8d879cb603cc50134b84a82355e1f48391d6720e7610e176513bdda2e",
+      "type": "image",
+      "mediaId": "image-000059",
+      "source": {
+        "repo": "JINGTING0714/jingyan-image-01",
+        "branch": "main",
+        "path": "image/059-img-2806.jpeg"
+      },
+      "addedAt": "2026-08-22T04:33:03.036Z"
+    },
+    "/image/060-img-2805.jpeg": {
+      "hash": "05dc8f1383b9f4bcc316e9363d93d793",
+      "size": 117923,
+      "sha256": "350ef899f6535c583bcaafef61bbdee265ac421723788b5f5efa969cfc9443ae",
+      "type": "image",
+      "mediaId": "image-000060",
+      "source": {
+        "repo": "JINGTING0714/jingyan-image-01",
+        "branch": "main",
+        "path": "image/060-img-2805.jpeg"
+      },
+      "addedAt": "2026-08-22T04:33:15.636Z"
     }
   }
 }
