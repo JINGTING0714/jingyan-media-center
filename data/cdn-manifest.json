@@ -2,10 +2,10 @@
   "version": 1,
   "worker": "jingyan-media-cdn",
   "baseURL": "https://jingyan-media-cdn.jingyancdn.workers.dev",
-  "updatedAt": "2026-08-23T01:51:57.075Z",
-  "lastPublishedAt": "2026-08-23T01:51:57.075Z",
-  "lastVersionId": "11004e15-464b-4e46-b2cc-4ff256019e3c",
-  "lastDeploymentId": "4ffd8c6d-22e0-47b2-b258-2571ebb121d4",
+  "updatedAt": "2026-08-23T02:03:47.632Z",
+  "lastPublishedAt": "2026-08-23T02:03:47.632Z",
+  "lastVersionId": "12faf76b-3465-4623-8d95-efb2db665690",
+  "lastDeploymentId": "addb0f75-1cb0-4d56-b162-c7ec7d74865d",
   "assets": {
     "/audio/004-jingyan-test-004-mp3.mp3": {
       "hash": "6e41de8f8e42b9643d7f2a5bcc066aae",
@@ -1826,6 +1826,19 @@
         "path": "music/068-tell-me-what-is-love-yu-yong-zhen-and-d-o.mp3"
       },
       "addedAt": "2026-08-23T01:51:46.674Z"
+    },
+    "/image/088-mmexport0a33fedc13d87eea4cc211000651a264-1787450576288.gif": {
+      "hash": "637f3a795961eb5b853d19b2933945a4",
+      "size": 91133,
+      "sha256": "22e42c84bb9004758aca5c5eab8a1807d2752e6d481035e2dfec306ec233e29b",
+      "type": "image",
+      "mediaId": "image-000088",
+      "source": {
+        "repo": "JINGTING0714/jingyan-image-01",
+        "branch": "main",
+        "path": "image/088-mmexport0a33fedc13d87eea4cc211000651a264-1787450576288.gif"
+      },
+      "addedAt": "2026-08-23T02:03:39.400Z"
     }
   }
 }
