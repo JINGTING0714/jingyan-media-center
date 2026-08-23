@@ -2,10 +2,10 @@
   "version": 1,
   "worker": "jingyan-media-cdn",
   "baseURL": "https://jingyan-media-cdn.jingyancdn.workers.dev",
-  "updatedAt": "2026-08-23T01:27:20.644Z",
-  "lastPublishedAt": "2026-08-23T01:27:20.644Z",
-  "lastVersionId": "a6e58f4c-db1b-41b7-98d0-5cd478e0d0a8",
-  "lastDeploymentId": "6775840a-11c9-4428-9ab7-6ac83fe29e0f",
+  "updatedAt": "2026-08-23T01:49:46.456Z",
+  "lastPublishedAt": "2026-08-23T01:49:46.456Z",
+  "lastVersionId": "98962533-2a53-41c8-b0a5-bbea7405adbb",
+  "lastDeploymentId": "d30a2509-b248-4bdb-9210-4e95f77af989",
   "assets": {
     "/audio/004-jingyan-test-004-mp3.mp3": {
       "hash": "6e41de8f8e42b9643d7f2a5bcc066aae",
@@ -1774,6 +1774,19 @@
         "path": "image/086-img-2891.jpeg"
       },
       "addedAt": "2026-08-22T09:05:54.494Z"
+    },
+    "/audio/065-naeireseo-gidarilge-i-ll-see-you-there-tomorrow-tomorrow-x-together.mp3": {
+      "hash": "3828316a6655d073a739c80cc04ef49f",
+      "size": 7870527,
+      "sha256": "c70da826849f70860da34d10dd5c42790cb51bec9493558aa48ea9f190f3e8b3",
+      "type": "audio",
+      "mediaId": "music-000065",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/065-naeireseo-gidarilge-i-ll-see-you-there-tomorrow-tomorrow-x-together.mp3"
+      },
+      "addedAt": "2026-08-23T01:49:32.365Z"
     }
   }
 }
