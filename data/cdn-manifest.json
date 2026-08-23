@@ -2,10 +2,10 @@
   "version": 1,
   "worker": "jingyan-media-cdn",
   "baseURL": "https://jingyan-media-cdn.jingyancdn.workers.dev",
-  "updatedAt": "2026-08-22T14:36:53.200Z",
-  "lastPublishedAt": "2026-08-22T14:36:53.200Z",
-  "lastVersionId": "03afab9d-2bb8-4950-bd33-4dfcd8bb92d8",
-  "lastDeploymentId": "e35ae21b-2ad6-4fdc-959a-240027311941",
+  "updatedAt": "2026-08-23T01:27:20.644Z",
+  "lastPublishedAt": "2026-08-23T01:27:20.644Z",
+  "lastVersionId": "a6e58f4c-db1b-41b7-98d0-5cd478e0d0a8",
+  "lastDeploymentId": "6775840a-11c9-4428-9ab7-6ac83fe29e0f",
   "assets": {
     "/audio/004-jingyan-test-004-mp3.mp3": {
       "hash": "6e41de8f8e42b9643d7f2a5bcc066aae",
@@ -396,19 +396,6 @@
         "path": "music/023-if-you-leave-me-now.mp3"
       },
       "addedAt": "2026-08-20T11:29:01.131Z"
-    },
-    "/image/018-yue-shen-shi-yong-di-wen.jpg": {
-      "hash": "becf8fd6fb136066b59dc4335a154c09",
-      "size": 2958175,
-      "sha256": "aa02f1f1bfad05bcd7a3d85a74181c01e32ab320fa8011eb1ef643bed555524d",
-      "type": "image",
-      "mediaId": "image-000018",
-      "source": {
-        "repo": "JINGTING0714/jingyan-image-01",
-        "branch": "main",
-        "path": "image/018-yue-shen-shi-yong-di-wen.jpg"
-      },
-      "addedAt": "2026-08-21T03:37:26.255Z"
     },
     "/audio/024-fang-da-tong-mei-sha-hao-shuo.mp3": {
       "hash": "bd8c4e9e0ca01c2e192af3e74f95bf9e",
