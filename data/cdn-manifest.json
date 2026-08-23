@@ -2,10 +2,10 @@
   "version": 1,
   "worker": "jingyan-media-cdn",
   "baseURL": "https://jingyan-media-cdn.jingyancdn.workers.dev",
-  "updatedAt": "2026-08-23T01:51:10.266Z",
-  "lastPublishedAt": "2026-08-23T01:51:10.266Z",
-  "lastVersionId": "41b2ea71-ebda-4cc9-8f61-ee466899c757",
-  "lastDeploymentId": "f5567d74-8b2e-4cab-afe6-d186adb683cc",
+  "updatedAt": "2026-08-23T01:51:57.075Z",
+  "lastPublishedAt": "2026-08-23T01:51:57.075Z",
+  "lastVersionId": "11004e15-464b-4e46-b2cc-4ff256019e3c",
+  "lastDeploymentId": "4ffd8c6d-22e0-47b2-b258-2571ebb121d4",
   "assets": {
     "/audio/004-jingyan-test-004-mp3.mp3": {
       "hash": "6e41de8f8e42b9643d7f2a5bcc066aae",
@@ -1813,6 +1813,19 @@
         "path": "music/067-didn-t-know-digital-farm-animals-and-yasmin.mp3"
       },
       "addedAt": "2026-08-23T01:51:01.404Z"
+    },
+    "/audio/068-tell-me-what-is-love-yu-yong-zhen-and-d-o.mp3": {
+      "hash": "505ef826ab229adc6f3b3b78780242a6",
+      "size": 11292482,
+      "sha256": "ecb8c9b13ebae71f5245f7eb4aa426bedc83b259b8ca28fde72faee1eec607c1",
+      "type": "audio",
+      "mediaId": "music-000068",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/068-tell-me-what-is-love-yu-yong-zhen-and-d-o.mp3"
+      },
+      "addedAt": "2026-08-23T01:51:46.674Z"
     }
   }
 }
