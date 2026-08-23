@@ -2,10 +2,10 @@
   "version": 1,
   "worker": "jingyan-media-cdn",
   "baseURL": "https://jingyan-media-cdn.jingyancdn.workers.dev",
-  "updatedAt": "2026-08-23T12:31:30.555Z",
-  "lastPublishedAt": "2026-08-23T12:31:30.555Z",
-  "lastVersionId": "76168807-9675-48ec-8670-940cc16c4c3b",
-  "lastDeploymentId": "9ca4c519-026f-42a8-8b8a-81a52d824ea1",
+  "updatedAt": "2026-08-23T14:09:02.137Z",
+  "lastPublishedAt": "2026-08-23T14:09:02.137Z",
+  "lastVersionId": "7b8a4e14-34c0-46a6-aa30-82e05cb9f322",
+  "lastDeploymentId": "24df30d3-8cba-40c2-b3b8-98d74683c68b",
   "assets": {
     "/audio/004-jingyan-test-004-mp3.mp3": {
       "hash": "6e41de8f8e42b9643d7f2a5bcc066aae",
@@ -1878,6 +1878,19 @@
         "path": "image/091-img-2930.jpeg"
       },
       "addedAt": "2026-08-23T12:31:23.384Z"
+    },
+    "/audio/069-lao-po-zui-da-cui-zi-ge-and-lao-mao.mp3": {
+      "hash": "0473d2a67a83eda86d8a6fdf034fcb42",
+      "size": 10148196,
+      "sha256": "b8de93ebc93ef4fc7ba479a9944259d4268ee0b5b300a008b291339b26272f83",
+      "type": "audio",
+      "mediaId": "music-000069",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/069-lao-po-zui-da-cui-zi-ge-and-lao-mao.mp3"
+      },
+      "addedAt": "2026-08-23T14:08:51.882Z"
     }
   }
 }
