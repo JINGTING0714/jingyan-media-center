@@ -2,10 +2,10 @@
   "version": 1,
   "worker": "jingyan-media-cdn",
   "baseURL": "https://jingyan-media-cdn.jingyancdn.workers.dev",
-  "updatedAt": "2026-08-23T01:50:25.658Z",
-  "lastPublishedAt": "2026-08-23T01:50:25.658Z",
-  "lastVersionId": "416ad2c8-0764-490e-b057-3351bc6650b9",
-  "lastDeploymentId": "3824bd63-4c25-442a-81e3-345fb703e7af",
+  "updatedAt": "2026-08-23T01:51:10.266Z",
+  "lastPublishedAt": "2026-08-23T01:51:10.266Z",
+  "lastVersionId": "41b2ea71-ebda-4cc9-8f61-ee466899c757",
+  "lastDeploymentId": "f5567d74-8b2e-4cab-afe6-d186adb683cc",
   "assets": {
     "/audio/004-jingyan-test-004-mp3.mp3": {
       "hash": "6e41de8f8e42b9643d7f2a5bcc066aae",
@@ -1800,6 +1800,19 @@
         "path": "music/066-lin-jun-jie-jie-dao.mp3"
       },
       "addedAt": "2026-08-23T01:50:16.369Z"
+    },
+    "/audio/067-didn-t-know-digital-farm-animals-and-yasmin.mp3": {
+      "hash": "e4fdab125436ee8045afd789d2864fa4",
+      "size": 8051212,
+      "sha256": "731cb408d161903ef692ea7235c3b520028edc5963c9bad3a89fa52d7ce726e5",
+      "type": "audio",
+      "mediaId": "music-000067",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/067-didn-t-know-digital-farm-animals-and-yasmin.mp3"
+      },
+      "addedAt": "2026-08-23T01:51:01.404Z"
     }
   }
 }
