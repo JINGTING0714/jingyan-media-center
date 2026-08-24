@@ -2,10 +2,10 @@
   "version": 1,
   "worker": "jingyan-media-cdn",
   "baseURL": "https://jingyan-media-cdn.jingyancdn.workers.dev",
-  "updatedAt": "2026-08-23T14:09:02.137Z",
-  "lastPublishedAt": "2026-08-23T14:09:02.137Z",
-  "lastVersionId": "7b8a4e14-34c0-46a6-aa30-82e05cb9f322",
-  "lastDeploymentId": "24df30d3-8cba-40c2-b3b8-98d74683c68b",
+  "updatedAt": "2026-08-24T00:31:07.340Z",
+  "lastPublishedAt": "2026-08-24T00:31:07.340Z",
+  "lastVersionId": "9f48369a-2886-4b90-8b94-5aaae28eb98b",
+  "lastDeploymentId": "b93c2716-b5ad-434a-ab26-c071d07f58c7",
   "assets": {
     "/audio/004-jingyan-test-004-mp3.mp3": {
       "hash": "6e41de8f8e42b9643d7f2a5bcc066aae",
@@ -1891,6 +1891,32 @@
         "path": "music/069-lao-po-zui-da-cui-zi-ge-and-lao-mao.mp3"
       },
       "addedAt": "2026-08-23T14:08:51.882Z"
+    },
+    "/image/092-img-2941.jpeg": {
+      "hash": "b6ccd0b5c912ff47df1a2fe071d82215",
+      "size": 73271,
+      "sha256": "c8d6d382eafea06b79b1e4eeea11d217631ea0b6d1437916b2a5c32da416ac26",
+      "type": "image",
+      "mediaId": "image-000092",
+      "source": {
+        "repo": "JINGTING0714/jingyan-image-01",
+        "branch": "main",
+        "path": "image/092-img-2941.jpeg"
+      },
+      "addedAt": "2026-08-24T00:30:48.700Z"
+    },
+    "/image/093-img-2942.jpeg": {
+      "hash": "e326d2f937e4c50671220bb6a23bea94",
+      "size": 116566,
+      "sha256": "e85964a54fcc4d84b924c6b3d38c82da7c9724fdaa87488e8cfa47f812836d84",
+      "type": "image",
+      "mediaId": "image-000093",
+      "source": {
+        "repo": "JINGTING0714/jingyan-image-01",
+        "branch": "main",
+        "path": "image/093-img-2942.jpeg"
+      },
+      "addedAt": "2026-08-24T00:30:59.043Z"
     }
   }
 }
