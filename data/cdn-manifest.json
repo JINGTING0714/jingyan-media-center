@@ -2,10 +2,10 @@
   "version": 1,
   "worker": "jingyan-media-cdn",
   "baseURL": "https://jingyan-media-cdn.jingyancdn.workers.dev",
-  "updatedAt": "2026-09-06T23:31:32.262Z",
-  "lastPublishedAt": "2026-09-06T23:31:32.262Z",
-  "lastVersionId": "cc093791-ca01-4118-820b-120623d83304",
-  "lastDeploymentId": "6bced69f-f2a4-427c-8fd0-c0deb5c086df",
+  "updatedAt": "2026-09-09T19:45:44.222Z",
+  "lastPublishedAt": "2026-09-09T19:45:44.221Z",
+  "lastVersionId": "ef03132a-e840-4d9f-b118-fe9ef1f643d7",
+  "lastDeploymentId": "fa61adb4-c1e8-4630-a21e-800fde9b3d1f",
   "assets": {
     "/audio/004-jingyan-test-004-mp3.mp3": {
       "hash": "6e41de8f8e42b9643d7f2a5bcc066aae",
@@ -2398,6 +2398,19 @@
         "path": "image/130-33.png"
       },
       "addedAt": "2026-09-06T23:31:25.678Z"
+    },
+    "/video/002-1787811351011.mp4": {
+      "hash": "a75e6e15ca82bae4ac96b01c474ebfb1",
+      "size": 1378195,
+      "sha256": "9a94ff432df632024bab4e634e324b505f0f6bed8b0036075466bab72e8b4eb6",
+      "type": "video",
+      "mediaId": "video-000002",
+      "source": {
+        "repo": "JINGTING0714/jingyan-video-01",
+        "branch": "main",
+        "path": "video/002-1787811351011.mp4"
+      },
+      "addedAt": "2026-09-09T19:45:37.059Z"
     }
   }
 }
