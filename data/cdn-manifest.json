@@ -2,10 +2,10 @@
   "version": 1,
   "worker": "jingyan-media-cdn",
   "baseURL": "https://jingyan-media-cdn.jingyancdn.workers.dev",
-  "updatedAt": "2026-09-10T01:03:18.147Z",
-  "lastPublishedAt": "2026-09-10T01:03:18.147Z",
-  "lastVersionId": "d5e58d04-a591-4e33-be13-4c43221eea18",
-  "lastDeploymentId": "e2fb3e30-c82d-46d0-8849-c2825cf151a5",
+  "updatedAt": "2026-09-10T12:40:07.023Z",
+  "lastPublishedAt": "2026-09-10T12:40:07.023Z",
+  "lastVersionId": "63719df6-1f75-4bd7-93e8-211b0298dd7c",
+  "lastDeploymentId": "56fee807-05fd-4095-8032-67f5c85b256a",
   "assets": {
     "/audio/004-jingyan-test-004-mp3.mp3": {
       "hash": "6e41de8f8e42b9643d7f2a5bcc066aae",
@@ -2424,6 +2424,45 @@
         "path": "image/132-55.png"
       },
       "addedAt": "2026-09-10T01:03:12.073Z"
+    },
+    "/image/133-img-1490.png": {
+      "hash": "c2eebc0380b2bcb36dc588eeea84fd83",
+      "size": 4303426,
+      "sha256": "e710f3e73b836e3e1709a5f636ad91bea32c8b9fd266b5a14b01f3228fa4a60e",
+      "type": "image",
+      "mediaId": "image-000133",
+      "source": {
+        "repo": "JINGTING0714/jingyan-image-01",
+        "branch": "main",
+        "path": "image/133-img-1490.png"
+      },
+      "addedAt": "2026-09-10T12:39:24.659Z"
+    },
+    "/image/134-14.jpeg": {
+      "hash": "2b220f0dd7c6797d02787cf419d5ff72",
+      "size": 1657594,
+      "sha256": "3e5e463c2131f1a1ec9a195d7cc77674af6713f3e611e993bae822bdbc409962",
+      "type": "image",
+      "mediaId": "image-000134",
+      "source": {
+        "repo": "JINGTING0714/jingyan-image-01",
+        "branch": "main",
+        "path": "image/134-14.jpeg"
+      },
+      "addedAt": "2026-09-10T12:39:40.590Z"
+    },
+    "/image/135-178386049300687.webp": {
+      "hash": "f67344aa88b0ffed37bcf6b0dbba193f",
+      "size": 45032,
+      "sha256": "430651e0aebc841529ad3f0c04f8183b2d3d484b90f7b569dd0c3c9397edcdcb",
+      "type": "image",
+      "mediaId": "image-000135",
+      "source": {
+        "repo": "JINGTING0714/jingyan-image-01",
+        "branch": "main",
+        "path": "image/135-178386049300687.webp"
+      },
+      "addedAt": "2026-09-10T12:39:55.928Z"
     }
   }
 }
