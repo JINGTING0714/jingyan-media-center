@@ -50,16 +50,16 @@
           "database": "data/image.json",
           "status": "data/status.json",
           "marker": "data/repository.json",
-          "sizeMB": 81.841,
-          "fileCount": 119,
+          "sizeMB": 85.599,
+          "fileCount": 120,
           "firstMediaId": "image-000002",
-          "lastMediaId": "image-000131",
+          "lastMediaId": "image-000132",
           "state": "active",
           "layout": "legacy-flat",
           "bucketSize": null,
           "createdAt": "2026-08-17T05:47:20.260Z",
           "sealedAt": null,
-          "updatedAt": "2026-09-09T19:55:53.222Z",
+          "updatedAt": "2026-09-10T01:03:21.715Z",
           "health": "healthy"
         },
         {
@@ -81,7 +81,7 @@
           "bucketSize": 1000,
           "createdAt": "2026-08-18T05:38:40.219Z",
           "sealedAt": null,
-          "updatedAt": "2026-09-09T19:55:28.068Z",
+          "updatedAt": "2026-09-10T01:03:01.706Z",
           "health": "healthy"
         }
       ],
@@ -185,7 +185,7 @@
     }
   },
   "counters": {
-    "image": 131,
+    "image": 132,
     "audio": 69,
     "video": 2
   },
