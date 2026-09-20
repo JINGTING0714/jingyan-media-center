@@ -1,7 +1,7 @@
 {
   "version": 1,
   "system": "jingyan-media-center",
-  "updatedAt": "2026-09-18T15:19:23.277Z",
+  "updatedAt": "2026-09-20T01:32:02.792Z",
   "repositories": [
     {
       "id": "image-01",
@@ -79,16 +79,16 @@
       "database": "data/video.json",
       "status": "data/status.json",
       "marker": "data/repository.json",
-      "sizeMB": 1.537,
+      "sizeMB": 7.552,
       "fileCount": 1,
-      "firstMediaId": "video-000002",
-      "lastMediaId": "video-000002",
+      "firstMediaId": "video-000003",
+      "lastMediaId": "video-000003",
       "state": "active",
       "layout": "legacy-flat",
       "bucketSize": null,
       "createdAt": "2026-08-17T05:49:21.971Z",
       "sealedAt": null,
-      "updatedAt": "2026-09-09T19:45:46.676Z",
+      "updatedAt": "2026-09-20T01:32:02.792Z",
       "health": "healthy"
     }
   ]
