@@ -2,10 +2,10 @@
   "version": 1,
   "worker": "jingyan-media-cdn",
   "baseURL": "https://jingyan-media-cdn.jingyancdn.workers.dev",
-  "updatedAt": "2026-09-28T13:46:02.248Z",
-  "lastPublishedAt": "2026-09-28T13:46:02.248Z",
-  "lastVersionId": "aff368d6-063b-40af-acee-c6a0faeabfb5",
-  "lastDeploymentId": "6dd82c0f-96ed-4b5a-9ccc-d6ba55d21ea7",
+  "updatedAt": "2026-09-30T08:16:01.775Z",
+  "lastPublishedAt": "2026-09-30T08:16:01.775Z",
+  "lastVersionId": "8ee287fe-46be-4043-b448-16460e83c346",
+  "lastDeploymentId": "5383eb14-7a36-4520-836f-c822047c4545",
   "assets": {
     "/audio/004-jingyan-test-004-mp3.mp3": {
       "hash": "6e41de8f8e42b9643d7f2a5bcc066aae",
@@ -2983,6 +2983,19 @@
         "path": "image/174-wu-biao-ti56-20260724192833.png"
       },
       "addedAt": "2026-09-28T13:45:54.457Z"
+    },
+    "/audio/070-jue-ding-bu-xiang-ni.mp3": {
+      "hash": "55f596d92bd5592df9bf5e1df45809d2",
+      "size": 9678047,
+      "sha256": "e621293fbc74530669b3619fd1ec9fb8c4e06a6ce019954cacf7b6772056da09",
+      "type": "audio",
+      "mediaId": "music-000070",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/070-jue-ding-bu-xiang-ni.mp3"
+      },
+      "addedAt": "2026-09-30T08:15:53.077Z"
     }
   }
 }
