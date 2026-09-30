@@ -2,10 +2,10 @@
   "version": 1,
   "worker": "jingyan-media-cdn",
   "baseURL": "https://jingyan-media-cdn.jingyancdn.workers.dev",
-  "updatedAt": "2026-09-30T08:16:01.775Z",
-  "lastPublishedAt": "2026-09-30T08:16:01.775Z",
-  "lastVersionId": "8ee287fe-46be-4043-b448-16460e83c346",
-  "lastDeploymentId": "5383eb14-7a36-4520-836f-c822047c4545",
+  "updatedAt": "2026-09-30T08:18:02.945Z",
+  "lastPublishedAt": "2026-09-30T08:18:02.945Z",
+  "lastVersionId": "b22f0508-9815-4288-bbfe-615e06678101",
+  "lastDeploymentId": "eedbc390-b99b-44bb-a0c5-937b368af7e6",
   "assets": {
     "/audio/004-jingyan-test-004-mp3.mp3": {
       "hash": "6e41de8f8e42b9643d7f2a5bcc066aae",
@@ -2996,6 +2996,19 @@
         "path": "music/070-jue-ding-bu-xiang-ni.mp3"
       },
       "addedAt": "2026-09-30T08:15:53.077Z"
+    },
+    "/audio/071-groovy-room-and-gemini-jeminai-and-deon-and-pu-zai-fan-jay-park-and-vince-ig-396461.mp3": {
+      "hash": "e3317802f1fd761b51d605147312117c",
+      "size": 8209981,
+      "sha256": "ca28c809556bf6fcea2d826690dd45b00ebfa16bb7bb3c7be1dde69b7a34a254",
+      "type": "audio",
+      "mediaId": "music-000071",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/071-groovy-room-and-gemini-jeminai-and-deon-and-pu-zai-fan-jay-park-and-vince-ig-396461.mp3"
+      },
+      "addedAt": "2026-09-30T08:17:54.186Z"
     }
   }
 }
