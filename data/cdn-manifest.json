@@ -2,10 +2,10 @@
   "version": 1,
   "worker": "jingyan-media-cdn",
   "baseURL": "https://jingyan-media-cdn.jingyancdn.workers.dev",
-  "updatedAt": "2026-09-30T08:18:02.945Z",
-  "lastPublishedAt": "2026-09-30T08:18:02.945Z",
-  "lastVersionId": "b22f0508-9815-4288-bbfe-615e06678101",
-  "lastDeploymentId": "eedbc390-b99b-44bb-a0c5-937b368af7e6",
+  "updatedAt": "2026-10-06T13:49:07.603Z",
+  "lastPublishedAt": "2026-10-06T13:49:07.603Z",
+  "lastVersionId": "f2bc7046-94bc-4fe7-bf9f-9b3a54f1a3f4",
+  "lastDeploymentId": "a345b585-88de-44f5-83a1-357d82a6898e",
   "assets": {
     "/audio/004-jingyan-test-004-mp3.mp3": {
       "hash": "6e41de8f8e42b9643d7f2a5bcc066aae",
@@ -3009,6 +3009,19 @@
         "path": "music/071-groovy-room-and-gemini-jeminai-and-deon-and-pu-zai-fan-jay-park-and-vince-ig-396461.mp3"
       },
       "addedAt": "2026-09-30T08:17:54.186Z"
+    },
+    "/video/004-video-1791288444097-871.mp4": {
+      "hash": "a93c755093bf3ab84d3c62a3f7f17841",
+      "size": 16462231,
+      "sha256": "57aa5dc205a0d64e5d63ac59a32b0ecc09c92a69bd05841635e968257cbaf1aa",
+      "type": "video",
+      "mediaId": "video-000004",
+      "source": {
+        "repo": "JINGTING0714/jingyan-video-01",
+        "branch": "main",
+        "path": "video/004-video-1791288444097-871.mp4"
+      },
+      "addedAt": "2026-10-06T13:48:57.061Z"
     }
   }
 }
