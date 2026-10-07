@@ -2,10 +2,10 @@
   "version": 1,
   "worker": "jingyan-media-cdn",
   "baseURL": "https://jingyan-media-cdn.jingyancdn.workers.dev",
-  "updatedAt": "2026-10-06T13:49:07.603Z",
-  "lastPublishedAt": "2026-10-06T13:49:07.603Z",
-  "lastVersionId": "f2bc7046-94bc-4fe7-bf9f-9b3a54f1a3f4",
-  "lastDeploymentId": "a345b585-88de-44f5-83a1-357d82a6898e",
+  "updatedAt": "2026-10-07T06:53:19.339Z",
+  "lastPublishedAt": "2026-10-07T06:53:19.339Z",
+  "lastVersionId": "3083a661-01c6-4ed2-9269-d07ddc372a5d",
+  "lastDeploymentId": "b7c2e41d-a21c-4d54-b7cd-2875528041de",
   "assets": {
     "/audio/004-jingyan-test-004-mp3.mp3": {
       "hash": "6e41de8f8e42b9643d7f2a5bcc066aae",
@@ -3022,6 +3022,110 @@
         "path": "video/004-video-1791288444097-871.mp4"
       },
       "addedAt": "2026-10-06T13:48:57.061Z"
+    },
+    "/video/005-svid-20261007-130109-1.mp4": {
+      "hash": "8e8d0c5d7ee33c89ea5cbb94b08b610c",
+      "size": 10811145,
+      "sha256": "ce4d02de7871b5702e66ba207aae092bf46c07ccc2c1dd9ee3c50d7eaf3f6956",
+      "type": "video",
+      "mediaId": "video-000005",
+      "source": {
+        "repo": "JINGTING0714/jingyan-video-01",
+        "branch": "main",
+        "path": "video/005-svid-20261007-130109-1.mp4"
+      },
+      "addedAt": "2026-10-07T06:51:29.703Z"
+    },
+    "/video/006-svid-20261007-130240-1.mp4": {
+      "hash": "9ed1de4486c747a30668dcedc2a08825",
+      "size": 5183976,
+      "sha256": "d379103d9a74f0507cf496d7f7f7a47228f6c3a7e8850287c3bbb07f1207ad99",
+      "type": "video",
+      "mediaId": "video-000006",
+      "source": {
+        "repo": "JINGTING0714/jingyan-video-01",
+        "branch": "main",
+        "path": "video/006-svid-20261007-130240-1.mp4"
+      },
+      "addedAt": "2026-10-07T06:51:43.392Z"
+    },
+    "/video/007-svid-20261007-130535-1.mp4": {
+      "hash": "0ba47748d6c9a68ca4d54f3482de7dc3",
+      "size": 5573459,
+      "sha256": "fdc0514ff97ffff3d6039759e5b14ebee6ff1bc1a101a32e10c614bff28c9bcb",
+      "type": "video",
+      "mediaId": "video-000007",
+      "source": {
+        "repo": "JINGTING0714/jingyan-video-01",
+        "branch": "main",
+        "path": "video/007-svid-20261007-130535-1.mp4"
+      },
+      "addedAt": "2026-10-07T06:51:56.121Z"
+    },
+    "/video/008-svid-20261007-131057-1.mp4": {
+      "hash": "612aa1f8b2c06fced9be0ec2f747077a",
+      "size": 5767642,
+      "sha256": "c98dcee0fb2bc2f503acbdfc01e487ebb7b2859060b27d3f199c46af26722b1e",
+      "type": "video",
+      "mediaId": "video-000008",
+      "source": {
+        "repo": "JINGTING0714/jingyan-video-01",
+        "branch": "main",
+        "path": "video/008-svid-20261007-131057-1.mp4"
+      },
+      "addedAt": "2026-10-07T06:52:09.513Z"
+    },
+    "/video/009-svid-20261007-131417-1.mp4": {
+      "hash": "c83284b952e36bf0c8eef55da2ae83c9",
+      "size": 5731812,
+      "sha256": "92a24624591c76c3ef71ff9b725222c283e435b0c078888b62238af401e247c5",
+      "type": "video",
+      "mediaId": "video-000009",
+      "source": {
+        "repo": "JINGTING0714/jingyan-video-01",
+        "branch": "main",
+        "path": "video/009-svid-20261007-131417-1.mp4"
+      },
+      "addedAt": "2026-10-07T06:52:23.725Z"
+    },
+    "/video/010-svid-20261007-132032-1.mp4": {
+      "hash": "427ce347fc205b5c59b280ab17b7104d",
+      "size": 6020038,
+      "sha256": "6d5c357e67085db66d9ce02e50d882933652ac417f6dcf8e5329055fa2872727",
+      "type": "video",
+      "mediaId": "video-000010",
+      "source": {
+        "repo": "JINGTING0714/jingyan-video-01",
+        "branch": "main",
+        "path": "video/010-svid-20261007-132032-1.mp4"
+      },
+      "addedAt": "2026-10-07T06:52:36.694Z"
+    },
+    "/video/011-svid-20261007-132133-1.mp4": {
+      "hash": "75c88861c4d2b77bf6ad7ffe0241667e",
+      "size": 3013018,
+      "sha256": "a851640c07f132e09d1ddb1f282ebf4ab75ab4e00eabcf68244f52fb73ed8302",
+      "type": "video",
+      "mediaId": "video-000011",
+      "source": {
+        "repo": "JINGTING0714/jingyan-video-01",
+        "branch": "main",
+        "path": "video/011-svid-20261007-132133-1.mp4"
+      },
+      "addedAt": "2026-10-07T06:52:47.831Z"
+    },
+    "/video/012-svid-20261007-132342-1.mp4": {
+      "hash": "cfd510cdaf7107ebadb4b50cd08cbfee",
+      "size": 2520012,
+      "sha256": "98c989a30a3f511976334b84f3dd0d328354128ff31ea376828dd76e9162853b",
+      "type": "video",
+      "mediaId": "video-000012",
+      "source": {
+        "repo": "JINGTING0714/jingyan-video-01",
+        "branch": "main",
+        "path": "video/012-svid-20261007-132342-1.mp4"
+      },
+      "addedAt": "2026-10-07T06:52:59.618Z"
     }
   }
 }
