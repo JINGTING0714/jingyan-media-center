@@ -2,10 +2,10 @@
   "version": 1,
   "worker": "jingyan-media-cdn",
   "baseURL": "https://jingyan-media-cdn.jingyancdn.workers.dev",
-  "updatedAt": "2026-10-08T12:43:06.778Z",
-  "lastPublishedAt": "2026-10-08T12:43:06.777Z",
-  "lastVersionId": "f659e71a-f8a1-4c5a-ac55-3237c9b6135a",
-  "lastDeploymentId": "b36a3c28-93e1-4b4d-937a-aa01ddc995f3",
+  "updatedAt": "2026-10-08T12:43:45.888Z",
+  "lastPublishedAt": "2026-10-08T12:43:45.888Z",
+  "lastVersionId": "38b71910-1834-4401-b195-7e9bd1231734",
+  "lastDeploymentId": "5898553f-c90f-44d3-b6b2-d5ebdb50c2a3",
   "assets": {
     "/audio/004-jingyan-test-004-mp3.mp3": {
       "hash": "6e41de8f8e42b9643d7f2a5bcc066aae",
@@ -3230,6 +3230,19 @@
         "path": "music/076-lian-suo-fan-ying-lin-shan-shan.mp3"
       },
       "addedAt": "2026-10-08T12:42:56.504Z"
+    },
+    "/audio/077-tian-ruo-you-qing-huang-li-ling.mp3": {
+      "hash": "ff6154e8d397b74348708a6680c5cec4",
+      "size": 4117492,
+      "sha256": "601dd01519cc3e1ff1f74fe41208e1bd498a29b0a9e258aa618f1237d022b5ad",
+      "type": "audio",
+      "mediaId": "music-000077",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/077-tian-ruo-you-qing-huang-li-ling.mp3"
+      },
+      "addedAt": "2026-10-08T12:43:39.208Z"
     }
   }
 }

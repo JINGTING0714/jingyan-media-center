@@ -96,16 +96,16 @@
           "database": "data/music.json",
           "status": "data/status.json",
           "marker": "data/repository.json",
-          "sizeMB": 687.274,
-          "fileCount": 73,
+          "sizeMB": 691.201,
+          "fileCount": 74,
           "firstMediaId": "music-000004",
-          "lastMediaId": "music-000076",
+          "lastMediaId": "music-000077",
           "state": "active",
           "layout": "legacy-flat",
           "bucketSize": null,
           "createdAt": "2026-08-17T05:34:30.105Z",
           "sealedAt": null,
-          "updatedAt": "2026-10-08T12:43:09.906Z",
+          "updatedAt": "2026-10-08T12:43:49.655Z",
           "health": "healthy"
         }
       ],
@@ -186,7 +186,7 @@
   },
   "counters": {
     "image": 176,
-    "audio": 76,
+    "audio": 77,
     "video": 13
   },
   "rename": {
