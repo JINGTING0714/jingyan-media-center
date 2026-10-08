@@ -2,10 +2,10 @@
   "version": 1,
   "worker": "jingyan-media-cdn",
   "baseURL": "https://jingyan-media-cdn.jingyancdn.workers.dev",
-  "updatedAt": "2026-10-08T12:41:40.752Z",
-  "lastPublishedAt": "2026-10-08T12:41:40.752Z",
-  "lastVersionId": "1882a973-1653-4824-b280-961a5c74b066",
-  "lastDeploymentId": "ebb515d2-5158-480f-a48a-d550a360339b",
+  "updatedAt": "2026-10-08T12:42:24.788Z",
+  "lastPublishedAt": "2026-10-08T12:42:24.788Z",
+  "lastVersionId": "4164a1fa-9b09-4e6c-b55e-79ac1cd0ca2b",
+  "lastDeploymentId": "45cc3c9b-1a35-42fb-b8f6-1d8a364512bf",
   "assets": {
     "/audio/004-jingyan-test-004-mp3.mp3": {
       "hash": "6e41de8f8e42b9643d7f2a5bcc066aae",
@@ -3204,6 +3204,19 @@
         "path": "music/074-yi-ge-ge-djban-dreamsky.mp3"
       },
       "addedAt": "2026-10-08T12:41:35.075Z"
+    },
+    "/audio/075-a-li-yue-huo-zheviva.mp3": {
+      "hash": "d79ade73a49c79c43299822b1eb77050",
+      "size": 7954600,
+      "sha256": "d528268e726267cc152d5f3df30c32fdd520e5c467f6cb88e13c3830e7975a18",
+      "type": "audio",
+      "mediaId": "music-000075",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/075-a-li-yue-huo-zheviva.mp3"
+      },
+      "addedAt": "2026-10-08T12:42:15.711Z"
     }
   }
 }
