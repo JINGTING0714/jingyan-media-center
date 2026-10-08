@@ -2,10 +2,10 @@
   "version": 1,
   "worker": "jingyan-media-cdn",
   "baseURL": "https://jingyan-media-cdn.jingyancdn.workers.dev",
-  "updatedAt": "2026-10-08T12:40:59.978Z",
-  "lastPublishedAt": "2026-10-08T12:40:59.977Z",
-  "lastVersionId": "4432a297-79e3-4f21-9018-302c0308171c",
-  "lastDeploymentId": "66f6d91b-a6b1-4bb7-ac51-f87e88de1f79",
+  "updatedAt": "2026-10-08T12:41:40.752Z",
+  "lastPublishedAt": "2026-10-08T12:41:40.752Z",
+  "lastVersionId": "1882a973-1653-4824-b280-961a5c74b066",
+  "lastDeploymentId": "ebb515d2-5158-480f-a48a-d550a360339b",
   "assets": {
     "/audio/004-jingyan-test-004-mp3.mp3": {
       "hash": "6e41de8f8e42b9643d7f2a5bcc066aae",
@@ -3191,6 +3191,19 @@
         "path": "music/073-zui-ai-zhou-hui-min.mp3"
       },
       "addedAt": "2026-10-08T12:40:51.560Z"
+    },
+    "/audio/074-yi-ge-ge-djban-dreamsky.mp3": {
+      "hash": "ebbf3f468d7fd605bdc3f95939d79f9b",
+      "size": 1550006,
+      "sha256": "0b2206e977fe3d0fb1d89885f1087cbc97c469387415b96f301de7286168b0ad",
+      "type": "audio",
+      "mediaId": "music-000074",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/074-yi-ge-ge-djban-dreamsky.mp3"
+      },
+      "addedAt": "2026-10-08T12:41:35.075Z"
     }
   }
 }
