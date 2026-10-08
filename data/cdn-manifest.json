@@ -2,10 +2,10 @@
   "version": 1,
   "worker": "jingyan-media-cdn",
   "baseURL": "https://jingyan-media-cdn.jingyancdn.workers.dev",
-  "updatedAt": "2026-10-08T07:02:01.630Z",
-  "lastPublishedAt": "2026-10-08T07:02:01.630Z",
-  "lastVersionId": "bc7c70ac-4568-4605-98bb-fff504df6b2a",
-  "lastDeploymentId": "ca76a30d-108d-40e1-bdf2-08e15809e0a0",
+  "updatedAt": "2026-10-08T12:40:59.978Z",
+  "lastPublishedAt": "2026-10-08T12:40:59.977Z",
+  "lastVersionId": "4432a297-79e3-4f21-9018-302c0308171c",
+  "lastDeploymentId": "66f6d91b-a6b1-4bb7-ac51-f87e88de1f79",
   "assets": {
     "/audio/004-jingyan-test-004-mp3.mp3": {
       "hash": "6e41de8f8e42b9643d7f2a5bcc066aae",
@@ -3178,6 +3178,19 @@
         "path": "music/072-1.mp3"
       },
       "addedAt": "2026-10-08T07:01:54.383Z"
+    },
+    "/audio/073-zui-ai-zhou-hui-min.mp3": {
+      "hash": "cb138907370bdd2fb5725a9c848392a2",
+      "size": 10620533,
+      "sha256": "78708bdeb00e128d6a86510d58a9a2c1eb74dd1de8e0d84755f4469a04d4a60f",
+      "type": "audio",
+      "mediaId": "music-000073",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/073-zui-ai-zhou-hui-min.mp3"
+      },
+      "addedAt": "2026-10-08T12:40:51.560Z"
     }
   }
 }
