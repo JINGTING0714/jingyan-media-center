@@ -2,10 +2,10 @@
   "version": 1,
   "worker": "jingyan-media-cdn",
   "baseURL": "https://jingyan-media-cdn.jingyancdn.workers.dev",
-  "updatedAt": "2026-10-07T13:34:34.699Z",
-  "lastPublishedAt": "2026-10-07T13:34:34.699Z",
-  "lastVersionId": "cca35456-564a-49f0-9021-1fd70e4b6bb0",
-  "lastDeploymentId": "181341ca-c105-4a6b-82a1-d3864d59eb9d",
+  "updatedAt": "2026-10-08T07:02:01.630Z",
+  "lastPublishedAt": "2026-10-08T07:02:01.630Z",
+  "lastVersionId": "bc7c70ac-4568-4605-98bb-fff504df6b2a",
+  "lastDeploymentId": "ca76a30d-108d-40e1-bdf2-08e15809e0a0",
   "assets": {
     "/audio/004-jingyan-test-004-mp3.mp3": {
       "hash": "6e41de8f8e42b9643d7f2a5bcc066aae",
@@ -3165,6 +3165,19 @@
         "path": "image/176-wu-biao-ti64-20261007213340.png"
       },
       "addedAt": "2026-10-07T13:34:25.493Z"
+    },
+    "/audio/072-1.mp3": {
+      "hash": "106f03953e6a23a54ed9d86a10232f14",
+      "size": 4393552,
+      "sha256": "05ec8be4a0d4d2a770755cf13aaada0f6fd780be3f2a1f8c81e12daf13b0eb6c",
+      "type": "audio",
+      "mediaId": "music-000072",
+      "source": {
+        "repo": "JINGTING0714/jingyan-media-01",
+        "branch": "main",
+        "path": "music/072-1.mp3"
+      },
+      "addedAt": "2026-10-08T07:01:54.383Z"
     }
   }
 }
