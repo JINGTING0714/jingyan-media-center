@@ -2,10 +2,10 @@
   "version": 1,
   "worker": "jingyan-media-cdn",
   "baseURL": "https://jingyan-media-cdn.jingyancdn.workers.dev",
-  "updatedAt": "2026-10-08T12:43:45.888Z",
-  "lastPublishedAt": "2026-10-08T12:43:45.888Z",
-  "lastVersionId": "38b71910-1834-4401-b195-7e9bd1231734",
-  "lastDeploymentId": "5898553f-c90f-44d3-b6b2-d5ebdb50c2a3",
+  "updatedAt": "2026-10-12T14:49:02.191Z",
+  "lastPublishedAt": "2026-10-12T14:49:02.191Z",
+  "lastVersionId": "32b81c82-2801-476c-916e-d24108341dc7",
+  "lastDeploymentId": "1459c897-bbf5-4a85-a56d-543885787373",
   "assets": {
     "/audio/004-jingyan-test-004-mp3.mp3": {
       "hash": "6e41de8f8e42b9643d7f2a5bcc066aae",
@@ -3243,6 +3243,19 @@
         "path": "music/077-tian-ruo-you-qing-huang-li-ling.mp3"
       },
       "addedAt": "2026-10-08T12:43:39.208Z"
+    },
+    "/image/177-screenshot-20261010-203318.jpg": {
+      "hash": "7ab38163b78162b7c420e02971c35e99",
+      "size": 153968,
+      "sha256": "e2c2fb1dacf15ec89a0e57318ae5704a3e14b8b4b6453be985fda1c1da0c37c6",
+      "type": "image",
+      "mediaId": "image-000177",
+      "source": {
+        "repo": "JINGTING0714/jingyan-image-01",
+        "branch": "main",
+        "path": "image/177-screenshot-20261010-203318.jpg"
+      },
+      "addedAt": "2026-10-12T14:48:55.846Z"
     }
   }
 }
