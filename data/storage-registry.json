@@ -1,7 +1,7 @@
 {
   "version": 1,
   "system": "jingyan-media-center",
-  "updatedAt": "2026-10-20T04:50:50.223Z",
+  "updatedAt": "2026-10-20T05:12:02.919Z",
   "repositories": [
     {
       "id": "image-01",
@@ -14,15 +14,15 @@
       "status": "data/status.json",
       "marker": "data/repository.json",
       "sizeMB": 174.985,
-      "fileCount": 177,
+      "fileCount": 179,
       "firstMediaId": "image-000002",
-      "lastMediaId": "image-000189",
+      "lastMediaId": "image-000191",
       "state": "active",
       "layout": "legacy-flat",
       "bucketSize": null,
       "createdAt": "2026-08-17T05:47:20.260Z",
       "sealedAt": null,
-      "updatedAt": "2026-10-20T04:50:50.223Z",
+      "updatedAt": "2026-10-20T05:12:02.919Z",
       "health": "healthy"
     },
     {
@@ -44,7 +44,7 @@
       "bucketSize": 1000,
       "createdAt": "2026-08-18T05:38:40.219Z",
       "sealedAt": null,
-      "updatedAt": "2026-10-20T04:50:31.363Z",
+      "updatedAt": "2026-10-20T05:11:43.183Z",
       "health": "healthy"
     },
     {
